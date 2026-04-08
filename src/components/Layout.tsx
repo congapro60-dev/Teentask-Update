@@ -10,6 +10,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import SearchOverlay from './SearchOverlay';
 import Clock from './Clock';
 import OnboardingTutorial from './OnboardingTutorial';
+import AppRatingWidget from './AppRatingWidget';
 
 interface LayoutProps {
   children: ReactNode;
@@ -370,6 +371,9 @@ export default function Layout({ children }: LayoutProps) {
                 <span className="font-bold text-sm">{item.label}</span>
               </NavLink>
             ))}
+            <div className="pt-4">
+              <AppRatingWidget />
+            </div>
           </aside>
 
           {/* Main Feed */}
