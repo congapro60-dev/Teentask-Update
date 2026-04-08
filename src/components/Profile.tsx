@@ -1022,7 +1022,7 @@ export default function Profile() {
               </div>
             )}
 
-            {verificationUI && (
+            {verificationUI && profile?.role !== 'business' && (
               <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Trạng thái hồ sơ</h4>
                 <div 
@@ -1064,6 +1064,32 @@ export default function Profile() {
                     <div className="pt-2 flex items-center gap-2 text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
                       <Edit2 size={12} />
                       Nhấn để xác minh lại
+                    </div>
+                  )}
+
+                  {profile?.verificationStatus === 'pending' && profile?.role === 'admin' && (
+                    <div className="pt-4 border-t border-gray-200 space-y-2">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Thông tin đã gửi:</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white p-2 rounded-xl border border-gray-100">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase">Họ tên</p>
+                          <p className="text-xs font-bold text-gray-700">{profile.fullName}</p>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-gray-100">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase">Ngày sinh</p>
+                          <p className="text-xs font-bold text-gray-700">{profile.dob}</p>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-gray-100 col-span-2">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase">Số CCCD</p>
+                          <p className="text-xs font-bold text-gray-700">{profile.idNumber}</p>
+                        </div>
+                      </div>
+                      {profile.idCardPhoto && (
+                        <div className="mt-2">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase mb-1">Ảnh CCCD</p>
+                          <img src={profile.idCardPhoto} alt="ID" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
+                        </div>
+                      )}
                     </div>
                   )}
 

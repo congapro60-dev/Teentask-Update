@@ -325,7 +325,7 @@ export default function AdminDashboard() {
   const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
   const userEmailLower = profile?.email?.toLowerCase();
   const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-  const isAdmin = profile?.role === 'admin' || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
+  const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
 
   useEffect(() => {
     if (firebaseLoading || !isAdmin) return;

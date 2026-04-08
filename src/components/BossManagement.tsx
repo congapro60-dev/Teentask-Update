@@ -11,6 +11,8 @@ interface AdminUser {
   email: string;
   photoURL: string;
   role: string;
+  isVerified?: boolean;
+  verificationStatus?: string;
 }
 
 export default function BossManagement() {
@@ -285,7 +287,16 @@ export default function BossManagement() {
                         className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
                       />
                       <div>
-                        <h3 className="font-bold text-gray-900 text-sm">{admin.displayName}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-gray-900 text-sm">{admin.displayName}</h3>
+                          {admin.isVerified ? (
+                            <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[10px] font-bold uppercase">Đã duyệt</span>
+                          ) : admin.verificationStatus === 'pending' ? (
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold uppercase">Chờ duyệt</span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full text-[10px] font-bold uppercase">Chưa xác minh</span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">{admin.email}</p>
                       </div>
                     </div>

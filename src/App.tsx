@@ -96,7 +96,7 @@ function AppContent() {
   const BOSS_EMAIL = "congapro60@gmail.com";
   const userEmailLower = profile?.email?.toLowerCase();
   const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-  const isAdmin = profile?.role === 'admin' || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
+  const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
 
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -219,18 +219,10 @@ function AppContent() {
         <div className={appWrapperClass}>
           <RoleSelection 
             onSelect={async (role) => {
-              const BOSS_EMAIL = "congapro60@gmail.com";
-              const userEmailLower = user.email?.toLowerCase();
-              const isAuthorizedAdmin = userEmailLower === BOSS_EMAIL.toLowerCase() || userEmailLower === ADMIN_EMAIL.toLowerCase();
-              
-              if (role === 'admin' && !isAuthorizedAdmin) {
-                alert('Chỉ quản trị viên mới có quyền truy cập vai trò này.');
-                return;
-              }
               await updateProfile({ 
                 role,
-                verificationStatus: role === 'admin' ? 'verified' : 'pending',
-                isVerified: role === 'admin'
+                verificationStatus: 'unverified',
+                isVerified: false
               });
             }} 
           />
@@ -243,7 +235,7 @@ function AppContent() {
 
   // Verification Check: Only show flow if user hasn't submitted yet
   const hasSubmittedVerification = profile?.verificationSubmittedAt != null;
-  const needsVerification = userRole !== 'admin' && !hasSubmittedVerification && !skipVerification && !isBoss;
+  const needsVerification = !hasSubmittedVerification && !skipVerification && !isBoss;
 
   if (needsVerification) {
     return (

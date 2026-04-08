@@ -23,7 +23,7 @@ export default function Layout({ children }: LayoutProps) {
   const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
   const userEmailLower = profile?.email?.toLowerCase();
   const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-  const isAdmin = profile?.role === 'admin' || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
+  const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
   const userRole = profile?.role || 'student';
   const navigate = useNavigate();
   const location = useLocation();
@@ -145,9 +145,9 @@ export default function Layout({ children }: LayoutProps) {
 
   const currentRoleItems = (isBoss && userRole === 'admin')
     ? roleSpecificItems.boss
-    : (!isBoss && isAdmin && userRole !== 'admin') 
-      ? [...(roleSpecificItems[userRole as keyof typeof roleSpecificItems] || []), ...roleSpecificItems.admin]
-      : (roleSpecificItems[userRole as keyof typeof roleSpecificItems] || []);
+    : isAdmin
+      ? [...(userRole !== 'admin' ? (roleSpecificItems[userRole as keyof typeof roleSpecificItems] || []) : []), ...roleSpecificItems.admin]
+      : (userRole !== 'admin' ? (roleSpecificItems[userRole as keyof typeof roleSpecificItems] || []) : []);
 
   const allNavItems = [...mainNavItems, ...currentRoleItems];
 

@@ -18,7 +18,7 @@ export interface UserProfile {
   
   // Verification fields
   isVerified?: boolean;
-  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  verificationStatus?: 'pending' | 'verified' | 'rejected' | 'unverified';
   fullName?: string;
   idNumber?: string;
   idCardPhoto?: string;

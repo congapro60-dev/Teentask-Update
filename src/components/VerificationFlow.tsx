@@ -70,6 +70,8 @@ export default function VerificationFlow({ onClose }: VerificationFlowProps) {
         Object.assign(verificationData, { occupation, dob, workplaceName, workplaceAddress });
       } else if (profile?.role === 'business') {
         Object.assign(verificationData, { representativeName, businessName, businessAddress, businessField });
+      } else if (profile?.role === 'admin') {
+        Object.assign(verificationData, { fullName, dob, idNumber });
       }
 
       await updateProfile(verificationData);
@@ -88,6 +90,8 @@ export default function VerificationFlow({ onClose }: VerificationFlowProps) {
       return occupation && dob && workplaceName && workplaceAddress;
     } else if (profile?.role === 'business') {
       return representativeName && businessName && businessAddress && businessField;
+    } else if (profile?.role === 'admin') {
+      return fullName && dob && idNumber;
     }
     return false;
   };
@@ -118,6 +122,14 @@ export default function VerificationFlow({ onClose }: VerificationFlowProps) {
             </div>
 
             <div className="space-y-4">
+              {profile?.role === 'admin' && (
+                <>
+                  <InputField label="Họ và tên" value={fullName} onChange={setFullName} icon={User} placeholder="Nguyễn Văn A" />
+                  <InputField label="Ngày tháng năm sinh" value={dob} onChange={setDob} icon={Calendar} type="date" />
+                  <InputField label="Số căn cước" value={idNumber} onChange={setIdNumber} icon={ShieldCheck} placeholder="0123456789" />
+                </>
+              )}
+
               {profile?.role === 'student' && (
                 <>
                   <InputField label="Họ và tên" value={fullName} onChange={setFullName} icon={User} placeholder="Nguyễn Văn A" />
