@@ -107,8 +107,10 @@ function AppContent() {
     } catch (error: any) {
       if (error.message === "không thể cấp quyền đăng nhập ở vai trò này") {
         setLoginError(error.message);
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setLoginError("Tên miền này chưa được cấp quyền đăng nhập. Vui lòng thêm tên miền vào Firebase Console.");
       } else {
-        setLoginError("Đã có lỗi xảy ra khi đăng nhập.");
+        setLoginError(`Đã có lỗi xảy ra khi đăng nhập: ${error.message || error.code || 'Lỗi không xác định'}`);
       }
     }
   };
