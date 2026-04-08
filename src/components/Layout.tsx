@@ -371,20 +371,9 @@ export default function Layout({ children }: LayoutProps) {
                 <span className="font-bold text-sm">{item.label}</span>
               </NavLink>
             ))}
-            <div className="pt-4">
-              <AppRatingWidget />
-            </div>
-          </aside>
-
-          {/* Main Feed */}
-          <main className="flex-1 min-w-0 w-full max-w-[720px] px-2 sm:px-0">
-            {children}
-          </main>
-
-          {/* Right Sidebar - Desktop only */}
-          <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
+            
             {/* Sponsored Section */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 mt-4">
               <h3 className="font-bold text-gray-500 mb-4 px-2 uppercase text-[10px] tracking-widest">Được tài trợ</h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-2xl cursor-pointer group transition-all">
@@ -407,6 +396,16 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </div>
             </div>
+          </aside>
+
+          {/* Main Feed */}
+          <main className="flex-1 min-w-0 w-full max-w-[720px] px-2 sm:px-0">
+            {children}
+          </main>
+
+          {/* Right Sidebar - Desktop only */}
+          <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
+            <AppRatingWidget />
 
             {/* Trending / Horoscope Widget */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
