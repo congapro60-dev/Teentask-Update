@@ -11,6 +11,7 @@ import SearchOverlay from './SearchOverlay';
 import Clock from './Clock';
 import OnboardingTutorial from './OnboardingTutorial';
 import AppRatingWidget from './AppRatingWidget';
+import MarketSurveyModal from './MarketSurveyModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -335,6 +336,7 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <MarketSurveyModal />
 
       {/* Main Content Area */}
       <div className="flex-1 flex justify-center py-4 px-0 sm:px-4">

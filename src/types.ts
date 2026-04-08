@@ -32,6 +32,7 @@ export interface UserProfile {
   location?: string;
   phone?: string;
   parentalVerification?: 'pending' | 'verified' | 'rejected';
+  marketSurveyCompleted?: boolean;
   
   // Parent specific
   occupation?: string;
