@@ -505,7 +505,7 @@ export default function Jobs() {
       </div>
 
       {/* Jobs List */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job, i) => (
             <motion.div

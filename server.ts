@@ -309,7 +309,7 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev";
+  const isDev = process.env.NODE_ENV !== "production";
   
   if (isDev) {
     console.log("Running in DEVELOPMENT mode with Vite middleware");
@@ -333,7 +333,9 @@ async function startServer() {
     });
   } else {
     console.log("Running in PRODUCTION mode");
-    const distPath = path.resolve(__dirname, "dist");
+    // In production, the server is bundled into dist/server.js
+    // so __dirname is already the dist folder.
+    const distPath = __dirname;
     
     // Serve static files from dist
     app.use(express.static(distPath, { index: false }));

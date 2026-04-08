@@ -185,7 +185,7 @@ export default function StudentProfile() {
           </button>
         </div>
         
-        <div className="px-6 pb-8 relative">
+        <div className="px-6 pb-8 relative max-w-5xl mx-auto">
           <div className="flex justify-between items-end -mt-12 mb-4">
             <div className="w-24 h-24 bg-white rounded-3xl p-1 shadow-xl">
               <div className="w-full h-full rounded-[20px] overflow-hidden bg-gray-50">
@@ -305,7 +305,7 @@ export default function StudentProfile() {
         </div>
       </div>
 
-      <div className="p-6 max-w-2xl mx-auto space-y-6">
+      <div className="p-6 max-w-5xl mx-auto space-y-6">
         {/* Relationships Section (Verified by) */}
         {relationships.length > 0 && (
           <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">

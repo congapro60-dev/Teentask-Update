@@ -137,7 +137,7 @@ export default function Shadowing() {
         <div className="absolute top-20 right-[5%] w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute -bottom-40 -left-20 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px]"></div>
 
-        <div className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center pt-20">
+        <div className="relative h-full max-w-[1400px] mx-auto px-6 flex flex-col justify-center pt-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -191,7 +191,7 @@ export default function Shadowing() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-6 -mt-12 relative z-10">
         {/* Categories */}
         <div className="flex gap-4 mb-16 overflow-x-auto no-scrollbar pb-4">
           {CATEGORIES.map((cat) => (

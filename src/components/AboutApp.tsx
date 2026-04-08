@@ -98,7 +98,7 @@ export default function AboutApp() {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 max-w-4xl"
+          className="relative z-10 max-w-6xl"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-xs font-black uppercase tracking-[0.3em] mb-8">
             <Rocket size={14} />
@@ -114,7 +114,7 @@ export default function AboutApp() {
         </motion.div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 -mt-20 relative z-20">
+      <div className="max-w-[1200px] mx-auto px-6 -mt-20 relative z-20">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
           {[
@@ -380,7 +380,7 @@ export default function AboutApp() {
 
       {/* Footer */}
       <footer className="mt-32 py-12 border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
               <GraduationCap size={20} className="text-white" />

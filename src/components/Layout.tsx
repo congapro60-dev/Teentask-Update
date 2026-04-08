@@ -337,9 +337,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex justify-center py-4 px-0 sm:px-4">
-        <div className="w-full max-w-7xl flex gap-0 lg:gap-6 justify-center">
+        <div className="w-full max-w-[1360px] flex gap-0 lg:gap-6 justify-center">
           {/* Left Sidebar - Desktop only */}
-          <aside className="hidden lg:block w-[280px] xl:w-[320px] shrink-0 sticky top-32 h-fit space-y-2">
+          <aside className="hidden lg:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-2">
             <NavLink to="/profile" className="flex items-center gap-3 p-2 hover:bg-gray-200 rounded-xl transition-colors relative group">
               <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 relative">
                 {profile?.photoURL ? (
@@ -373,12 +373,12 @@ export default function Layout({ children }: LayoutProps) {
           </aside>
 
           {/* Main Feed */}
-          <main className="flex-1 w-full max-w-[680px] px-2 sm:px-0">
+          <main className="flex-1 min-w-0 w-full max-w-[720px] px-2 sm:px-0">
             {children}
           </main>
 
           {/* Right Sidebar - Desktop only */}
-          <aside className="hidden xl:block w-[280px] xl:w-[320px] shrink-0 sticky top-32 h-fit space-y-6">
+          <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
             {/* Sponsored Section */}
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
               <h3 className="font-bold text-gray-500 mb-4 px-2 uppercase text-[10px] tracking-widest">Được tài trợ</h3>

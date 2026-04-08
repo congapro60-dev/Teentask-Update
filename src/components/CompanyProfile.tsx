@@ -231,7 +231,7 @@ export default function CompanyProfile() {
           </button>
         </div>
         
-        <div className="px-6 pb-8 relative">
+        <div className="px-6 pb-8 relative max-w-5xl mx-auto">
           <div className="flex justify-between items-end -mt-12 mb-4">
             <div className="w-24 h-24 bg-white rounded-3xl p-1 shadow-xl">
               <div className="w-full h-full rounded-[20px] overflow-hidden bg-gray-50">
@@ -325,7 +325,7 @@ export default function CompanyProfile() {
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-6 max-w-5xl mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

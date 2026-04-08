@@ -44,7 +44,7 @@ export default function ChatList() {
 
   // Add virtual bot chat if not already in filteredChats
   const botChatExists = chats.some(c => c.participants.includes(TEENTASK_BOT_ID));
-  const virtualBotChat = !botChatExists && searchQuery.toLowerCase().includes('bot') || searchQuery === '' ? {
+  const virtualBotChat = !botChatExists && (searchQuery.toLowerCase().includes('bot') || searchQuery === '') ? {
     id: TEENTASK_BOT_ID,
     participants: [auth.currentUser?.uid || '', TEENTASK_BOT_ID],
     participantDetails: {

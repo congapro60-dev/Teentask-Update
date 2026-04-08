@@ -11,6 +11,7 @@ import JobDetail from './JobDetail';
 import ShadowingDetail from './ShadowingDetail';
 import { MOCK_JOBS, MOCK_SHADOWING } from '../mockData';
 import ParentVerificationModal from './ParentVerificationModal';
+import VipAdsSlider from './VipAdsSlider';
 
 export default function Home() {
   const { profile, toggleSaveJob, toggleSaveShadowing } = useFirebase();
@@ -223,7 +224,7 @@ export default function Home() {
       {/* Guest Welcome Hero */}
       {!profile && (
         <section className="px-4 sm:px-6 py-12 bg-gradient-to-br from-[#1877F2] via-[#4F46E5] to-[#7C3AED] mb-6 relative overflow-hidden rounded-b-[64px] shadow-2xl shadow-blue-100">
-          <div className="relative z-10 max-w-2xl mx-auto text-center">
+          <div className="relative z-10 max-w-6xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -238,22 +239,12 @@ export default function Home() {
                 Nơi khởi đầu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">sự nghiệp</span> cho Gen Z
               </h1>
               
-              <p className="text-white/80 text-base sm:text-lg mb-10 leading-relaxed max-w-lg mx-auto font-medium">
+              <p className="text-white/80 text-base sm:text-lg mb-10 leading-relaxed max-w-4xl mx-auto font-medium">
                 TeenTask kết nối hàng ngàn học sinh với các cơ hội việc làm và kiến tập thực tế từ những doanh nghiệp hàng đầu.
               </p>
               
-              <div className="max-w-md mx-auto mb-10 relative group">
-                <div className="absolute inset-0 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all"></div>
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
-                  className="relative w-full bg-white/10 backdrop-blur-xl border border-white/30 rounded-full py-4 px-6 flex items-center gap-4 text-white/60 hover:text-white hover:bg-white/20 transition-all shadow-2xl"
-                >
-                  <Search size={20} className="text-amber-300" />
-                  <span className="text-sm font-bold truncate">Tìm kiếm công việc, kiến tập, người dùng...</span>
-                  <div className="ml-auto bg-white/20 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest hidden sm:block">
-                    Khám phá
-                  </div>
-                </button>
+              <div className="max-w-6xl mx-auto mb-10">
+                <VipAdsSlider />
               </div>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -330,22 +321,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mb-6 relative group">
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
-              className="w-full bg-[#F0F2F5] hover:bg-gray-200 rounded-2xl py-4 px-6 flex items-center gap-4 text-gray-500 transition-all shadow-sm border border-transparent hover:border-gray-200 group"
-            >
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#1877F2] shadow-sm group-hover:scale-110 transition-transform">
-                <Search size={20} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-bold text-gray-900">Tìm kiếm trên TeenTask</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Việc làm, Kiến tập, Bạn bè...</p>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Ctrl + K
-              </div>
-            </button>
+          <div className="mb-6">
+            <VipAdsSlider />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
