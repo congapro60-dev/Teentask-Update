@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, CV } from '../types';
@@ -75,6 +75,7 @@ interface FirebaseContextType {
   sendNotification: (userId: string, title: string, message: string, type: string, link?: string) => Promise<void>;
   toggleSaveJob: (jobId: string) => Promise<void>;
   toggleSaveShadowing: (shadowingId: string) => Promise<void>;
+  toggleSaveCourse: (courseId: string) => Promise<void>;
   submitNameChangeRequest: (newName: string, reason: string, proofUrl: string) => Promise<void>;
   toggleFollowUser: (targetUserId: string) => Promise<void>;
   unfriendUser: (targetUserId: string) => Promise<void>;
@@ -104,6 +105,104 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
 
+    const isDemoMode = localStorage.getItem('isDemoMode') === 'true';
+
+    // Handle redirect result for fallback login
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const user = result.user;
+          const pendingRole = localStorage.getItem('pendingRole') as any;
+          localStorage.removeItem('pendingRole');
+          
+          const BOSS_EMAIL = "congapro60@gmail.com";
+          const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
+          const ADMIN_EMAIL_2 = "vuvietcuonglmnx@gmail.com";
+          
+          const path = `users/${user.uid}`;
+          const profileRef = doc(db, 'users', user.uid);
+          
+          let profileSnap;
+          try {
+            profileSnap = await getDoc(profileRef);
+          } catch (error) {
+            handleFirestoreError(error, OperationType.GET, path);
+            return;
+          }
+          
+          const userEmailLower = user.email?.toLowerCase();
+          const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
+          const isPredefinedAdmin = userEmailLower === ADMIN_EMAIL.toLowerCase() || userEmailLower === ADMIN_EMAIL_2.toLowerCase();
+          const isAuthorizedAdmin = isBoss || isPredefinedAdmin || (profileSnap.exists() && profileSnap.data()?.role === 'admin');
+
+          if (pendingRole === 'admin' && !isAuthorizedAdmin) {
+            await signOut(auth);
+            return; // Cannot grant admin role
+          }
+
+          if (!profileSnap.exists()) {
+            const newProfile: Partial<UserProfile> = {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || 'TeenTasker',
+              photoURL: user.photoURL || '',
+              trustScore: 0,
+              skills: [],
+              role: pendingRole || 'student',
+              createdAt: Date.now(),
+              balance: 0,
+              isVip: isAuthorizedAdmin,
+              paymentCode: user.uid.substring(0, 6).toUpperCase(),
+            };
+            try {
+              await setDoc(profileRef, newProfile);
+            } catch (error) {
+              handleFirestoreError(error, OperationType.WRITE, path);
+            }
+          } else if (pendingRole) {
+            try {
+              await setDoc(profileRef, { 
+                role: pendingRole,
+                isVip: !!(isAuthorizedAdmin || profileSnap.data()?.isVip)
+              }, { merge: true });
+            } catch (error) {
+              handleFirestoreError(error, OperationType.WRITE, path);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Redirect result error:", error);
+      }
+    };
+
+    if (!isDemoMode) {
+      handleRedirectResult();
+    }
+
+    if (isDemoMode) {
+      const demoRole = localStorage.getItem('demoRole') || 'student';
+      setUser({ uid: 'demo-user', isAnonymous: true, email: 'demo@teentask.vn' } as User);
+      setProfile({
+        uid: 'demo-user',
+        email: 'demo@teentask.vn',
+        displayName: 'Người dùng Demo',
+        photoURL: 'https://ui-avatars.com/api/?name=Demo&background=4F46E5&color=fff',
+        role: demoRole as any,
+        trustScore: 85,
+        skills: ['Design', 'Video', 'Marketing'],
+        balance: 0,
+        isVip: false,
+        isVerified: true,
+        verificationStatus: 'verified',
+        savedJobs: [],
+        savedShadowing: [],
+        createdAt: Date.now(),
+      });
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       
@@ -113,41 +212,19 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (currentUser) {
-        if (currentUser.isAnonymous) {
-          // Mock profile for demo mode
-          const demoRole = localStorage.getItem('demoRole') || 'student';
-          setProfile({
-            uid: currentUser.uid,
-            email: 'demo@teentask.vn',
-            displayName: 'Người dùng Demo',
-            photoURL: 'https://ui-avatars.com/api/?name=Demo&background=4F46E5&color=fff',
-            role: demoRole as any,
-            trustScore: 85,
-            skills: ['Design', 'Video', 'Marketing'],
-            balance: 0,
-            isVip: false,
-            isVerified: true,
-            verificationStatus: 'verified',
-            savedJobs: [],
-            savedShadowing: [],
-            createdAt: Date.now(),
-          });
+        const path = `users/${currentUser.uid}`;
+        const profileRef = doc(db, 'users', currentUser.uid);
+        unsubProfile = onSnapshot(profileRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setProfile(docSnap.data() as UserProfile);
+          } else {
+            setProfile(null);
+          }
           setLoading(false);
-        } else {
-          const path = `users/${currentUser.uid}`;
-          const profileRef = doc(db, 'users', currentUser.uid);
-          unsubProfile = onSnapshot(profileRef, (docSnap) => {
-            if (docSnap.exists()) {
-              setProfile(docSnap.data() as UserProfile);
-            } else {
-              setProfile(null);
-            }
-            setLoading(false);
-          }, (error) => {
-            handleFirestoreError(error, OperationType.GET, path);
-            setLoading(false);
-          });
-        }
+        }, (error) => {
+          handleFirestoreError(error, OperationType.GET, path);
+          setLoading(false);
+        });
       } else {
         setProfile(null);
         setLoading(false);
@@ -155,13 +232,15 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      unsubscribe();
+      if (!isDemoMode) {
+        unsubscribe();
+      }
       if (unsubProfile) unsubProfile();
     };
   }, []);
 
   const checkDemo = () => {
-    if (user?.isAnonymous) {
+    if (user?.isAnonymous || localStorage.getItem('isDemoMode') === 'true') {
       alert("👀 Chế độ xem thử: Tính năng này cần đăng nhập tài khoản chính thức!");
       return true;
     }
@@ -229,6 +308,15 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error: any) {
+      if (error.code === 'auth/network-request-failed' || error.code === 'auth/popup-closed-by-user' || error.code === 'auth/popup-blocked') {
+        // Fallback to redirect if popup fails due to network/browser restrictions
+        if (selectedRole) {
+          localStorage.setItem('pendingRole', selectedRole);
+        }
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      
       if (error.message !== "không thể cấp quyền đăng nhập ở vai trò này") {
         console.error('Login error:', error);
       }
@@ -456,6 +544,20 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const toggleSaveCourse = async (courseId: string) => {
+    if (checkDemo()) return;
+    if (!user || !profile) return;
+    const savedCourses = profile.savedCourses || [];
+    const isSaved = savedCourses.includes(courseId);
+    const newSavedCourses = isSaved 
+      ? savedCourses.filter(id => id !== courseId)
+      : [...savedCourses, courseId];
+    
+    await updateDoc(doc(db, 'users', user.uid), {
+      savedCourses: newSavedCourses
+    });
+  };
+
   const submitNameChangeRequest = async (newName: string, reason: string, proofUrl: string) => {
     if (checkDemo()) return;
     if (!user || !profile) return;
@@ -615,7 +717,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       sendFriendRequest, acceptFriendRequest, rejectFriendRequest, 
       addRelationship, acceptRelationship, rejectRelationship,
       submitRating, createChat, sendNotification,
-      toggleSaveJob, toggleSaveShadowing, submitNameChangeRequest,
+      toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, submitNameChangeRequest,
       toggleFollowUser, unfriendUser, saveCV, getCV,
       bookShadowing, getBookings
     }}>

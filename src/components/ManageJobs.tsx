@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Edit2, Trash2, Users, Briefcase, MapPin, DollarSign, Clock, X, CheckCircle2, User, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Briefcase, MapPin, DollarSign, Clock, X, CheckCircle2, User, ShieldCheck, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth, useFirebase } from './FirebaseProvider';
 import { useNavigate } from 'react-router-dom';
 import { Job, Application } from '../types';
+import { GoogleGenAI } from '@google/genai';
 
 export default function ManageJobs() {
   const { profile } = useFirebase();
@@ -15,6 +16,8 @@ export default function ManageJobs() {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [viewingApplicationsFor, setViewingApplicationsFor] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [aiAnalysis, setAiAnalysis] = useState<{[key: string]: string}>({});
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -156,6 +159,50 @@ export default function ManageJobs() {
       setApplications(prev => prev.map(app => app.id === appId ? { ...app, finalStatus: status } : app));
     } catch (error) {
       console.error("Error updating application:", error);
+    }
+  };
+
+  const handleAIAnalyzeCandidate = async (app: Application) => {
+    const job = jobs.find(j => j.id === app.jobId);
+    if (!job) return;
+
+    setAnalyzingId(app.id);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+      const prompt = `
+        Hãy phân tích ứng viên sau cho công việc "${job.title}":
+        
+        Ứng viên:
+        - Tên: ${app.studentName}
+        - Trường: ${app.studentSchool}
+        - Lớp: ${app.studentClass}
+        - Portfolio/CV: ${app.portfolioUrl || 'Không có'}
+        
+        Mô tả công việc:
+        - Tiêu đề: ${job.title}
+        - Yêu cầu: ${job.qualifications?.join(', ') || 'Không có'}
+        - Mô tả: ${job.description}
+        
+        Hãy đưa ra:
+        1. Đánh giá sơ bộ về độ phù hợp (Thấp/Trung bình/Cao).
+        2. Những điểm mạnh của ứng viên dựa trên thông tin có sẵn.
+        3. Những gì doanh nghiệp nên hỏi thêm trong buổi phỏng vấn.
+        4. Đề xuất: Nên nhận hay không?
+        
+        Viết bằng tiếng Việt, ngắn gọn, súc tích.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt
+      });
+      setAiAnalysis(prev => ({ ...prev, [app.id]: response.text }));
+    } catch (error) {
+      console.error("AI Analysis error:", error);
+      alert("Có lỗi xảy ra khi phân tích ứng viên bằng AI.");
+    } finally {
+      setAnalyzingId(null);
     }
   };
 
@@ -457,6 +504,44 @@ export default function ManageJobs() {
                           }`}>
                             {app.finalStatus === 'completed' ? 'Đã hoàn thành' : 
                              app.finalStatus === 'rejected' ? 'Đã từ chối' : 'Không xác định'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* AI Analysis Section */}
+                      <div className="mt-4">
+                        {!aiAnalysis[app.id] ? (
+                          <button
+                            onClick={() => handleAIAnalyzeCandidate(app)}
+                            disabled={analyzingId === app.id}
+                            className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+                          >
+                            {analyzingId === app.id ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Sparkles size={12} />
+                            )}
+                            Phân tích ứng viên (AI)
+                          </button>
+                        ) : (
+                          <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Sparkles size={14} className="text-indigo-600" />
+                              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Đánh giá từ AI</span>
+                            </div>
+                            <p className="text-xs text-indigo-900 leading-relaxed whitespace-pre-wrap">
+                              {aiAnalysis[app.id]}
+                            </p>
+                            <button
+                              onClick={() => setAiAnalysis(prev => {
+                                const next = { ...prev };
+                                delete next[app.id];
+                                return next;
+                              })}
+                              className="mt-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-600 transition-colors"
+                            >
+                              Ẩn phân tích
+                            </button>
                           </div>
                         )}
                       </div>

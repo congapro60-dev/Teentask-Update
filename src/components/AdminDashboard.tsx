@@ -1,16 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, UserCheck, UserX, Search, Filter, Clock, CheckCircle2, XCircle, AlertCircle, Eye, X, Briefcase, MessageSquare, Megaphone, Send, UserCog, Zap, PieChart, Download, TrendingUp, MapPin, Star, Users, BarChart2, Sparkles, Loader2, Scale, Award, Shield, Zap as ZapIcon } from 'lucide-react';
+import { ShieldCheck, UserCheck, UserX, Search, Filter, Clock, CheckCircle2, XCircle, AlertCircle, Eye, X, Briefcase, MessageSquare, Megaphone, Send, UserCog, Zap, PieChart as PieChartIcon, Download, TrendingUp, MapPin, Star, Users, BarChart2, Sparkles, Loader2, Scale, Award, Shield, Zap as ZapIcon, ClipboardList } from 'lucide-react';
 import { collection, query, where, getDocs, doc, updateDoc, onSnapshot, addDoc, orderBy, limit, getDoc, setDoc } from 'firebase/firestore';
 import { db, useFirebase } from './FirebaseProvider';
 import { Job, Advertisement } from '../types';
 import { cn } from '../lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { GoogleGenAI } from '@google/genai';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function AdminDashboard() {
   const { profile, loading: firebaseLoading } = useFirebase();
-  const [activeTab, setActiveTab] = useState<'users' | 'jobs' | 'messages' | 'ads' | 'transactions' | 'name_changes' | 'financial' | 'market' | 'competitors'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'jobs' | 'messages' | 'ads' | 'transactions' | 'name_changes' | 'financial' | 'market'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [ads, setAds] = useState<Advertisement[]>([]);
@@ -42,6 +44,64 @@ export default function AdminDashboard() {
   const [aiCompetitorData, setAiCompetitorData] = useState<any[] | null>(null);
   const [aiCompetitorLastUpdated, setAiCompetitorLastUpdated] = useState<Date | null>(null);
 
+  // Survey Data for Financial Simulator
+  const [surveyPricingData, setSurveyPricingData] = useState<{
+    distribution: { name: string; value: number }[];
+    popularPrice: string;
+    popularPercentage: number;
+    totalResponses: number;
+    avgValue: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchSurveyPricing = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'market_surveys'));
+        if (!snapshot.empty) {
+          const total = snapshot.size;
+          const counts: Record<string, number> = {
+            'Có, nếu chất lượng tốt': 0,
+            'Không, tôi chỉ muốn miễn phí': 0
+          };
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.payForShadowing) {
+              counts[data.payForShadowing] = (counts[data.payForShadowing] || 0) + 1;
+            }
+          });
+
+          const distribution = [
+            { name: 'Sẵn sàng trả phí', value: Math.round((counts['Có, nếu chất lượng tốt'] / total) * 100) || 0 },
+            { name: 'Chỉ muốn miễn phí', value: Math.round((counts['Không, tôi chỉ muốn miễn phí'] / total) * 100) || 0 }
+          ];
+
+          const popularPrice = counts['Có, nếu chất lượng tốt'] > counts['Không, tôi chỉ muốn miễn phí'] 
+            ? 'Có, nếu chất lượng tốt' 
+            : 'Không, tôi chỉ muốn miễn phí';
+          
+          const popularPercentage = Math.round((counts[popularPrice] / total) * 100) || 0;
+
+          // Estimate average ticket price based on willingness to pay
+          // If they are willing to pay, we assume a base ticket price of 300k
+          const avgValue = popularPrice === 'Có, nếu chất lượng tốt' ? 300000 : 0;
+
+          setSurveyPricingData({
+            distribution,
+            popularPrice,
+            popularPercentage,
+            totalResponses: total,
+            avgValue
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching survey pricing:", error);
+      }
+    };
+
+    fetchSurveyPricing();
+  }, []);
+
   // Thêm state cho simulator tài chính
   const [simData, setSimData] = useState({
     jobsPerMonth: 100,        // Số job mới/tháng
@@ -55,6 +115,7 @@ export default function AdminDashboard() {
     bannerFee: 2000000,       // Phí banner (VND)
     premiumPosts: 20,         // Số tin Premium/tháng
     premiumFee: 200000,       // Phí tin Premium (VND)
+    fixedCost: 2000000,       // Chi phí cố định (VND)
   });
 
   // Hàm tính toán tài chính (tự động cập nhật khi simData thay đổi)
@@ -66,7 +127,7 @@ export default function AdminDashboard() {
     const adRevenue = (simData.bannersPerMonth * simData.bannerFee) 
       + (simData.premiumPosts * simData.premiumFee);
     const totalRevenue = jobRevenue + shadowingRevenue + adRevenue;
-    const fixedCost = 2000000; // 2 triệu/tháng chi phí cố định
+    const fixedCost = simData.fixedCost; // Sử dụng chi phí cố định từ simData
     const profit = totalRevenue - fixedCost;
     const breakEvenJobs = Math.ceil(fixedCost / 
       (simData.avgSalary * simData.jobCommission / 100));
@@ -77,9 +138,15 @@ export default function AdminDashboard() {
       revenue: Math.round(totalRevenue * Math.pow(1.15, i)),
       cost: fixedCost
     }));
+
+    const revenueBreakdown = [
+      { name: 'Việc làm', value: jobRevenue },
+      { name: 'Shadowing', value: shadowingRevenue },
+      { name: 'Quảng cáo', value: adRevenue }
+    ].filter(item => item.value > 0);
     
     return { jobRevenue, shadowingRevenue, adRevenue, 
-             totalRevenue, profit, fixedCost, breakEvenJobs, monthlyData };
+             totalRevenue, profit, fixedCost, breakEvenJobs, monthlyData, revenueBreakdown };
   }, [simData]);
 
   // Hàm tính toán dữ liệu thực tế từ database
@@ -98,8 +165,14 @@ export default function AdminDashboard() {
     const realAdRevenue = approvedAdsCount * 500000;
 
     const totalRevenue = realJobRevenue + realShadowingRevenue + realAdRevenue;
-    const fixedCost = 2000000; // Chi phí cố định hàng tháng
+    const fixedCost = simData.fixedCost; // Mirror simulation fixed cost
     const profit = totalRevenue - fixedCost;
+
+    const revenueBreakdown = [
+      { name: 'Việc làm', value: realJobRevenue },
+      { name: 'Shadowing', value: realShadowingRevenue },
+      { name: 'Quảng cáo', value: realAdRevenue }
+    ].filter(item => item.value > 0);
 
     return {
       approvedJobsCount,
@@ -110,9 +183,10 @@ export default function AdminDashboard() {
       adRevenue: realAdRevenue,
       totalRevenue,
       profit,
-      fixedCost
+      fixedCost,
+      revenueBreakdown
     };
-  }, [jobs, shadowingBookings, ads]);
+  }, [jobs, shadowingBookings, ads, simData.fixedCost]);
 
   // Hàm format tiền Việt Nam
   const formatVND = (amount: number) => 
@@ -207,7 +281,7 @@ export default function AdminDashboard() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.1-pro-preview',
         contents: prompt,
         config: {
           temperature: 0.7,
@@ -280,7 +354,7 @@ export default function AdminDashboard() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.1-pro-preview',
         contents: prompt,
         config: {
           temperature: 0.7,
@@ -408,6 +482,62 @@ export default function AdminDashboard() {
       await setDoc(doc(db, 'settings', 'admin'), { autoApprove: !autoApprove }, { merge: true });
     } catch (error) {
       console.error("Error toggling auto-approve:", error);
+    }
+  };
+
+  const handleExportBCTC = async () => {
+    const element = document.querySelector('.financial-content') as HTMLElement;
+    if (!element) return;
+
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).jsPDF;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#F8FAFC'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`BCTC_TeenTask_${financialTabMode === 'realtime' ? 'ThucTe' : 'MoPhong'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.pdf`);
+    } catch (error) {
+      console.error("Error exporting BCTC:", error);
+      alert("Có lỗi xảy ra khi xuất báo cáo tài chính.");
+    }
+  };
+
+  const handleExportSlides = async () => {
+    const content = document.querySelector('.financial-content') as HTMLElement;
+    if (!content) return;
+
+    try {
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#f3f4f6'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      // Use landscape orientation for slides (16:9 aspect ratio roughly)
+      const pdf = new jsPDF('l', 'mm', [297, 167]); 
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Slide_TeenTask_${financialTabMode === 'realtime' ? 'ThucTe' : 'MoPhong'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.pdf`);
+    } catch (error) {
+      console.error("Error exporting Slides:", error);
+      alert("Có lỗi xảy ra khi xuất slide trình chiếu.");
     }
   };
 
@@ -574,6 +704,8 @@ export default function AdminDashboard() {
     );
   }
 
+  const COLORS = ['#4F46E5', '#8B5CF6', '#EC4899'];
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-12">
       <div className="max-w-6xl mx-auto">
@@ -593,9 +725,8 @@ export default function AdminDashboard() {
               { id: 'messages', label: 'Tin nhắn', icon: MessageSquare },
               { id: 'ads', label: 'Quảng cáo', icon: Megaphone },
               { id: 'name_changes', label: 'Đổi tên', icon: UserCog },
-              { id: 'financial', label: 'Tài chính', icon: PieChart },
+              { id: 'financial', label: 'Tài chính', icon: PieChartIcon },
               { id: 'market', label: 'Thị trường', icon: TrendingUp },
-              { id: 'competitors', label: 'So sánh', icon: Scale },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -613,7 +744,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {activeTab !== 'financial' && activeTab !== 'market' && activeTab !== 'competitors' && (
+        {activeTab !== 'financial' && activeTab !== 'market' && (
           <>
             <div className="flex flex-col lg:flex-row gap-4 mb-8 items-start lg:items-center justify-between">
               <div className="relative w-full lg:max-w-md shrink-0">
@@ -891,12 +1022,20 @@ export default function AdminDashboard() {
                   </button>
                 </div>
                 
-                <button 
-                  onClick={() => window.print()} 
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-colors"
-                >
-                  <Download size={16} /> Xuất PDF
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleExportSlides} 
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl font-bold hover:bg-amber-100 transition-colors"
+                  >
+                    <Download size={16} /> Xuất Slide
+                  </button>
+                  <button 
+                    onClick={handleExportBCTC} 
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-colors"
+                  >
+                    <Download size={16} /> Xuất BCTC
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -942,34 +1081,45 @@ export default function AdminDashboard() {
                   {/* Card: Cơ cấu doanh thu thực tế */}
                   <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                     <h3 className="font-black text-lg mb-4">📊 Cơ cấu doanh thu thực tế</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm font-bold mb-1">
-                          <span className="text-gray-600">Sàn việc làm</span>
-                          <span className="text-indigo-600">{formatVND(realFinancials.jobRevenue)}</span>
+                    <div className="h-[250px] w-full flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={realFinancials.revenueBreakdown}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {realFinancials.revenueBreakdown.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => formatVND(value)} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="space-y-4 mt-4">
+                      {realFinancials.revenueBreakdown.map((item, idx) => (
+                        <div key={idx}>
+                          <div className="flex justify-between text-sm font-bold mb-1">
+                            <span className="text-gray-600">{item.name}</span>
+                            <span className="text-indigo-600">{formatVND(item.value)}</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full" 
+                              style={{ 
+                                width: `${realFinancials.totalRevenue > 0 ? (item.value / realFinancials.totalRevenue) * 100 : 0}%`,
+                                backgroundColor: COLORS[idx % COLORS.length]
+                              }} 
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2">
-                          <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${realFinancials.totalRevenue > 0 ? (realFinancials.jobRevenue / realFinancials.totalRevenue) * 100 : 0}%` }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm font-bold mb-1">
-                          <span className="text-gray-600">Job Shadowing</span>
-                          <span className="text-purple-600">{formatVND(realFinancials.shadowingRevenue)}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2">
-                          <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${realFinancials.totalRevenue > 0 ? (realFinancials.shadowingRevenue / realFinancials.totalRevenue) * 100 : 0}%` }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm font-bold mb-1">
-                          <span className="text-gray-600">Quảng cáo</span>
-                          <span className="text-pink-600">{formatVND(realFinancials.adRevenue)}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2">
-                          <div className="bg-pink-500 h-2 rounded-full" style={{ width: `${realFinancials.totalRevenue > 0 ? (realFinancials.adRevenue / realFinancials.totalRevenue) * 100 : 0}%` }}></div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
 
@@ -1071,6 +1221,67 @@ export default function AdminDashboard() {
                     <Eye className="text-purple-500" size={20} />
                     Job Shadowing
                   </h3>
+
+                  {/* Dữ liệu thực từ khảo sát */}
+                  {surveyPricingData && (
+                    <div className="mb-6 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                      <h4 className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                        <ClipboardList size={16} />
+                        📋 Dữ liệu thực từ khảo sát người dùng
+                      </h4>
+                      
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-24 h-24 shrink-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={surveyPricingData.distribution}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={25}
+                                outerRadius={40}
+                                paddingAngle={2}
+                                dataKey="value"
+                              >
+                                {surveyPricingData.distribution.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={index === 0 ? '#8B5CF6' : '#E5E7EB'} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value: number) => `${value}%`} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex-1">
+                          {surveyPricingData.distribution.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-xs mb-1">
+                              <span className="flex items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-purple-500' : 'bg-gray-300'}`}></div>
+                                {item.name}
+                              </span>
+                              <span className="font-bold">{item.value}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-lg border border-purple-100 mb-3">
+                        <p className="text-xs text-purple-800 font-medium leading-relaxed">
+                          💡 Dựa trên khảo sát thực tế: <span className="font-bold">{surveyPricingData.popularPercentage}%</span> người dùng chọn <span className="font-bold">"{surveyPricingData.popularPrice}"</span>.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setSimData(prev => ({ ...prev, avgTicketPrice: surveyPricingData.avgValue }))}
+                        className="w-full py-2 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Áp dụng vào Simulator
+                      </button>
+                      <p className="text-[10px] text-center text-purple-400 mt-2">
+                        Dựa trên {surveyPricingData.totalResponses} phản hồi khảo sát
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm font-medium text-gray-700 mb-1">
@@ -1159,6 +1370,28 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* Nhóm D: Chi phí cố định */}
+                <div className="bg-white rounded-2xl shadow-sm p-5 border-t-4 border-amber-500">
+                  <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                    <ZapIcon className="text-amber-500" size={20} />
+                    Chi phí cố định
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tổng chi phí cố định (VND/tháng)</label>
+                      <input 
+                        type="number" step="100000"
+                        value={simData.fixedCost}
+                        onChange={(e) => setSimData({...simData, fixedCost: Number(e.target.value)})}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-400 italic">
+                      Bao gồm: Hosting, Email API, Phí cổng thanh toán, Vận hành...
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* CỘT PHẢI - Output Panel */}
@@ -1166,34 +1399,45 @@ export default function AdminDashboard() {
                 {/* Card 1: Cơ cấu doanh thu */}
                 <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                   <h3 className="font-black text-lg mb-4">📊 Cơ cấu doanh thu</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm font-bold mb-1">
-                        <span className="text-gray-600">Sàn việc làm</span>
-                        <span className="text-indigo-600">{formatVND(financials.jobRevenue)}</span>
+                  <div className="h-[250px] w-full flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={financials.revenueBreakdown}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {financials.revenueBreakdown.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatVND(value)} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-4 mt-4">
+                    {financials.revenueBreakdown.map((item, idx) => (
+                      <div key={idx}>
+                        <div className="flex justify-between text-sm font-bold mb-1">
+                          <span className="text-gray-600">{item.name}</span>
+                          <span className="text-indigo-600">{formatVND(item.value)}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full" 
+                            style={{ 
+                              width: `${financials.totalRevenue > 0 ? (item.value / financials.totalRevenue) * 100 : 0}%`,
+                              backgroundColor: COLORS[idx % COLORS.length]
+                            }} 
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${financials.totalRevenue > 0 ? (financials.jobRevenue / financials.totalRevenue) * 100 : 0}%` }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm font-bold mb-1">
-                        <span className="text-gray-600">Job Shadowing</span>
-                        <span className="text-purple-600">{formatVND(financials.shadowingRevenue)}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${financials.totalRevenue > 0 ? (financials.shadowingRevenue / financials.totalRevenue) * 100 : 0}%` }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm font-bold mb-1">
-                        <span className="text-gray-600">Quảng cáo</span>
-                        <span className="text-pink-600">{formatVND(financials.adRevenue)}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-pink-500 h-2 rounded-full" style={{ width: `${financials.totalRevenue > 0 ? (financials.adRevenue / financials.totalRevenue) * 100 : 0}%` }}></div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1209,24 +1453,12 @@ export default function AdminDashboard() {
                   <h3 className="font-black text-lg mb-4 text-amber-900">🔧 Chi phí cố định</h3>
                   <div className="space-y-2 text-sm text-amber-800">
                     <div className="flex justify-between">
-                      <span>Supabase/Firebase hosting:</span>
-                      <span className="font-medium">500.000đ</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SendGrid email:</span>
-                      <span className="font-medium">300.000đ</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Phí cổng thanh toán:</span>
-                      <span className="font-medium">200.000đ</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Chi phí vận hành khác:</span>
-                      <span className="font-medium">1.000.000đ</span>
+                      <span>Tổng chi phí vận hành:</span>
+                      <span className="font-medium">{formatVND(financials.fixedCost)}</span>
                     </div>
                     <div className="pt-2 border-t border-amber-200 flex justify-between font-bold text-amber-900">
                       <span>Tổng:</span>
-                      <span>2.000.000đ/tháng</span>
+                      <span>{formatVND(financials.fixedCost)}/tháng</span>
                     </div>
                   </div>
                 </div>
@@ -1414,140 +1646,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab So sánh đối thủ */}
-        {activeTab === 'competitors' && (
-          <div className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Award size={32} className="text-amber-500" />
-                  <h2 className="text-2xl font-black text-gray-900">Vì sao chọn TeenTask?</h2>
-                </div>
-                <p className="text-gray-500 font-medium">So sánh với các nền tảng khác</p>
-                <p className="text-xs text-gray-400 italic mt-1">
-                  Cập nhật lúc: {aiCompetitorLastUpdated ? aiCompetitorLastUpdated.toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')}
-                </p>
-              </div>
-              <button
-                onClick={fetchCompetitorDataFromAI}
-                disabled={isAICompetitorLoading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {isAICompetitorLoading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Đang phân tích...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    Lấy dữ kiện thực tế (AI)
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Intro Card */}
-            <div className="bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-3xl p-8 shadow-xl shadow-indigo-200">
-              <p className="text-indigo-50 text-lg leading-relaxed text-center font-medium">
-                <span className="font-black text-white">TeenTask</span> là nền tảng <span className="font-black text-white underline decoration-pink-500 decoration-2 underline-offset-4">DUY NHẤT</span> tại Việt Nam được thiết kế riêng cho học sinh 14–18 tuổi, có cơ chế xác minh phụ huynh và tuân thủ Bộ luật Lao động 2019.
-              </p>
-            </div>
-
-            {/* Comparison Table */}
-            <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white shadow-sm overflow-hidden">
-              <div className="overflow-x-auto hide-scrollbar">
-                <div className="min-w-[800px] flex">
-                  {/* Cột Tiêu chí */}
-                  <div className="w-64 shrink-0 bg-white/80 border-r border-gray-100">
-                    <div className="h-16 flex items-center px-6 border-b-2 border-gray-100 bg-gray-50/50">
-                      <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Tiêu chí</span>
-                    </div>
-                    {criteriaList.map((criteria, idx) => (
-                      <div key={idx} className="h-14 flex items-center px-6 border-b border-gray-50">
-                        <span className="text-sm font-semibold text-gray-700">{criteria}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Các cột nền tảng */}
-                  {platforms.map((platform, pIdx) => (
-                    <div 
-                      key={pIdx} 
-                      className={cn(
-                        "flex-1 min-w-[140px] border-r border-gray-100 last:border-r-0",
-                        platform.isHighlight && "bg-indigo-50/50 relative z-10 shadow-[0_0_20px_rgba(79,70,229,0.1)] border-x-2 border-indigo-200"
-                      )}
-                    >
-                      <div className={cn(
-                        "h-16 flex items-center justify-center px-4 border-b-2 border-gray-100",
-                        platform.isHighlight ? "bg-indigo-600 border-indigo-600" : "bg-white/50"
-                      )}>
-                        <span className={cn(
-                          "text-sm text-center",
-                          platform.isHighlight ? "font-black text-white" : "font-bold text-gray-700"
-                        )}>
-                          {platform.name}
-                        </span>
-                      </div>
-                      {platform.data.map((value: string, vIdx: number) => (
-                        <div key={vIdx} className={cn(
-                          "h-14 flex items-center justify-center border-b border-gray-50",
-                          platform.isHighlight && "border-indigo-100/50"
-                        )}>
-                          {value === '✅' ? (
-                            <CheckCircle2 size={20} className="text-emerald-500" />
-                          ) : value === '❌' ? (
-                            <XCircle size={20} className="text-red-500" />
-                          ) : value === '⚠️' ? (
-                            <AlertCircle size={20} className="text-amber-500" />
-                          ) : (
-                            <span className="text-sm font-medium">{value}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Conclusion Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
-                  <span className="text-2xl">🏆</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-black text-gray-900 mb-1">Nền tảng #1</h4>
-                  <p className="text-sm font-medium text-gray-500">Dành riêng cho học sinh VN</p>
-                </div>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
-                  <span className="text-2xl">🛡️</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-black text-gray-900 mb-1">100% An toàn</h4>
-                  <p className="text-sm font-medium text-gray-500">Xác minh phụ huynh & doanh nghiệp</p>
-                </div>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0">
-                  <span className="text-2xl">⚡</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-black text-gray-900 mb-1">Duy nhất</h4>
-                  <p className="text-sm font-medium text-gray-500">Có Job Shadowing tại VN</p>
                 </div>
               </div>
             </div>

@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { useFirebase } from './FirebaseProvider';
 import { auth, db } from './FirebaseProvider';
 import { signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, limit } from 'firebase/firestore';
 import SearchOverlay from './SearchOverlay';
 import Clock from './Clock';
 import OnboardingTutorial from './OnboardingTutorial';
@@ -32,6 +32,10 @@ export default function Layout({ children }: LayoutProps) {
   const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [ads, setAds] = useState<any[]>([]);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [marketTrends, setMarketTrends] = useState<any>({ topSkills: [], popularSalary: '' });
+  const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
     const handleOpenSearch = () => setIsSearchOpen(true);
@@ -50,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   useEffect(() => {
-    if (!profile) {
+    if (!profile || profile.uid === 'demo-user') {
       setUnreadNotifications(0);
       setUnreadMessages(0);
       return;
@@ -90,6 +94,93 @@ export default function Layout({ children }: LayoutProps) {
     };
   }, [profile]);
 
+  useEffect(() => {
+    // Fetch ads for sidebar
+    const qAds = query(collection(db, 'advertisements'), where('status', '==', 'approved'));
+    const unsubAds = onSnapshot(qAds, (snapshot) => {
+      if (!snapshot.empty) {
+        setAds(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } else {
+        setAds([
+          { id: 'ad1', title: 'Khóa học TeenTask Pro', businessName: 'teentask.edu.vn', imageUrl: 'https://picsum.photos/seed/edu/200/200' },
+          { id: 'ad2', title: 'Ưu đãi trà sữa 50%', businessName: 'gongcha.com.vn', imageUrl: 'https://picsum.photos/seed/milk/200/200' },
+          { id: 'ad3', title: 'Vé xem phim 1k', businessName: 'cgv.vn', imageUrl: 'https://picsum.photos/seed/movie/200/200' },
+        ]);
+      }
+    });
+
+    // Fetch market trends for sidebar (Real-time from surveys)
+    const qSurveys = collection(db, 'market_surveys');
+    const unsubTrends = onSnapshot(qSurveys, (snapshot) => {
+      if (!snapshot.empty) {
+        const skillsCount: Record<string, number> = {};
+        const salaryCount: Record<string, number> = {};
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.desiredSkill) {
+            skillsCount[data.desiredSkill] = (skillsCount[data.desiredSkill] || 0) + 1;
+          }
+          if (data.expectedSalary) {
+            salaryCount[data.expectedSalary] = (salaryCount[data.expectedSalary] || 0) + 1;
+          }
+        });
+
+        const topSkills = Object.entries(skillsCount)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3);
+
+        let popularSalary = '';
+        let maxSalaryCount = 0;
+        Object.entries(salaryCount).forEach(([salary, count]) => {
+          if (count > maxSalaryCount) {
+            maxSalaryCount = count;
+            popularSalary = salary;
+          }
+        });
+
+        setMarketTrends({ topSkills, popularSalary });
+      } else {
+        setMarketTrends({
+          topSkills: [
+            { name: 'Thiết kế đồ họa', count: 1250 },
+            { name: 'Video Editing', count: 980 },
+            { name: 'Content Writing', count: 850 }
+          ],
+          popularSalary: '25.000đ - 35.000đ/h'
+        });
+      }
+    }, (error) => console.error("Error fetching market trends:", error));
+
+    // Fetch events
+    const qEvents = query(collection(db, 'events'), where('status', '==', 'active'), limit(3));
+    const unsubEvents = onSnapshot(qEvents, (snapshot) => {
+      if (!snapshot.empty) {
+        setEvents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } else {
+        setEvents([
+          { id: '1', title: 'Workshop Design', date: Date.now() + 86400000 * 2, location: 'Online', time: '19:00' },
+          { id: '2', title: 'Job Shadowing Day', date: Date.now() + 86400000 * 5, location: 'FPT Software', time: '08:00' }
+        ]);
+      }
+    }, (error) => console.error("Error fetching events:", error));
+
+    return () => {
+      unsubAds();
+      unsubTrends();
+      unsubEvents();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (ads.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentAdIndex((prev) => (prev + 1) % ads.length);
+    }, 5000); // Change ad every 5 seconds
+    return () => clearInterval(interval);
+  }, [ads]);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -101,6 +192,14 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleSwitchRole = async (role: string) => {
     if (!profile) return;
+
+    // Handle Demo Mode
+    if (profile.uid === 'demo-user') {
+      localStorage.setItem('demoRole', role);
+      window.location.reload();
+      return;
+    }
+
     // Only Boss can switch to admin
     if (role === 'admin' && !isBoss) return;
     
@@ -150,6 +249,81 @@ export default function Layout({ children }: LayoutProps) {
       : (userRole !== 'admin' ? (roleSpecificItems[userRole as keyof typeof roleSpecificItems] || []) : []);
 
   const allNavItems = [...mainNavItems, ...currentRoleItems];
+
+  const RightSidebarWidgets = () => (
+    <div className="space-y-6">
+      <AppRatingWidget />
+
+      {/* Trending / Horoscope Widget */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Xu hướng Gen Z</h3>
+          <Rocket size={16} className="text-orange-500" />
+        </div>
+        <div className="space-y-4">
+          {marketTrends.topSkills.slice(0, 3).map((skill: any, i: number) => (
+            <div key={i} className="flex items-center gap-3 group cursor-pointer">
+              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500 group-hover:bg-orange-100 transition-colors">
+                <span className="text-xs font-black">{i + 1}</span>
+              </div>
+              <div>
+                <p className="text-sm font-black text-gray-900 group-hover:text-orange-600 transition-colors">{skill.name}</p>
+                <p className="text-[10px] text-gray-400 font-bold">{skill.count} quan tâm</p>
+              </div>
+            </div>
+          ))}
+          
+          {marketTrends.popularSalary && (
+            <div className="pt-4 border-t border-gray-50">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Lương kỳ vọng</p>
+              <p className="text-sm font-black text-green-600">{marketTrends.popularSalary}</p>
+            </div>
+          )}
+        </div>
+        <button className="w-full mt-6 py-3 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition-all">
+          Xem chi tiết xu hướng
+        </button>
+      </div>
+
+      {/* Calendar Widget */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Lịch sự kiện</h3>
+          <Calendar size={16} className="text-indigo-600" />
+        </div>
+        <div className="space-y-4">
+          {events.length > 0 ? events.map((event, i) => {
+            const eventDate = new Date(event.date);
+            const month = eventDate.getMonth() + 1;
+            const day = eventDate.getDate();
+            return (
+              <div key={event.id || i} className="flex gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center text-white shrink-0 ${i % 2 === 0 ? 'bg-indigo-600' : 'bg-amber-500'}`}>
+                  <span className="text-[10px] font-black uppercase">Th{month}</span>
+                  <span className="text-lg font-black leading-none">{day}</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-gray-900">{event.title}</h4>
+                  <p className="text-[10px] text-gray-400 font-bold">{event.location} • {event.time || '08:00'}</p>
+                </div>
+              </div>
+            );
+          }) : (
+            <div className="text-center py-4 text-gray-500 text-sm">Chưa có sự kiện nào</div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer Links */}
+      <div className="px-4 flex flex-wrap gap-x-4 gap-y-2">
+        {['Quyền riêng tư', 'Điều khoản', 'Quảng cáo', 'Lựa chọn quảng cáo', 'Cookies', 'Xem thêm', 'TeenTask © 2026'].map((link, i) => (
+          <span key={i} className="text-[10px] font-bold text-gray-400 hover:underline cursor-pointer">
+            {link}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col">
@@ -374,28 +548,33 @@ export default function Layout({ children }: LayoutProps) {
               </NavLink>
             ))}
             
-            {/* Sponsored Section */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 mt-4">
+            {/* Sponsored Section - Looping Ads */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 mt-4 overflow-hidden">
               <h3 className="font-bold text-gray-500 mb-4 px-2 uppercase text-[10px] tracking-widest">Được tài trợ</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-2xl cursor-pointer group transition-all">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                    <img src="https://picsum.photos/seed/edu/200/200" className="w-full h-full object-cover group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900 leading-tight">Khóa học TeenTask Pro</h4>
-                    <p className="text-[10px] text-gray-400 font-bold mt-1">teentask.edu.vn</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-2xl cursor-pointer group transition-all">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                    <img src="https://picsum.photos/seed/milk/200/200" className="w-full h-full object-cover group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900 leading-tight">Ưu đãi trà sữa 50%</h4>
-                    <p className="text-[10px] text-gray-400 font-bold mt-1">gongcha.com.vn</p>
-                  </div>
-                </div>
+              <div className="relative h-24">
+                <AnimatePresence mode="wait">
+                  {ads.length > 0 && (
+                    <motion.div
+                      key={ads[currentAdIndex].id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-2xl cursor-pointer group transition-all absolute inset-0"
+                    >
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                        <img 
+                          src={ads[currentAdIndex].imageUrl} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
+                          referrerPolicy="no-referrer" 
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-black text-gray-900 leading-tight truncate">{ads[currentAdIndex].title}</h4>
+                        <p className="text-[10px] text-gray-400 font-bold mt-1 truncate">{ads[currentAdIndex].businessName}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </aside>
@@ -403,78 +582,16 @@ export default function Layout({ children }: LayoutProps) {
           {/* Main Feed */}
           <main className="flex-1 min-w-0 w-full max-w-[720px] px-2 sm:px-0">
             {children}
+            
+            {/* Mobile-only widgets (rendered at bottom of feed) */}
+            <div className="xl:hidden mt-8 mb-20 px-2">
+              <RightSidebarWidgets />
+            </div>
           </main>
 
           {/* Right Sidebar - Desktop only */}
           <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
-            <AppRatingWidget />
-
-            {/* Trending / Horoscope Widget */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Xu hướng Gen Z</h3>
-                <Star size={16} className="text-amber-400" fill="currentColor" />
-              </div>
-              <div className="space-y-4">
-                {[
-                  { tag: '#HuongNghiep', count: '12.5k bài viết', icon: Rocket },
-                  { tag: '#KỹNăngMềm', count: '8.2k bài viết', icon: GraduationCap },
-                  { tag: '#TeenTasker', count: '15.1k bài viết', icon: Star },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 group cursor-pointer">
-                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                      <item.icon size={18} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors">{item.tag}</p>
-                      <p className="text-[10px] text-gray-400 font-bold">{item.count}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all">
-                Xem thêm xu hướng
-              </button>
-            </div>
-
-            {/* Calendar Widget */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Lịch sự kiện</h3>
-                <Calendar size={16} className="text-indigo-600" />
-              </div>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex flex-col items-center justify-center text-white shrink-0">
-                    <span className="text-[10px] font-black uppercase">Th4</span>
-                    <span className="text-lg font-black leading-none">15</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900">Workshop Design</h4>
-                    <p className="text-[10px] text-gray-400 font-bold">Online • 19:00</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-amber-500 rounded-2xl flex flex-col items-center justify-center text-white shrink-0">
-                    <span className="text-[10px] font-black uppercase">Th4</span>
-                    <span className="text-lg font-black leading-none">20</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900">Job Shadowing Day</h4>
-                    <p className="text-[10px] text-gray-400 font-bold">FPT Software • 08:00</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Links */}
-            <div className="px-4 flex flex-wrap gap-x-4 gap-y-2">
-              {['Quyền riêng tư', 'Điều khoản', 'Quảng cáo', 'Lựa chọn quảng cáo', 'Cookies', 'Xem thêm', 'TeenTask © 2026'].map((link, i) => (
-                <span key={i} className="text-[10px] font-bold text-gray-400 hover:underline cursor-pointer">
-                  {link}
-                </span>
-              ))}
-            </div>
+            <RightSidebarWidgets />
           </aside>
         </div>
       </div>

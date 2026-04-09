@@ -348,22 +348,22 @@ export default function AboutApp() {
                   <TrendingUp className="text-blue-600" />
                   Lộ trình phát triển
                 </h3>
-                <div className="space-y-10 sm:space-y-12 relative">
+                <div className="space-y-10 relative">
                   <div className="absolute left-4 sm:left-6 top-0 bottom-0 w-0.5 bg-gray-100" />
                   {roadmap.map((step, i) => (
                     <div key={i} className="relative pl-10 sm:pl-16">
                       <div className="absolute left-0 top-0 w-8 h-8 sm:w-12 h-12 bg-white border-2 sm:border-4 border-blue-50 rounded-xl sm:rounded-2xl flex items-center justify-center z-10 shadow-sm">
                         <span className="text-blue-600 font-black text-xs sm:text-base">{i + 1}</span>
                       </div>
-                      <div className="space-y-2 sm:space-y-3">
+                      <div className="space-y-2">
                         <div>
                           <p className="text-[8px] sm:text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">{step.phase}</p>
                           <h4 className="text-base sm:text-lg font-black text-gray-900">{step.title}</h4>
                         </div>
                         <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed">{step.desc}</p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 pt-1">
                           {step.tags.map((tag, idx) => (
-                            <span key={idx} className="px-2 sm:px-3 py-1 bg-gray-50 text-gray-400 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-full border border-gray-100">
+                            <span key={idx} className="px-2 py-0.5 bg-gray-50 text-gray-400 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-full border border-gray-100">
                               {tag}
                             </span>
                           ))}

@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart } from 'lucide-react';
+import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart, Sparkles, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useFirebase } from './FirebaseProvider';
 import { cn } from '../lib/utils';
+import { GoogleGenAI } from '@google/genai';
 
 interface ShadowingDetailProps {
   event: any;
@@ -14,8 +15,55 @@ interface ShadowingDetailProps {
 export default function ShadowingDetail({ event, isOpen, onClose, onChat }: ShadowingDetailProps) {
   const [step, setStep] = useState<'detail' | 'booking' | 'success'>('detail');
   const { profile, toggleSaveShadowing, bookShadowing } = useFirebase();
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   if (!event) return null;
+
+  const handleAIAnalysis = async () => {
+    if (!profile) {
+      alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+    setIsAnalyzing(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+      const prompt = `
+        Hãy phân tích độ phù hợp của học sinh này với chương trình Job Shadowing sau:
+        
+        Học sinh:
+        - Tên: ${profile.displayName}
+        - Kỹ năng: ${profile.skills?.join(', ') || 'Chưa cập nhật'}
+        - Sở thích: ${profile.interests?.join(', ') || 'Chưa cập nhật'}
+        - Định hướng nghề nghiệp: ${profile.careerGoal || 'Chưa có'}
+        
+        Chương trình Shadowing:
+        - Tiêu đề: ${event.title}
+        - Công ty: ${event.company}
+        - Mô tả: ${event.description || 'Trải nghiệm một ngày làm việc thực thụ'}
+        
+        Hãy đưa ra:
+        1. Điểm phù hợp (trên 100).
+        2. Tại sao chương trình này có ích cho học sinh này.
+        3. Những gì học sinh nên chuẩn bị trước khi tham gia.
+        4. Gợi ý các câu hỏi học sinh nên hỏi mentor.
+        
+        Viết bằng tiếng Việt, ngắn gọn, súc tích, định dạng Markdown.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt
+      });
+      setAiAnalysis(response.text);
+    } catch (error) {
+      console.error("AI Analysis error:", error);
+      alert("Có lỗi xảy ra khi phân tích bằng AI.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleConfirm = async () => {
     await bookShadowing(event);
@@ -118,6 +166,34 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                     </div>
                   </div>
 
+                  {(event.slotsTotal !== undefined || event.slotsRemaining !== undefined) && (
+                    <div className="mb-10 p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner flex items-center justify-between">
+                      <div>
+                        <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Số lượng</p>
+                        <p className="text-xs font-black text-white uppercase tracking-widest">
+                          Còn {event.slotsRemaining || 0} / {event.slotsTotal || '-'} chỗ
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                        <Users className="text-amber-500" size={20} strokeWidth={2.5} />
+                      </div>
+                    </div>
+                  )}
+
+                  {event.company && (
+                    <div className="w-full h-32 rounded-[28px] overflow-hidden border border-white/5 mb-10">
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameBorder="0" 
+                        scrolling="no" 
+                        marginHeight={0} 
+                        marginWidth={0} 
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(event.location || event.company)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                      ></iframe>
+                    </div>
+                  )}
+
                   <h3 className="text-white font-black text-lg tracking-tight mb-4">Mô tả chương trình</h3>
                   <p className="text-sm leading-relaxed mb-10 font-bold text-slate-400">
                     Trải nghiệm một ngày làm việc thực thụ tại {event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor {event.mentor}.
@@ -144,6 +220,57 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         <span className="font-bold text-slate-300">Tư vấn định hướng nghề nghiệp 1-1</span>
                       </li>
                     </ul>
+                  </div>
+
+                  {/* AI Match Analysis */}
+                  <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-8 text-white shadow-2xl shadow-indigo-500/20 mb-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/20 rounded-xl">
+                          <Sparkles size={20} className="text-amber-300" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-lg">Phân tích độ phù hợp (AI)</h3>
+                          <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest">Powered by Gemini</p>
+                        </div>
+                      </div>
+                      {!aiAnalysis && (
+                        <button
+                          onClick={handleAIAnalysis}
+                          disabled={isAnalyzing}
+                          className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all disabled:opacity-50"
+                        >
+                          {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : 'Phân tích'}
+                        </button>
+                      )}
+                    </div>
+
+                    {isAnalyzing && (
+                      <div className="flex flex-col items-center justify-center py-8 gap-4">
+                        <Loader2 size={32} className="animate-spin text-white/50" />
+                        <p className="text-sm font-medium text-indigo-100 animate-pulse">Đang đối chiếu hồ sơ của bạn...</p>
+                      </div>
+                    )}
+
+                    {aiAnalysis && (
+                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                        <div className="text-sm text-indigo-50 whitespace-pre-wrap leading-relaxed prose prose-invert prose-sm max-w-none">
+                          {aiAnalysis}
+                        </div>
+                        <button
+                          onClick={() => setAiAnalysis(null)}
+                          className="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-200 hover:text-white transition-colors"
+                        >
+                          Phân tích lại
+                        </button>
+                      </div>
+                    )}
+
+                    {!aiAnalysis && !isAnalyzing && (
+                      <p className="text-sm text-indigo-100 leading-relaxed">
+                        Sử dụng AI để biết chương trình này có giúp ích gì cho định hướng nghề nghiệp của bạn không!
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               )}

@@ -214,6 +214,39 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "userId", "eventId", "eventTitle", "eventDate", "status", "createdAt"]
+    },
+    "Course": {
+      "title": "Skill Course",
+      "description": "Educational courses for students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "provider": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "price": { "type": "number" },
+        "registeredCount": { "type": "number" },
+        "totalSlots": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "title", "provider", "price", "status", "createdAt"]
+    },
+    "Event": {
+      "title": "Calendar Event",
+      "description": "Events for the calendar widget.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "number" },
+        "location": { "type": "string" },
+        "type": { "type": "string", "enum": ["workshop", "shadowing", "other"] },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "title", "date", "type", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -264,6 +297,14 @@
     "shadowing_bookings/{bookingId}": {
       "schema": "ShadowingBooking",
       "description": "Shadowing event bookings."
+    },
+    "courses/{courseId}": {
+      "schema": "Course",
+      "description": "Skill building courses."
+    },
+    "events/{eventId}": {
+      "schema": "Event",
+      "description": "Calendar events."
     }
   }
 }

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Users, Briefcase, TrendingUp, ChevronRight, Megaphone, X, Send, Image as ImageIcon } from 'lucide-react';
+import { Plus, Users, Briefcase, TrendingUp, ChevronRight, Megaphone, X, Send, Image as ImageIcon, Download, FileText, Presentation } from 'lucide-react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db, useFirebase } from './FirebaseProvider';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function BusinessDashboard() {
   const { profile } = useFirebase();
@@ -15,6 +18,40 @@ export default function BusinessDashboard() {
     { label: 'Đơn ứng tuyển', value: '12', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Lượt xem tin', value: '450', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
   ];
+
+  const performanceData = [
+    { name: 'Thứ 2', views: 45, apps: 2 },
+    { name: 'Thứ 3', views: 52, apps: 3 },
+    { name: 'Thứ 4', views: 38, apps: 1 },
+    { name: 'Thứ 5', views: 65, apps: 4 },
+    { name: 'Thứ 6', views: 48, apps: 2 },
+    { name: 'Thứ 7', views: 80, apps: 5 },
+    { name: 'Chủ nhật', views: 72, apps: 3 },
+  ];
+
+  const handleExportReport = async (type: 'pdf' | 'slide') => {
+    const content = document.getElementById('dashboard-content');
+    if (!content) return;
+
+    try {
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#020617'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF(type === 'pdf' ? 'p' : 'l', 'mm', type === 'pdf' ? 'a4' : [297, 167]);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Business_Report_${type === 'pdf' ? 'BaoCao' : 'Slide'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.pdf`);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Có lỗi xảy ra khi xuất báo cáo.");
+    }
+  };
 
   const handleCreateAd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +77,7 @@ export default function BusinessDashboard() {
   };
 
   return (
-    <div className="p-6 pb-24 bg-slate-950 min-h-screen relative overflow-hidden">
+    <div className="p-6 pb-24 bg-slate-950 min-h-screen relative overflow-hidden" id="dashboard-content">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[80%] bg-primary rounded-full blur-[150px] opacity-10"></div>
@@ -51,11 +88,27 @@ export default function BusinessDashboard() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Quản trị hệ thống</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Doanh nghiệp</span>
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-white leading-none">Dashboard</h1>
         </div>
         <div className="flex gap-3">
+          <div className="flex bg-white/5 backdrop-blur-xl rounded-[24px] border border-white/10 p-1">
+            <button 
+              onClick={() => handleExportReport('pdf')}
+              className="p-3 text-slate-400 hover:text-white transition-colors"
+              title="Xuất Báo cáo PDF"
+            >
+              <FileText size={20} />
+            </button>
+            <button 
+              onClick={() => handleExportReport('slide')}
+              className="p-3 text-slate-400 hover:text-white transition-colors"
+              title="Xuất Slide trình chiếu"
+            >
+              <Presentation size={20} />
+            </button>
+          </div>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -63,7 +116,7 @@ export default function BusinessDashboard() {
             className="px-6 h-16 bg-white/5 backdrop-blur-xl text-white rounded-[24px] border border-white/10 flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all"
           >
             <Megaphone size={20} className="text-primary" />
-            Liên hệ quảng cáo
+            Quảng cáo
           </motion.button>
           <motion.button 
             whileHover={{ scale: 1.05 }}
@@ -92,6 +145,67 @@ export default function BusinessDashboard() {
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 leading-tight">{stat.label}</span>
           </motion.div>
         ))}
+      </div>
+
+      {/* Performance Chart */}
+      <div className="mb-10 relative z-10">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-lg font-black text-white tracking-tight uppercase tracking-widest">Hiệu quả tuyển dụng</h3>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Thống kê 7 ngày qua</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lượt xem</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-secondary rounded-full"></div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ứng tuyển</span>
+              </div>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} 
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} 
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #ffffff10', borderRadius: '16px' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: 900 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="views" 
+                  stroke="#4F46E5" 
+                  strokeWidth={4} 
+                  dot={{ r: 6, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }} 
+                  activeDot={{ r: 8, strokeWidth: 0 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="apps" 
+                  stroke="#EC4899" 
+                  strokeWidth={4} 
+                  dot={{ r: 6, fill: '#EC4899', strokeWidth: 2, stroke: '#fff' }} 
+                  activeDot={{ r: 8, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* Recent Applications & Active Jobs */}

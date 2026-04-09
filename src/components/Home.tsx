@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Bell, TrendingUp, Star, Zap, Clock, CheckCircle2, ChevronRight, ChevronLeft, Briefcase, GraduationCap, Building2, Users, Award, Rocket, Sparkles, MessageSquare, Heart } from 'lucide-react';
-import { useFirebase } from './FirebaseProvider';
+import { useFirebase, handleFirestoreError, OperationType } from './FirebaseProvider';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, onSnapshot, limit, addDoc, doc, getDoc, setDoc, getDocs } from 'firebase/firestore';
 import { db, auth } from './FirebaseProvider';
 import { cn } from '../lib/utils';
-import { Advertisement, Job, ShadowingEvent } from '../types';
+import { Advertisement, Job, ShadowingEvent, Course } from '../types';
 import JobDetail from './JobDetail';
 import ShadowingDetail from './ShadowingDetail';
 import { MOCK_JOBS, MOCK_SHADOWING } from '../mockData';
@@ -14,11 +14,14 @@ import ParentVerificationModal from './ParentVerificationModal';
 import VipAdsSlider from './VipAdsSlider';
 
 export default function Home() {
-  const { profile, toggleSaveJob, toggleSaveShadowing } = useFirebase();
+  const { profile, toggleSaveJob, toggleSaveShadowing, toggleSaveCourse } = useFirebase();
   const navigate = useNavigate();
   const [ads, setAds] = useState<Advertisement[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [shadowingEvents, setShadowingEvents] = useState<ShadowingEvent[]>([]);
+  
+  const [featuredUsers, setFeaturedUsers] = useState<any[]>([]);
   
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
@@ -26,20 +29,33 @@ export default function Home() {
   const [isShadowingDetailOpen, setIsShadowingDetailOpen] = useState(false);
   const [isParentModalOpen, setIsParentModalOpen] = useState(false);
 
-  // New states for stats and trends
+  // New states for stats
   const [surveyStats, setSurveyStats] = useState({ total: 0, satisfiedRate: 0, npsRate: 0 });
-  const [marketTrends, setMarketTrends] = useState({ topSkills: [] as {name: string, count: number}[], popularSalary: '' });
 
   useEffect(() => {
     const qAds = query(collection(db, 'advertisements'), where('status', '==', 'approved'), limit(10));
     const unsubAds = onSnapshot(qAds, (snapshot) => {
       setAds(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Advertisement)));
-    }, (error) => console.error("Ads listener error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'advertisements'));
+
+    const qCourses = query(collection(db, 'courses'), where('status', '==', 'active'), limit(10));
+    const unsubCourses = onSnapshot(qCourses, (snapshot) => {
+      if (!snapshot.empty) {
+        setCourses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course)));
+      } else {
+        // Mock courses if none in DB
+        setCourses([
+          { id: 'c1', title: 'Kỹ năng giao tiếp đỉnh cao', provider: 'TeenTask Academy', imageUrl: 'https://picsum.photos/seed/course1/400/250', price: 299000, registeredCount: 45, totalSlots: 100, status: 'active', createdAt: Date.now() },
+          { id: 'c2', title: 'Lập trình Python cơ bản', provider: 'FPT Software', imageUrl: 'https://picsum.photos/seed/course2/400/250', price: 500000, registeredCount: 80, totalSlots: 80, status: 'active', createdAt: Date.now() },
+          { id: 'c3', title: 'Thiết kế đồ họa với Canva', provider: 'Design Hub', imageUrl: 'https://picsum.photos/seed/course3/400/250', price: 0, registeredCount: 120, totalSlots: 200, status: 'active', createdAt: Date.now() },
+        ]);
+      }
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'courses'));
 
     const qJobs = query(collection(db, 'jobs'), where('status', '==', 'active'), limit(10));
     const unsubJobs = onSnapshot(qJobs, (snapshot) => {
       setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Job)));
-    }, (error) => console.error("Jobs listener error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'jobs'));
 
     const qShadowing = query(collection(db, 'shadowing_events'), limit(10));
     const unsubShadowing = onSnapshot(qShadowing, (snapshot) => {
@@ -48,11 +64,7 @@ export default function Home() {
       } else {
         setShadowingEvents(MOCK_SHADOWING as any);
       }
-    }, (error) => {
-      console.error("Shadowing listener error:", error);
-      // Silent fallback for guests or permission issues
-      setShadowingEvents(MOCK_SHADOWING as any);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'shadowing_events'));
 
     // Fetch Survey Stats
     const fetchSurveyStats = async () => {
@@ -78,50 +90,59 @@ export default function Home() {
       }
     };
 
-    // Fetch Market Trends
-    const fetchMarketTrends = async () => {
+    // Fetch Featured Users (Parents/Businesses)
+    const fetchFeaturedUsers = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'market_surveys'));
+        const q = query(
+          collection(db, 'users'), 
+          where('role', 'in', ['parent', 'business']),
+          limit(10)
+        );
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-          const skillsCount: Record<string, number> = {};
-          const salaryCount: Record<string, number> = {};
-
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.desiredSkill) {
-              skillsCount[data.desiredSkill] = (skillsCount[data.desiredSkill] || 0) + 1;
-            }
-            if (data.expectedSalary) {
-              salaryCount[data.expectedSalary] = (salaryCount[data.expectedSalary] || 0) + 1;
-            }
-          });
-
-          const topSkills = Object.entries(skillsCount)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 3);
-
-          let popularSalary = '';
-          let maxSalaryCount = 0;
-          Object.entries(salaryCount).forEach(([salary, count]) => {
-            if (count > maxSalaryCount) {
-              maxSalaryCount = count;
-              popularSalary = salary;
-            }
-          });
-
-          setMarketTrends({ topSkills, popularSalary });
+          setFeaturedUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } else {
+          // Fallback to demo names as requested
+          setFeaturedUsers([
+            { id: 1, displayName: 'Mr. A', bio: 'Giám đốc Marketing', photoURL: 'https://i.pravatar.cc/150?u=mra', role: 'business' },
+            { id: 2, displayName: 'Mrs. B', bio: 'Phụ huynh học sinh', photoURL: 'https://i.pravatar.cc/150?u=mrsb', role: 'parent' },
+            { id: 3, displayName: 'Mr. C', bio: 'Chủ doanh nghiệp F&B', photoURL: 'https://i.pravatar.cc/150?u=mrc', role: 'business' },
+            { id: 4, displayName: 'Mrs. D', bio: 'Chuyên gia tâm lý', photoURL: 'https://i.pravatar.cc/150?u=mrsd', role: 'parent' },
+            { id: 5, displayName: 'Mr. E', bio: 'Kỹ sư phần mềm', photoURL: 'https://i.pravatar.cc/150?u=mre', role: 'business' },
+          ]);
         }
       } catch (error) {
-        console.error("Error fetching market trends:", error);
+        console.error("Error fetching featured users:", error);
       }
     };
 
+    // Seed Courses if empty (Boss only)
+    const seedCourses = async () => {
+      if (auth.currentUser?.email !== 'congapro60@gmail.com') return;
+      try {
+        const snapshot = await getDocs(collection(db, 'courses'));
+        if (snapshot.empty) {
+          const initialCourses = [
+            { title: 'Kỹ năng giao tiếp đỉnh cao', provider: 'TeenTask Academy', imageUrl: 'https://picsum.photos/seed/course1/400/250', price: 299000, registeredCount: 45, totalSlots: 100, status: 'active', createdAt: Date.now() },
+            { title: 'Lập trình Python cơ bản', provider: 'FPT Software', imageUrl: 'https://picsum.photos/seed/course2/400/250', price: 500000, registeredCount: 80, totalSlots: 80, status: 'active', createdAt: Date.now() },
+            { title: 'Thiết kế đồ họa với Canva', provider: 'Design Hub', imageUrl: 'https://picsum.photos/seed/course3/400/250', price: 0, registeredCount: 120, totalSlots: 200, status: 'active', createdAt: Date.now() },
+          ];
+          for (const course of initialCourses) {
+            await addDoc(collection(db, 'courses'), course);
+          }
+          console.log("Courses seeded successfully");
+        }
+      } catch (error) {
+        console.error("Error seeding courses:", error);
+      }
+    };
     fetchSurveyStats();
-    fetchMarketTrends();
+    fetchFeaturedUsers();
+    seedCourses();
 
     return () => {
       unsubAds();
+      unsubCourses();
       unsubJobs();
       unsubShadowing();
     };
@@ -510,28 +531,77 @@ export default function Home() {
         viewAllPath="/news"
       />
 
-      {/* Sponsored Ads Carousel */}
+      {/* Skill Courses Carousel */}
       <CarouselSection 
-        title="Quảng cáo tài trợ" 
-        icon={Star}
-        items={ads.length >= 5 ? ads : [
-          { id: 'd1', title: 'Khóa học IELTS cấp tốc', businessName: 'British Council', imageUrl: 'https://picsum.photos/seed/ad1/400/250' },
-          { id: 'd2', title: 'Ưu đãi trà sữa 50%', businessName: 'Gong Cha', imageUrl: 'https://picsum.photos/seed/ad2/400/250' },
-          { id: 'd3', title: 'Giảm giá 30% khóa học lập trình', businessName: 'FPT Academy', imageUrl: 'https://picsum.photos/seed/ad3/400/250' },
-          { id: 'd4', title: 'Vé xem phim cuối tuần 1k', businessName: 'CGV Cinemas', imageUrl: 'https://picsum.photos/seed/ad4/400/250' },
-          { id: 'd5', title: 'Tặng voucher 100k mua sách', businessName: 'Fahasa', imageUrl: 'https://picsum.photos/seed/ad5/400/250' },
-        ]}
-        renderItem={(ad: any) => (
-          <div className="w-[320px] relative rounded-3xl overflow-hidden aspect-[16/9] shadow-lg group">
-            <img src={ad.imageUrl} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-5 flex flex-col justify-end">
-              <span className="w-fit px-2 py-1 bg-amber-400 text-white text-[8px] font-black uppercase rounded-md mb-2">Tài trợ</span>
-              <h4 className="text-white font-bold text-lg line-clamp-1">{ad.title}</h4>
-              <p className="text-white/70 text-xs">{ad.businessName}</p>
+        title="Khóa học kỹ năng" 
+        icon={GraduationCap}
+        items={courses}
+        renderItem={(course: any) => {
+          const isSaved = profile?.savedCourses?.includes(course.id);
+          const isFull = course.registeredCount >= course.totalSlots;
+          
+          return (
+            <div className="w-[320px] bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <img 
+                  src={course.imageUrl} 
+                  alt={course.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  referrerPolicy="no-referrer" 
+                />
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSaveCourse(course.id);
+                  }}
+                  className={cn(
+                    "absolute top-4 right-4 p-2 rounded-full transition-all z-10 backdrop-blur-md",
+                    isSaved ? "bg-red-500 text-white" : "bg-black/20 text-white hover:bg-red-500"
+                  )}
+                >
+                  <Heart size={16} fill={isSaved ? "currentColor" : "none"} />
+                </button>
+                {course.price === 0 && (
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                    Miễn phí
+                  </div>
+                )}
+              </div>
+              <div className="p-5">
+                <h4 className="font-bold text-gray-900 text-lg line-clamp-1 mb-1">{course.title}</h4>
+                <p className="text-xs text-gray-500 mb-4">{course.provider}</p>
+                
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Học phí</span>
+                    <span className="text-lg font-black text-[#1877F2]">
+                      {course.price === 0 ? '0đ' : `${course.price.toLocaleString('vi-VN')}đ`}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Đã đăng ký</span>
+                    <span className={cn("text-xs font-bold", isFull ? "text-red-500" : "text-gray-700")}>
+                      {course.registeredCount}/{course.totalSlots}
+                    </span>
+                  </div>
+                </div>
+                
+                <button 
+                  disabled={isFull}
+                  className={cn(
+                    "w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95",
+                    isFull 
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                      : "bg-blue-50 text-[#1877F2] hover:bg-[#1877F2] hover:text-white"
+                  )}
+                >
+                  {isFull ? 'Đã hết chỗ' : 'Đăng ký ngay'}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-        viewAllPath="/ads"
+          );
+        }}
+        viewAllPath="/courses"
       />
 
       {/* Jobs Carousel */}
@@ -662,74 +732,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Business Owners Carousel */}
+      {/* Featured Parents & Businesses Carousel */}
       <CarouselSection 
-        title="Chủ doanh nghiệp" 
+        title="Phụ huynh & Doanh nghiệp" 
         icon={Users}
-        items={[
-          { id: 1, name: 'Shark Hưng', role: 'CEN Group', image: 'https://i.pravatar.cc/150?u=sharkhung' },
-          { id: 2, name: 'Shark Liên', role: 'Green Insurance', image: 'https://i.pravatar.cc/150?u=sharklien' },
-          { id: 3, name: 'Shark Bình', role: 'NextTech', image: 'https://i.pravatar.cc/150?u=sharkbinh' },
-          { id: 4, name: 'Shark Linh', role: 'VinaCapital', image: 'https://i.pravatar.cc/150?u=sharklinh' },
-          { id: 5, name: 'Shark Phú', role: 'Sunhouse', image: 'https://i.pravatar.cc/150?u=sharkphu' },
-        ]}
+        items={featuredUsers}
         renderItem={(item: any) => (
           <div className="w-[160px] text-center">
-            <div className="w-24 h-24 rounded-full mx-auto mb-3 p-1 bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
+            <div className="w-24 h-24 rounded-full mx-auto mb-3 p-1 bg-gradient-to-br from-[#1877F2] to-[#4F46E5] shadow-lg">
               <div className="w-full h-full rounded-full bg-white p-1">
-                <img src={item.image} alt={item.name} className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
+                <img 
+                  src={item.photoURL || `https://i.pravatar.cc/150?u=${item.id}`} 
+                  alt={item.displayName} 
+                  className="w-full h-full rounded-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
               </div>
             </div>
-            <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
-            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{item.role}</p>
+            <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{item.displayName || 'Người dùng'}</h4>
+            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider line-clamp-1">
+              {item.bio || (item.role === 'parent' ? 'Phụ huynh' : 'Doanh nghiệp')}
+            </p>
           </div>
         )}
         viewAllPath="/mentors"
       />
 
-      {/* New Section: Trending Skills */}
-      {marketTrends.topSkills.length > 0 && (
-        <section className="px-4 sm:px-6 py-6 bg-gradient-to-br from-orange-50 to-amber-50 border-y border-orange-100 mb-4">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-orange-500">
-                <TrendingUp size={20} />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-gray-900 tracking-tight">Xu hướng Gen Z</h2>
-                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Từ khảo sát thị trường</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-orange-100/50">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1"><Rocket size={14} className="text-orange-400"/> Top kỹ năng muốn học</h3>
-              <div className="space-y-2">
-                {marketTrends.topSkills.map((skill, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[10px]">{i + 1}</span>
-                      {skill.name}
-                    </span>
-                    <span className="text-xs font-bold text-gray-400">{skill.count} vote</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {marketTrends.popularSalary && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-orange-100/50 flex flex-col justify-center">
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1"><Briefcase size={14} className="text-green-500"/> Mức lương part-time kỳ vọng</h3>
-                <div className="text-2xl font-black text-green-600 mt-1">{marketTrends.popularSalary}</div>
-                <p className="text-[10px] font-bold text-gray-400 mt-2">Được bình chọn nhiều nhất</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* New Section: Success Stories */}
+      {/* Success Stories */}
       <section className="px-4 sm:px-6 py-6 bg-white mb-4">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-8 h-8 bg-pink-50 rounded-lg flex items-center justify-center text-pink-500">

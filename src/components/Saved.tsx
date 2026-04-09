@@ -98,7 +98,29 @@ export default function Saved() {
       {/* Content */}
       <div className="p-6">
         <AnimatePresence mode="wait">
-          {activeTab === 'jobs' ? (
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm flex gap-4 animate-pulse">
+                  <div className="w-16 h-16 bg-gray-200 rounded-2xl flex-shrink-0"></div>
+                  <div className="flex-1 space-y-3 py-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="flex gap-3 pt-2">
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          ) : activeTab === 'jobs' ? (
             <motion.div
               key="jobs"
               initial={{ opacity: 0, x: -20 }}
@@ -139,15 +161,16 @@ export default function Saved() {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <Briefcase size={32} className="opacity-20" />
+                  <div className="w-32 h-32 mb-6 opacity-50">
+                    <img src="https://illustrations.popsy.co/amber/surreal-hourglass.svg" alt="Empty" className="w-full h-full" referrerPolicy="no-referrer" />
                   </div>
-                  <p className="text-sm font-bold">Chưa có việc làm nào được lưu</p>
+                  <p className="text-sm font-bold mb-2 text-gray-600">Chưa có việc làm nào được lưu</p>
+                  <p className="text-xs text-gray-400 mb-6 text-center max-w-[250px]">Hãy khám phá các cơ hội việc làm hấp dẫn và lưu lại để ứng tuyển sau nhé!</p>
                   <button 
                     onClick={() => navigate('/jobs')}
-                    className="mt-4 text-[#1877F2] text-xs font-bold flex items-center gap-1"
+                    className="px-6 py-3 bg-[#1877F2] text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20"
                   >
-                    Khám phá ngay <ArrowRight size={14} />
+                    Khám phá việc làm <ArrowRight size={16} />
                   </button>
                 </div>
               )}
@@ -191,15 +214,16 @@ export default function Saved() {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <GraduationCap size={32} className="opacity-20" />
+                  <div className="w-32 h-32 mb-6 opacity-50">
+                    <img src="https://illustrations.popsy.co/amber/surreal-hourglass.svg" alt="Empty" className="w-full h-full" referrerPolicy="no-referrer" />
                   </div>
-                  <p className="text-sm font-bold">Chưa có kiến tập nào được lưu</p>
+                  <p className="text-sm font-bold mb-2 text-gray-600">Chưa có kiến tập nào được lưu</p>
+                  <p className="text-xs text-gray-400 mb-6 text-center max-w-[250px]">Hãy khám phá các chương trình kiến tập thực tế để định hướng nghề nghiệp nhé!</p>
                   <button 
                     onClick={() => navigate('/shadowing')}
-                    className="mt-4 text-red-500 text-xs font-bold flex items-center gap-1"
+                    className="px-6 py-3 bg-red-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-600 transition-colors shadow-md shadow-red-500/20"
                   >
-                    Khám phá ngay <ArrowRight size={14} />
+                    Khám phá kiến tập <ArrowRight size={16} />
                   </button>
                 </div>
               )}

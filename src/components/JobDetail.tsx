@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { X, MapPin, Clock, DollarSign, Briefcase, CheckCircle2, ShieldCheck, MessageSquare, Heart } from 'lucide-react';
+import { X, MapPin, Clock, DollarSign, Briefcase, CheckCircle2, ShieldCheck, MessageSquare, Heart, Sparkles, Loader2 } from 'lucide-react';
+import { useFirebase } from './FirebaseProvider';
+import { GoogleGenAI } from '@google/genai';
 
 interface JobDetailProps {
   job: any;
@@ -33,8 +35,56 @@ export default function JobDetail({
   isParentView
 }: JobDetailProps) {
   const navigate = useNavigate();
+  const { profile } = useFirebase();
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   if (!job) return null;
+
+  const handleAIAnalysis = async () => {
+    if (!profile) {
+      alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+    setIsAnalyzing(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+      const prompt = `
+        Hãy phân tích độ phù hợp của học sinh này với công việc sau:
+        
+        Học sinh:
+        - Tên: ${profile.displayName}
+        - Kỹ năng: ${profile.skills?.join(', ') || 'Chưa cập nhật'}
+        - Sở thích: ${profile.interests?.join(', ') || 'Chưa cập nhật'}
+        - Kinh nghiệm: ${profile.experience || 'Chưa có'}
+        
+        Công việc:
+        - Tiêu đề: ${job.title}
+        - Mô tả: ${job.description}
+        - Yêu cầu: ${job.qualifications?.join(', ')}
+        
+        Hãy đưa ra:
+        1. Điểm phù hợp (trên 100).
+        2. Tại sao phù hợp.
+        3. Những điểm cần cải thiện hoặc lưu ý.
+        4. Lời khuyên để ứng tuyển thành công.
+        
+        Viết bằng tiếng Việt, ngắn gọn, súc tích, định dạng Markdown.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt
+      });
+      setAiAnalysis(response.text);
+    } catch (error) {
+      console.error("AI Analysis error:", error);
+      alert("Có lỗi xảy ra khi phân tích bằng AI.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleCompanyClick = () => {
     onClose();
@@ -124,6 +174,11 @@ export default function JobDetail({
                         {applicationCount} lượt ứng tuyển
                       </span>
                     )}
+                    {(job.slotsTotal !== undefined || job.slotsFilled !== undefined) && (
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        Đã tuyển {job.slotsFilled || 0}/{job.slotsTotal || '-'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -197,7 +252,7 @@ export default function JobDetail({
                 </motion.div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl border border-gray-100">
                   <MapPin size={16} className="text-[#4F46E5]" />
                   <span className="text-[11px] font-bold text-gray-600">{job.location}</span>
@@ -283,14 +338,10 @@ export default function JobDetail({
                         height="100%"
                         frameBorder="0"
                         style={{ border: 0 }}
-                        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(job.location)}`}
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(job.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                         allowFullScreen
                         title="Job Location"
                         className="grayscale hover:grayscale-0 transition-all duration-500"
-                        // Fallback if no API key is provided - using a simple search link or a placeholder
-                        onError={(e) => {
-                          (e.target as any).src = `https://maps.google.com/maps?q=${encodeURIComponent(job.location)}&output=embed`;
-                        }}
                       />
                       {/* Overlay to prevent accidental scrolling while navigating the modal */}
                       <div className="absolute inset-0 pointer-events-none border-4 border-white/20 rounded-3xl"></div>
@@ -307,6 +358,61 @@ export default function JobDetail({
                         Chỉ đường
                       </button>
                     </div>
+                  </div>
+                </section>
+
+                {/* AI Match Analysis */}
+                <section className="mt-8">
+                  <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/20 rounded-xl">
+                          <Sparkles size={20} className="text-amber-300" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-lg">Phân tích độ phù hợp (AI)</h3>
+                          <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest">Powered by Gemini</p>
+                        </div>
+                      </div>
+                      {!aiAnalysis && (
+                        <button
+                          onClick={handleAIAnalysis}
+                          disabled={isAnalyzing}
+                          className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all disabled:opacity-50"
+                        >
+                          {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : 'Bắt đầu phân tích'}
+                        </button>
+                      )}
+                    </div>
+
+                    {isAnalyzing && (
+                      <div className="flex flex-col items-center justify-center py-8 gap-4">
+                        <Loader2 size={32} className="animate-spin text-white/50" />
+                        <p className="text-sm font-medium text-indigo-100 animate-pulse">Đang đối chiếu hồ sơ của bạn với yêu cầu công việc...</p>
+                      </div>
+                    )}
+
+                    {aiAnalysis && (
+                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                        <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-li:my-1">
+                          <div className="text-sm text-indigo-50 whitespace-pre-wrap leading-relaxed">
+                            {aiAnalysis}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setAiAnalysis(null)}
+                          className="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-200 hover:text-white transition-colors"
+                        >
+                          Phân tích lại
+                        </button>
+                      </div>
+                    )}
+
+                    {!aiAnalysis && !isAnalyzing && (
+                      <p className="text-sm text-indigo-100 leading-relaxed">
+                        Sử dụng AI để biết bạn có phù hợp với công việc này không và nhận lời khuyên để tăng cơ hội trúng tuyển!
+                      </p>
+                    )}
                   </div>
                 </section>
               </div>

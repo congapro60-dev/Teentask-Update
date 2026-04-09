@@ -12,6 +12,9 @@ export interface UserProfile {
   trustScore: number;
   bio?: string;
   skills: string[];
+  interests?: string[];
+  experience?: string[];
+  careerGoal?: string[];
   savedJobs?: string[];
   savedShadowing?: string[];
   createdAt: number;
@@ -66,6 +69,7 @@ export interface UserProfile {
   tutorialCompleted?: { [role: string]: boolean };
   geminiApiKey?: string;
   paymentCode?: string;
+  savedCourses?: string[];
 }
 
 export interface CV {
@@ -98,6 +102,8 @@ export interface CV {
   }[];
   languages: string[];
   photoURL?: string;
+  templateId?: string;
+  isExclusive?: boolean;
   lastUpdated: number;
 }
 
@@ -155,6 +161,8 @@ export interface Job {
   status: 'active' | 'closed';
   isApproved: boolean;
   tags: string[];
+  qualifications?: string[];
+  benefits?: string[];
   createdAt: number;
 }
 
@@ -167,6 +175,19 @@ export interface Advertisement {
   imageUrl: string;
   linkUrl?: string;
   status: 'pending' | 'approved' | 'rejected';
+  createdAt: number;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  provider: string;
+  imageUrl: string;
+  price: number;
+  registeredCount: number;
+  totalSlots: number;
+  description?: string;
+  status: 'active' | 'inactive';
   createdAt: number;
 }
 

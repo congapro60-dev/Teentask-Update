@@ -15,9 +15,11 @@ export default function MarketSurveyModal() {
   const [formData, setFormData] = useState({
     expectedSalary: '',
     payForShadowing: '',
+    shadowingPrice: '',
     desiredSkill: '',
     location: '',
-    currentPlatform: ''
+    currentPlatform: '',
+    knowsLaborLaw: ''
   });
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function MarketSurveyModal() {
   if (!profile || profile.marketSurveyCompleted) return null;
 
   const handleNext = () => {
-    if (step < 3) setStep(step + 1);
+    if (step < 4) setStep(step + 1);
   };
 
   const handleOptionSelect = (field: string, value: string) => {
@@ -44,6 +46,11 @@ export default function MarketSurveyModal() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      if (profile.uid === 'demo-user') {
+        // Simulate success for demo mode
+        setIsOpen(false);
+        return;
+      }
       // 1. Save survey data
       await addDoc(collection(db, 'market_surveys'), {
         userId: profile.uid,
@@ -94,7 +101,7 @@ export default function MarketSurveyModal() {
               
               {/* Progress Bar */}
               <div className="mt-6 flex gap-2">
-                {[1, 2, 3].map(i => (
+                {[1, 2, 3, 4].map(i => (
                   <div key={i} className="h-1.5 flex-1 rounded-full bg-white/20 overflow-hidden">
                     <motion.div 
                       className="h-full bg-white"
@@ -108,7 +115,7 @@ export default function MarketSurveyModal() {
             </div>
 
             {/* Body */}
-            <div className="p-6">
+            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
               <AnimatePresence mode="wait">
                 {step === 1 && (
                   <motion.div
@@ -156,6 +163,29 @@ export default function MarketSurveyModal() {
                         </button>
                       ))}
                     </div>
+
+                    {formData.payForShadowing === 'Có, nếu chất lượng tốt' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="space-y-3 pt-2"
+                      >
+                        <p className="font-semibold text-gray-800">Mức phí bạn sẵn sàng chi trả cho 1 buổi kiến tập?</p>
+                        {['Dưới 100k', '100k - 300k', 'Trên 300k'].map(opt => (
+                          <button
+                            key={opt}
+                            onClick={() => handleOptionSelect('shadowingPrice', opt)}
+                            className={`w-full p-3 rounded-xl border-2 text-left font-medium transition-all ${
+                              formData.shadowingPrice === opt 
+                              ? 'border-indigo-600 bg-indigo-50 text-indigo-700' 
+                              : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50 text-gray-600'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
 
@@ -222,6 +252,53 @@ export default function MarketSurveyModal() {
                   >
                     <div className="flex items-center gap-2 text-amber-500 mb-4">
                       <Scale size={20} />
+                      <h3 className="font-bold">Pháp luật & Quyền lợi</h3>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+                      <h4 className="font-bold text-amber-800 flex items-center gap-2">
+                        <Sparkles size={16} /> Bạn có biết?
+                      </h4>
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        Theo <b>Bộ luật Lao động 2019</b>, người lao động từ đủ 15 đến dưới 18 tuổi:
+                      </p>
+                      <ul className="text-[10px] text-amber-800 space-y-1 list-disc pl-4">
+                        <li>Thời giờ làm việc không quá 08 giờ/ngày và 40 giờ/tuần.</li>
+                        <li>Không được làm các công việc nặng nhọc, độc hại, nguy hiểm.</li>
+                        <li>Phải có sự đồng ý của cha, mẹ hoặc người giám hộ.</li>
+                        <li>Được hưởng đầy đủ các quyền lợi về lương, nghỉ ngơi và bảo hiểm.</li>
+                      </ul>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="font-semibold text-gray-800">Bạn đã nắm rõ các quy định này chưa?</p>
+                      {['Đã nắm rõ', 'Chưa biết, cảm ơn TeenTask đã chia sẻ', 'Cần tìm hiểu thêm'].map(opt => (
+                        <button
+                          key={opt}
+                          onClick={() => handleOptionSelect('knowsLaborLaw', opt)}
+                          className={`w-full p-3 rounded-xl border-2 text-left font-medium transition-all ${
+                            formData.knowsLaborLaw === opt 
+                            ? 'border-amber-500 bg-amber-50 text-amber-700' 
+                            : 'border-gray-100 hover:border-amber-200 hover:bg-gray-50 text-gray-600'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {step === 4 && (
+                  <motion.div
+                    key="step4"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-2 text-emerald-500 mb-4">
+                      <ClipboardList size={20} />
                       <h3 className="font-bold">Nền tảng sử dụng</h3>
                     </div>
 
@@ -233,8 +310,8 @@ export default function MarketSurveyModal() {
                           onClick={() => handleOptionSelect('currentPlatform', opt)}
                           className={`w-full p-3 rounded-xl border-2 text-left font-medium transition-all ${
                             formData.currentPlatform === opt 
-                            ? 'border-amber-500 bg-amber-50 text-amber-700' 
-                            : 'border-gray-100 hover:border-amber-200 hover:bg-gray-50 text-gray-600'
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                            : 'border-gray-100 hover:border-emerald-200 hover:bg-gray-50 text-gray-600'
                           }`}
                         >
                           {opt}
@@ -244,41 +321,42 @@ export default function MarketSurveyModal() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
 
-              {/* Footer Actions */}
-              <div className="mt-8 flex justify-between items-center">
-                {step > 1 ? (
-                  <button 
-                    onClick={() => setStep(step - 1)}
-                    className="px-4 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    Quay lại
-                  </button>
-                ) : <div></div>}
+            {/* Footer Actions */}
+            <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-white">
+              {step > 1 ? (
+                <button 
+                  onClick={() => setStep(step - 1)}
+                  className="px-4 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Quay lại
+                </button>
+              ) : <div></div>}
 
-                {step < 3 ? (
-                  <button 
-                    onClick={handleNext}
-                    disabled={
-                      (step === 1 && (!formData.expectedSalary || !formData.payForShadowing)) ||
-                      (step === 2 && (!formData.desiredSkill || !formData.location))
-                    }
-                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Tiếp theo <ChevronRight size={18} />
-                  </button>
-                ) : (
-                  <button 
-                    onClick={handleSubmit}
-                    disabled={!formData.currentPlatform || isSubmitting}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  >
-                    {isSubmitting ? 'Đang gửi...' : (
-                      <>Hoàn tất <CheckCircle2 size={18} /></>
-                    )}
-                  </button>
-                )}
-              </div>
+              {step < 4 ? (
+                <button 
+                  onClick={handleNext}
+                  disabled={
+                    (step === 1 && (!formData.expectedSalary || !formData.payForShadowing || (formData.payForShadowing === 'Có, nếu chất lượng tốt' && !formData.shadowingPrice))) ||
+                    (step === 2 && (!formData.desiredSkill || !formData.location)) ||
+                    (step === 3 && !formData.knowsLaborLaw)
+                  }
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Tiếp theo <ChevronRight size={18} />
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSubmit}
+                  disabled={!formData.currentPlatform || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? 'Đang gửi...' : (
+                    <>Hoàn tất <CheckCircle2 size={18} /></>
+                  )}
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

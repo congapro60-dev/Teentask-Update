@@ -122,7 +122,8 @@ function AppContent() {
     setLoginError(null);
     try {
       localStorage.setItem('demoRole', selectedRole || 'student');
-      await signInAnonymously(auth);
+      localStorage.setItem('isDemoMode', 'true');
+      window.location.reload();
     } catch (error: any) {
       setLoginError(`Lỗi Demo Mode: ${error.message}`);
     }
@@ -130,6 +131,7 @@ function AppContent() {
 
   const exitDemo = async () => {
     localStorage.removeItem('demoRole');
+    localStorage.removeItem('isDemoMode');
     await signOut(auth);
     window.location.href = '/profile';
   };
