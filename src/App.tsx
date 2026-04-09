@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, Component, ErrorInfo, ReactNode } from 'react';
-import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldAlert, LogOut, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { signInAnonymously, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 
 // Error Boundary Component
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
@@ -115,6 +117,27 @@ function AppContent() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setLoginError(null);
+    try {
+      localStorage.setItem('demoRole', selectedRole || 'student');
+      await signInAnonymously(auth);
+    } catch (error: any) {
+      setLoginError(`Lỗi Demo Mode: ${error.message}`);
+    }
+  };
+
+  const exitDemo = async () => {
+    localStorage.removeItem('demoRole');
+    await signOut(auth);
+    window.location.href = '/profile';
+  };
+
+  const switchDemoRole = (role: 'student' | 'parent' | 'business') => {
+    localStorage.setItem('demoRole', role);
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -201,6 +224,13 @@ function AppContent() {
                         <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
                         Đăng nhập với Google
                       </button>
+
+                      <button
+                        onClick={handleDemoLogin}
+                        className="w-full max-w-md py-4 mt-4 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        👀 Xem thử không cần đăng nhập (Demo)
+                      </button>
                     </div>
                   } />
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -250,6 +280,25 @@ function AppContent() {
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
       <div className={appWrapperClass}>
+        {user?.isAnonymous && (
+          <div className="bg-amber-400 text-amber-900 text-center py-2 px-4 text-sm font-semibold sticky top-0 z-[100] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 shadow-md">
+            <span>👀 Chế độ xem thử — Dữ liệu không được lưu</span>
+            <div className="flex items-center gap-2">
+              <select 
+                value={userRole} 
+                onChange={(e) => switchDemoRole(e.target.value as any)}
+                className="bg-amber-100 text-amber-900 border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none"
+              >
+                <option value="student">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="business">Doanh nghiệp</option>
+              </select>
+              <button onClick={exitDemo} className="bg-amber-900 text-amber-50 px-3 py-1 rounded-lg text-xs hover:bg-amber-800 transition-colors flex items-center gap-1">
+                <LogOut size={12} /> Đăng nhập thật
+              </button>
+            </div>
+          </div>
+        )}
         <Layout>
           <AnimatePresence mode="wait">
             <motion.div

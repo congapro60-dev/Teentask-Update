@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, Bell, TrendingUp, Star, Zap, Clock, CheckCircle2, ChevronRight, ChevronLeft, Briefcase, GraduationCap, Building2, Users, Award, Rocket, Sparkles, MessageSquare, Heart } from 'lucide-react';
 import { useFirebase } from './FirebaseProvider';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, limit, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, limit, addDoc, doc, getDoc, setDoc, getDocs } from 'firebase/firestore';
 import { db, auth } from './FirebaseProvider';
 import { cn } from '../lib/utils';
 import { Advertisement, Job, ShadowingEvent } from '../types';
@@ -25,6 +25,10 @@ export default function Home() {
   const [selectedShadowing, setSelectedShadowing] = useState<any>(null);
   const [isShadowingDetailOpen, setIsShadowingDetailOpen] = useState(false);
   const [isParentModalOpen, setIsParentModalOpen] = useState(false);
+
+  // New states for stats and trends
+  const [surveyStats, setSurveyStats] = useState({ total: 0, satisfiedRate: 0, npsRate: 0 });
+  const [marketTrends, setMarketTrends] = useState({ topSkills: [] as {name: string, count: number}[], popularSalary: '' });
 
   useEffect(() => {
     const qAds = query(collection(db, 'advertisements'), where('status', '==', 'approved'), limit(10));
@@ -49,6 +53,72 @@ export default function Home() {
       // Silent fallback for guests or permission issues
       setShadowingEvents(MOCK_SHADOWING as any);
     });
+
+    // Fetch Survey Stats
+    const fetchSurveyStats = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'survey_responses'));
+        if (!snapshot.empty) {
+          const total = snapshot.size;
+          let satisfied = 0;
+          let promoters = 0;
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.easeOfUse >= 4) satisfied++;
+            if (data.recommendScore >= 8) promoters++;
+          });
+          setSurveyStats({
+            total,
+            satisfiedRate: Math.round((satisfied / total) * 100),
+            npsRate: Math.round((promoters / total) * 100)
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching survey stats:", error);
+      }
+    };
+
+    // Fetch Market Trends
+    const fetchMarketTrends = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'market_surveys'));
+        if (!snapshot.empty) {
+          const skillsCount: Record<string, number> = {};
+          const salaryCount: Record<string, number> = {};
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.desiredSkill) {
+              skillsCount[data.desiredSkill] = (skillsCount[data.desiredSkill] || 0) + 1;
+            }
+            if (data.expectedSalary) {
+              salaryCount[data.expectedSalary] = (salaryCount[data.expectedSalary] || 0) + 1;
+            }
+          });
+
+          const topSkills = Object.entries(skillsCount)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+
+          let popularSalary = '';
+          let maxSalaryCount = 0;
+          Object.entries(salaryCount).forEach(([salary, count]) => {
+            if (count > maxSalaryCount) {
+              maxSalaryCount = count;
+              popularSalary = salary;
+            }
+          });
+
+          setMarketTrends({ topSkills, popularSalary });
+        }
+      } catch (error) {
+        console.error("Error fetching market trends:", error);
+      }
+    };
+
+    fetchSurveyStats();
+    fetchMarketTrends();
 
     return () => {
       unsubAds();
@@ -368,6 +438,52 @@ export default function Home() {
         </div>
       </section>
 
+      {/* New Section: Community Feedback */}
+      {surveyStats.total > 0 && (
+        <section className="px-4 sm:px-6 mb-8">
+          <div className="bg-gradient-to-br from-[#1877F2] to-[#4F46E5] rounded-[32px] p-6 sm:p-8 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                  <MessageSquare size={20} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black tracking-tight">Cộng đồng nói gì về TeenTask?</h2>
+                  <p className="text-xs text-white/80 font-medium">Dữ liệu từ {surveyStats.total} người dùng thực tế</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart size={16} className="text-pink-300" fill="currentColor" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">Hài lòng</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black">{surveyStats.satisfiedRate}</span>
+                    <span className="text-sm font-bold text-white/80">%</span>
+                  </div>
+                  <p className="text-[10px] text-white/70 mt-1">Đánh giá giao diện dễ dùng (4-5★)</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star size={16} className="text-amber-300" fill="currentColor" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">Giới thiệu (NPS)</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black">{surveyStats.npsRate}</span>
+                    <span className="text-sm font-bold text-white/80">%</span>
+                  </div>
+                  <p className="text-[10px] text-white/70 mt-1">Sẵn sàng giới thiệu bạn bè (8-10đ)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Featured News Carousel */}
       <CarouselSection 
         title="Tin tức nổi bật" 
@@ -572,21 +688,46 @@ export default function Home() {
       />
 
       {/* New Section: Trending Skills */}
-      <section className="px-4 sm:px-6 py-6 bg-white border-b border-gray-100 mb-4">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500">
-            <Rocket size={18} />
-          </div>
-          <h2 className="text-lg font-black text-gray-900 tracking-tight">Kỹ năng đang hot</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {['Thiết kế Canva', 'Video Editing', 'Content Writing', 'Public Speaking', 'Data Entry', 'Social Media', 'Python Basic', 'UI/UX Design', 'Digital Marketing'].map((skill, i) => (
-            <div key={i} className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600 hover:border-[#1877F2] hover:text-[#1877F2] transition-all cursor-pointer">
-              {skill}
+      {marketTrends.topSkills.length > 0 && (
+        <section className="px-4 sm:px-6 py-6 bg-gradient-to-br from-orange-50 to-amber-50 border-y border-orange-100 mb-4">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-orange-500">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-gray-900 tracking-tight">Xu hướng Gen Z</h2>
+                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Từ khảo sát thị trường</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-orange-100/50">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1"><Rocket size={14} className="text-orange-400"/> Top kỹ năng muốn học</h3>
+              <div className="space-y-2">
+                {marketTrends.topSkills.map((skill, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[10px]">{i + 1}</span>
+                      {skill.name}
+                    </span>
+                    <span className="text-xs font-bold text-gray-400">{skill.count} vote</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {marketTrends.popularSalary && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-orange-100/50 flex flex-col justify-center">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1"><Briefcase size={14} className="text-green-500"/> Mức lương part-time kỳ vọng</h3>
+                <div className="text-2xl font-black text-green-600 mt-1">{marketTrends.popularSalary}</div>
+                <p className="text-[10px] font-bold text-gray-400 mt-2">Được bình chọn nhiều nhất</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* New Section: Success Stories */}
       <section className="px-4 sm:px-6 py-6 bg-white mb-4">

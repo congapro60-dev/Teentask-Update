@@ -113,19 +113,41 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (currentUser) {
-        const path = `users/${currentUser.uid}`;
-        const profileRef = doc(db, 'users', currentUser.uid);
-        unsubProfile = onSnapshot(profileRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
-          } else {
-            setProfile(null);
-          }
+        if (currentUser.isAnonymous) {
+          // Mock profile for demo mode
+          const demoRole = localStorage.getItem('demoRole') || 'student';
+          setProfile({
+            uid: currentUser.uid,
+            email: 'demo@teentask.vn',
+            displayName: 'Người dùng Demo',
+            photoURL: 'https://ui-avatars.com/api/?name=Demo&background=4F46E5&color=fff',
+            role: demoRole as any,
+            trustScore: 85,
+            skills: ['Design', 'Video', 'Marketing'],
+            balance: 0,
+            isVip: false,
+            isVerified: true,
+            verificationStatus: 'verified',
+            savedJobs: [],
+            savedShadowing: [],
+            createdAt: Date.now(),
+          });
           setLoading(false);
-        }, (error) => {
-          handleFirestoreError(error, OperationType.GET, path);
-          setLoading(false);
-        });
+        } else {
+          const path = `users/${currentUser.uid}`;
+          const profileRef = doc(db, 'users', currentUser.uid);
+          unsubProfile = onSnapshot(profileRef, (docSnap) => {
+            if (docSnap.exists()) {
+              setProfile(docSnap.data() as UserProfile);
+            } else {
+              setProfile(null);
+            }
+            setLoading(false);
+          }, (error) => {
+            handleFirestoreError(error, OperationType.GET, path);
+            setLoading(false);
+          });
+        }
       } else {
         setProfile(null);
         setLoading(false);
@@ -137,6 +159,14 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       if (unsubProfile) unsubProfile();
     };
   }, []);
+
+  const checkDemo = () => {
+    if (user?.isAnonymous) {
+      alert("👀 Chế độ xem thử: Tính năng này cần đăng nhập tài khoản chính thức!");
+      return true;
+    }
+    return false;
+  };
 
   const login = async (selectedRole?: 'student' | 'parent' | 'business' | 'admin') => {
     const provider = new GoogleAuthProvider();
@@ -211,6 +241,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
+    if (checkDemo()) return;
     if (!user) return;
     const path = `users/${user.uid}`;
     const profileRef = doc(db, 'users', user.uid);
@@ -222,6 +253,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const sendFriendRequest = async (toId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'friend_requests';
     try {
@@ -242,6 +274,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const acceptFriendRequest = async (requestId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = `friend_requests/${requestId}`;
     try {
@@ -267,6 +300,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const rejectFriendRequest = async (requestId: string) => {
+    if (checkDemo()) return;
     const path = `friend_requests/${requestId}`;
     try {
       await setDoc(doc(db, 'friend_requests', requestId), { status: 'rejected' }, { merge: true });
@@ -276,6 +310,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addRelationship = async (relatedUserId: string, relatedUserName: string, relatedUserPhoto: string | undefined, type: 'Family' | 'Professional', title: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'relationships';
     try {
@@ -299,6 +334,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const acceptRelationship = async (relId: string) => {
+    if (checkDemo()) return;
     const path = `relationships/${relId}`;
     try {
       await setDoc(doc(db, 'relationships', relId), { status: 'accepted' }, { merge: true });
@@ -308,6 +344,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const rejectRelationship = async (relId: string) => {
+    if (checkDemo()) return;
     const path = `relationships/${relId}`;
     try {
       await setDoc(doc(db, 'relationships', relId), { status: 'rejected' }, { merge: true });
@@ -317,6 +354,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const submitRating = async (toId: string, score: number, comment?: string, jobId?: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'ratings';
     try {
@@ -345,6 +383,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createChat = async (otherUserId: string, otherUserDetails: any, relatedTo?: { type: string, id: string, title: string }) => {
+    if (checkDemo()) return `${user?.uid}_${otherUserId}`;
     if (!user || !profile) throw new Error("User not authenticated");
     const chatId = [user.uid, otherUserId].sort().join('_');
     const chatRef = doc(db, 'chats', chatId);
@@ -376,6 +415,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const sendNotification = async (userId: string, title: string, message: string, type: string, link?: string) => {
+    if (checkDemo()) return;
     const notifRef = collection(db, 'notifications');
     await addDoc(notifRef, {
       userId,
@@ -389,6 +429,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleSaveJob = async (jobId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const savedJobs = profile.savedJobs || [];
     const isSaved = savedJobs.includes(jobId);
@@ -402,6 +443,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleSaveShadowing = async (shadowingId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const savedShadowing = profile.savedShadowing || [];
     const isSaved = savedShadowing.includes(shadowingId);
@@ -415,6 +457,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const submitNameChangeRequest = async (newName: string, reason: string, proofUrl: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'name_change_requests';
     try {
@@ -433,6 +476,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleFollowUser = async (targetUserId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const following = profile.following || [];
     const isFollowing = following.includes(targetUserId);
@@ -464,6 +508,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const unfriendUser = async (targetUserId: string) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const myFriends = profile.friends || [];
     
@@ -483,6 +528,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveCV = async (cvData: Partial<CV>) => {
+    if (checkDemo()) return "demo-cv-id";
     if (!user) throw new Error("User not authenticated");
     const cvId = profile?.cvId || user.uid; // Use UID as CV ID for simplicity or a separate ID
     const cvRef = doc(db, 'cvs', cvId);
@@ -518,6 +564,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const bookShadowing = async (event: any) => {
+    if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'shadowing_bookings';
     try {

@@ -1,9 +1,38 @@
 import { Info, ArrowRight, Target, Rocket, Users, ShieldCheck, GraduationCap, BookOpen, Search, MessageSquare, Star, Briefcase, Award, Zap, Shield, Heart, Globe, TrendingUp, CheckCircle2, Eye, Clock, Building2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from './FirebaseProvider';
 
 export default function AboutApp() {
   const navigate = useNavigate();
+  const [npsStat, setNpsStat] = useState({ avg: 0, count: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'survey_responses'));
+        if (!snapshot.empty) {
+          let totalScore = 0;
+          let validCount = 0;
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (typeof data.recommendScore === 'number') {
+              totalScore += data.recommendScore;
+              validCount++;
+            }
+          });
+          if (validCount > 0) {
+            setNpsStat({ avg: Number((totalScore / validCount).toFixed(1)), count: validCount });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching survey stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const pillars = [
     {
@@ -116,7 +145,7 @@ export default function AboutApp() {
 
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 -mt-20 relative z-20">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {[
             { label: 'Độ tuổi mục tiêu', value: '14 - 18', sub: 'Học sinh THPT toàn quốc', icon: Users },
             { label: 'Mức độ an toàn', value: '100%', sub: 'Môi trường được kiểm chứng', icon: ShieldCheck },
@@ -138,6 +167,31 @@ export default function AboutApp() {
             </motion.div>
           ))}
         </div>
+
+        {npsStat.count > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-24 bg-gradient-to-r from-amber-500 to-orange-500 rounded-[40px] p-8 sm:p-10 text-white flex flex-col md:flex-row items-center justify-between shadow-xl shadow-orange-500/20 relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3"></div>
+            <div className="flex items-center gap-6 mb-4 md:mb-0 relative z-10">
+              <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-md shadow-inner">
+                <Star size={40} className="text-white fill-white" />
+              </div>
+              <div>
+                <h4 className="text-5xl font-black mb-1">{npsStat.avg}<span className="text-3xl text-white/70">/10</span></h4>
+                <p className="font-bold text-white/90 text-lg">Chỉ số tin cậy (NPS)</p>
+              </div>
+            </div>
+            <div className="text-center md:text-right relative z-10">
+              <p className="text-sm font-bold text-white/90 max-w-[250px] mx-auto md:mx-0">
+                "Điểm đánh giá trung bình từ {npsStat.count} người dùng thực tế đã trải nghiệm TeenTask"
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Roles & Functions Section */}
         <section className="space-y-16 mb-32">
