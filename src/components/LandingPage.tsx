@@ -126,6 +126,95 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* SECTION 1.5: PAIN POINTS */}
+      <section className="py-24 bg-white px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-6xl mx-auto"
+        >
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Vấn đề của bạn là gì?</h2>
+            <p className="text-xl text-gray-500">TeenTask ra đời để giải quyết những nỗi đau thực tế nhất.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Học sinh */}
+            <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                <GraduationCap size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-blue-900 mb-4">Học sinh (14-18 tuổi)</h3>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-2 text-blue-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Muốn đi làm thêm nhưng toàn gặp lừa đảo, đa cấp.</span>
+                </li>
+                <li className="flex items-start gap-2 text-blue-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Cần kinh nghiệm thực tế để apply học bổng nhưng không ai nhận.</span>
+                </li>
+              </ul>
+              <div className="pt-6 border-t border-blue-200">
+                <p className="font-bold text-blue-900 flex items-center gap-2">
+                  <CheckCircle2 size={20} className="text-emerald-500" />
+                  TeenTask cung cấp Job an toàn & Mentor xịn.
+                </p>
+              </div>
+            </div>
+
+            {/* Phụ huynh */}
+            <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
+                <ShieldCheck size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-emerald-900 mb-4">Phụ huynh</h3>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-2 text-emerald-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Sợ con bị bóc lột sức lao động, ảnh hưởng việc học.</span>
+                </li>
+                <li className="flex items-start gap-2 text-emerald-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Không kiểm soát được con đang làm việc với ai, ở đâu.</span>
+                </li>
+              </ul>
+              <div className="pt-6 border-t border-emerald-200">
+                <p className="font-bold text-emerald-900 flex items-center gap-2">
+                  <CheckCircle2 size={20} className="text-emerald-500" />
+                  Phụ huynh phê duyệt mọi giao dịch & theo dõi sát sao.
+                </p>
+              </div>
+            </div>
+
+            {/* Doanh nghiệp */}
+            <div className="bg-amber-50 rounded-3xl p-8 border border-amber-100">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
+                <Briefcase size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-amber-900 mb-4">Doanh nghiệp / Mentor</h3>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-2 text-amber-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Cần nhân sự làm task nhỏ (nhập liệu, design cơ bản) nhưng ngân sách thấp.</span>
+                </li>
+                <li className="flex items-start gap-2 text-amber-800">
+                  <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <span>Muốn chia sẻ kinh nghiệm nhưng không có kênh tiếp cận học sinh.</span>
+                </li>
+              </ul>
+              <div className="pt-6 border-t border-amber-200">
+                <p className="font-bold text-amber-900 flex items-center gap-2">
+                  <CheckCircle2 size={20} className="text-emerald-500" />
+                  Nguồn nhân lực trẻ dồi dào & Nền tảng Mentor chuyên nghiệp.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* SECTION 2: SỐ LIỆU */}
       <section className="py-20 bg-white px-6">
         <motion.div 

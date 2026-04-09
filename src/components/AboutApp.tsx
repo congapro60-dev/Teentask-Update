@@ -1,4 +1,4 @@
-import { Info, ArrowRight, Target, Rocket, Users, ShieldCheck, GraduationCap, BookOpen, Search, MessageSquare, Star, Briefcase, Award, Zap, Shield, Heart, Globe, TrendingUp, CheckCircle2, Eye, Clock, Building2 } from 'lucide-react';
+import { Info, ArrowRight, Target, Rocket, Users, ShieldCheck, GraduationCap, BookOpen, Search, MessageSquare, Star, Briefcase, Award, Zap, Shield, Heart, Globe, TrendingUp, CheckCircle2, Eye, Clock, Building2, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -144,6 +144,144 @@ export default function AboutApp() {
       </div>
 
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 -mt-20 relative z-20">
+        {/* Vấn đề chúng tôi giải quyết */}
+        <section className="mb-24 mt-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Vấn đề chúng tôi giải quyết</h2>
+          </div>
+
+          {/* PHẦN A — PROBLEM STATEMENT */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-red-50 rounded-[32px] p-8 sm:p-10 mb-8 border border-red-100 shadow-sm"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center shrink-0">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-red-900">Khoảng trống thị trường chưa ai lấp đầy</h3>
+            </div>
+            <ul className="space-y-4 mb-6">
+              <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+                78% học sinh THPT muốn tích lũy kinh nghiệm trước 18 tuổi nhưng không biết bắt đầu từ đâu
+              </li>
+              <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+                Không có nền tảng nào tại VN kết nối học sinh 14-18 tuổi với doanh nghiệp một cách an toàn và đúng pháp luật
+              </li>
+              <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+                Phụ huynh lo ngại: 65% từ chối cho con làm thêm vì thiếu cơ chế giám sát minh bạch
+              </li>
+            </ul>
+            <p className="text-sm text-red-600/80 italic font-medium">* Dữ liệu từ khảo sát 200 học sinh và phụ huynh tại Hà Nội và TP.HCM, Q1/2025</p>
+          </motion.div>
+
+          {/* PHẦN B — ROOT CAUSES */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm"
+            >
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-6">
+                <Search size={24} />
+              </div>
+              <h4 className="text-xl font-black text-gray-900 mb-3">Thiếu cơ hội phù hợp</h4>
+              <p className="text-gray-600 font-medium leading-relaxed">Các nền tảng hiện tại (TopCV, Việc làm tốt) không có job dành cho người chưa có kinh nghiệm và dưới 18 tuổi.</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm"
+            >
+              <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6">
+                <Shield size={24} />
+              </div>
+              <h4 className="text-xl font-black text-gray-900 mb-3">Thiếu cơ chế an toàn</h4>
+              <p className="text-gray-600 font-medium leading-relaxed">Không có xác minh danh tính doanh nghiệp, không có sự tham gia của phụ huynh, rủi ro cao cho cả 2 phía.</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm"
+            >
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-6">
+                <Users size={24} />
+              </div>
+              <h4 className="text-xl font-black text-gray-900 mb-3">Thiếu trải nghiệm thực chiến</h4>
+              <p className="text-gray-600 font-medium leading-relaxed">Học sinh chỉ học lý thuyết, không có cơ hội quan sát môi trường làm việc thực tế trước khi chọn ngành.</p>
+            </motion.div>
+          </div>
+
+          {/* PHẦN C — SOLUTION */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[32px] p-8 sm:p-12 mb-8 text-white shadow-xl"
+          >
+            <h3 className="text-3xl sm:text-4xl font-black mb-10 text-center">TeenTask — Giải pháp toàn diện</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-4">
+                <div className="text-2xl mb-2">💼</div>
+                <h4 className="text-xl font-black text-white">Marketplace an toàn</h4>
+                <p className="text-indigo-100 font-medium leading-relaxed">Job phù hợp lứa tuổi + xác minh doanh nghiệp + phê duyệt phụ huynh.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="text-2xl mb-2">🎓</div>
+                <h4 className="text-xl font-black text-white">Job Shadowing</h4>
+                <p className="text-indigo-100 font-medium leading-relaxed">Trải nghiệm thực tế bên cạnh chuyên gia, không cần kinh nghiệm, có cấu trúc rõ ràng.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="text-2xl mb-2">🛡️</div>
+                <h4 className="text-xl font-black text-white">Hệ sinh thái tin cậy</h4>
+                <p className="text-indigo-100 font-medium leading-relaxed">3 bên cùng có lợi: Học sinh tích lũy kinh nghiệm, Phụ huynh an tâm, Doanh nghiệp có nhân lực trẻ.</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* PHẦN D — WHY NOW */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-amber-50 rounded-[32px] p-8 sm:p-10 border border-amber-100 shadow-sm"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shrink-0">
+                <Clock size={28} />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-amber-900">Tại sao là lúc này?</h3>
+            </div>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-amber-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-amber-500 rounded-full shrink-0"></span>
+                Bộ luật Lao động 2019 cho phép học sinh 15-18 tuổi làm việc với điều kiện cụ thể — TeenTask là nền tảng đầu tiên tuân thủ đầy đủ.
+              </li>
+              <li className="flex items-start gap-3 text-amber-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-amber-500 rounded-full shrink-0"></span>
+                Gen Z VN ngày càng muốn tự chủ tài chính sớm — xu hướng side hustle tăng 40% mỗi năm.
+              </li>
+              <li className="flex items-start gap-3 text-amber-800 font-medium text-lg">
+                <span className="mt-1.5 w-2 h-2 bg-amber-500 rounded-full shrink-0"></span>
+                Doanh nghiệp SME thiếu nhân lực trẻ cho các task nhỏ (content, design, event) với chi phí hợp lý.
+              </li>
+            </ul>
+          </motion.div>
+        </section>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {[

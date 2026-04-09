@@ -1,4 +1,4 @@
-import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, SlidersHorizontal, ArrowRight, Heart, TrendingUp } from 'lucide-react';
+import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, SlidersHorizontal, ArrowRight, Heart, TrendingUp, DollarSign, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -318,6 +318,76 @@ export default function Shadowing() {
             <p className="text-slate-500 font-medium">Thử tìm kiếm với từ khóa khác hoặc thay đổi danh mục.</p>
           </div>
         )}
+
+        {/* Tại sao Mentor chọn TeenTask? */}
+        <section className="mt-24 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Tại sao Mentor chọn TeenTask?</h2>
+            <p className="text-slate-500 font-medium">Giá trị thực tế và bền vững dành cho những người dẫn dắt.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Card 1 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-emerald-50 rounded-[32px] p-8 border border-emerald-200 shadow-sm"
+            >
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
+                <DollarSign size={28} />
+              </div>
+              <h3 className="text-xl font-black text-emerald-900 mb-3">Thu nhập thực tế</h3>
+              <p className="text-emerald-800 font-medium leading-relaxed">
+                Mentor nhận 85% giá trị mỗi vé. Với 10 học sinh/buổi × 300k = 2.55 triệu/buổi, không tốn chi phí marketing hay tìm kiếm.
+              </p>
+            </motion.div>
+
+            {/* Card 2 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-blue-50 rounded-[32px] p-8 border border-blue-200 shadow-sm"
+            >
+              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                <Users size={28} />
+              </div>
+              <h3 className="text-xl font-black text-blue-900 mb-3">Xây dựng thương hiệu cá nhân</h3>
+              <p className="text-blue-800 font-medium leading-relaxed">
+                Mỗi buổi kiến tập là cơ hội truyền đạt kiến thức, được ghi nhận bởi thế hệ trẻ và lan truyền qua mạng xã hội.
+              </p>
+            </motion.div>
+
+            {/* Card 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-purple-50 rounded-[32px] p-8 border border-purple-200 shadow-sm"
+            >
+              <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                <Award size={28} />
+              </div>
+              <h3 className="text-xl font-black text-purple-900 mb-3">Đóng góp xã hội có giá trị</h3>
+              <p className="text-purple-800 font-medium leading-relaxed">
+                Nghiên cứu cho thấy mentoring giúp chính mentor phát triển kỹ năng lãnh đạo và tư duy chiến lược (Harvard Business Review).
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="text-center">
+            <button 
+              onClick={() => navigate('/verify')}
+              className="inline-flex items-center gap-2 px-10 py-5 bg-slate-900 text-white rounded-full font-black text-lg shadow-xl hover:scale-105 transition-transform"
+            >
+              Đăng ký trở thành Mentor
+              <ArrowRight size={20} />
+            </button>
+          </div>
+        </section>
       </div>
 
       {selectedEvent && (
