@@ -51,6 +51,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 import Layout from './components/Layout';
 import Home from './components/Home';
+import LandingPage from './components/LandingPage';
 import Jobs from './components/Jobs';
 import Shadowing from './components/Shadowing';
 import Profile from './components/Profile';
@@ -155,19 +156,21 @@ function AppContent() {
     return (
       <div className="bg-[#F8FAFC] min-h-screen">
         <div className={appWrapperClass}>
-          <Layout>
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/jobs" element={<Jobs />} />
-                  <Route path="/shadowing" element={<Shadowing />} />
-                  <Route path="/profile" element={
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="*" element={
+              <Layout>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Routes>
+                      <Route path="/jobs" element={<Jobs />} />
+                      <Route path="/shadowing" element={<Shadowing />} />
+                      <Route path="/profile" element={
                     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
                       <div className="w-full max-w-md mb-10 text-center md:text-left">
                         <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Chào mừng trở lại!</h2>
@@ -238,6 +241,8 @@ function AppContent() {
               </motion.div>
             </AnimatePresence>
           </Layout>
+          } />
+        </Routes>
         </div>
       </div>
     );
