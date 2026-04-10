@@ -132,7 +132,7 @@ service cloud.firestore {
 
     match /jobs/{jobId} {
       allow read: if resource.data.status == 'active' || isAuthenticated();
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && (isBusiness() || isAdmin());
       allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
       allow delete: if isAdmin();
     }
@@ -159,7 +159,7 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)) &&
         get(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)).data.businessId == request.auth.uid
       );
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.studentId ||
         isAdmin() ||
@@ -176,7 +176,7 @@ service cloud.firestore {
         request.auth.token.email == resource.data.parentEmail ||
         isAdmin()
       );
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.studentId ||
         resource.data.businessId == request.auth.uid ||
@@ -244,7 +244,7 @@ service cloud.firestore {
 
     match /support_messages/{msgId} {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -258,7 +258,10 @@ service cloud.firestore {
 
     match /quick_surveys/{surveyId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if true 
+                    && request.resource.data.keys().hasAll(['role', 'createdAt'])
+                    && request.resource.data.role in ['student', 'parent', 'business']
+                    && request.resource.data.createdAt is number;
       allow update: if false;
       allow delete: if isAdmin();
     }
@@ -312,7 +315,10 @@ service cloud.firestore {
 
     match /market_surveys/{surveyId} {
       allow read: if true; // Allow public read for market trends
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'role', 'createdAt'])
+                    && request.resource.data.role in ['student', 'parent', 'business'];
       allow update: if false;
       allow delete: if isAdmin();
     }

@@ -291,6 +291,28 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "title", "date", "type", "status", "createdAt"]
+    },
+    "QuickSurvey": {
+      "title": "Quick Survey",
+      "description": "Survey responses from the landing page (unauthenticated).",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["student", "parent", "business"] },
+        "source": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["role", "createdAt"]
+    },
+    "MarketSurvey": {
+      "title": "Market Survey",
+      "description": "Detailed survey responses from authenticated users.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "parent", "business"] },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["userId", "role", "createdAt"]
     }
   },
   "firestore": {
