@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from './FirebaseProvider';
-import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle, BookOpen, Award, ChevronRight, ChevronDown, Globe, LogIn, Search } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -103,9 +103,63 @@ export default function LandingPage() {
           <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight">
             TeenTask
           </h1>
-          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mb-12 leading-relaxed">
-            Sàn việc làm đầu tiên dành riêng cho học sinh Việt Nam 14–18 tuổi. An toàn, minh bạch và định hướng tương lai.
+          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mb-4 leading-relaxed">
+            Nơi học sinh Việt Nam tích lũy kinh nghiệm thực chiến, phát triển kỹ năng và kết nối với chuyên gia hàng đầu.
           </p>
+          <p className="text-lg text-white/60 italic mb-12">
+            "Không chỉ là tìm việc — TeenTask là hành trình phát triển bản thân có hệ thống"
+          </p>
+
+          {/* 1. BADGE "KHÔNG CẦN CÀI APP" — Ý tưởng từ Claude AI */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex flex-wrap justify-center gap-2 mb-8"
+          >
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+              <CheckCircle2 size={14} className="text-emerald-400" /> Không cần cài đặt
+            </span>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+              <Globe size={14} className="text-blue-300" /> Dùng ngay trên trình duyệt
+            </span>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-amber-300" /> Bảo mật Google OAuth
+            </span>
+          </motion.div>
+
+          {/* 2. STEPPER "3 BƯỚC ĐƠN GIẢN" — Ý tưởng từ Claude AI */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex items-center justify-center gap-4 mb-12 flex-wrap"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">1</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+                <Globe size={14} /> Vào web
+              </div>
+            </div>
+            
+            <ChevronRight size={20} className="text-white/40 mt-[-20px] hidden sm:block" />
+            
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">2</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+                <LogIn size={14} /> Đăng nhập Google
+              </div>
+            </div>
+
+            <ChevronRight size={20} className="text-white/40 mt-[-20px] hidden sm:block" />
+
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">3</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+                <Search size={14} /> Tìm việc ngay
+              </div>
+            </div>
+          </motion.div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button 
@@ -123,6 +177,138 @@ export default function LandingPage() {
               Tìm hiểu thêm
             </button>
           </div>
+        </motion.div>
+      </section>
+
+      {/* SECTION 1.2: HÀNH TRÌNH 3 BƯỚC (Ý TƯỞNG 2) */}
+      <section className="py-24 bg-white px-6 overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-6xl mx-auto"
+        >
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
+              Không chỉ tìm việc — Đây là hành trình phát triển bản thân
+            </h2>
+            <p className="text-xl text-gray-500 max-w-3xl mx-auto">
+              TeenTask kết hợp học viện và sàn việc làm thành một hệ sinh thái khép kín, giúp bạn đi từ con số 0 đến chuyên nghiệp.
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* Desktop Connectors (Arrows) */}
+            <div className="hidden md:block absolute top-1/2 left-[30%] -translate-y-1/2 z-0">
+              <ChevronRight size={48} className="text-gray-200" />
+            </div>
+            <div className="hidden md:block absolute top-1/2 left-[64%] -translate-y-1/2 z-0">
+              <ChevronRight size={48} className="text-gray-200" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+              {/* Bước 1: HỌC */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-8 relative overflow-hidden group hover:shadow-xl hover:shadow-indigo-100 transition-all"
+              >
+                <div className="absolute -bottom-4 -right-4 text-7xl font-black text-indigo-100/50 group-hover:scale-110 transition-transform">01</div>
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                  <BookOpen size={32} className="text-indigo-600" />
+                </div>
+                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Bước 1 — HỌC VIỆN</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">Trang bị kiến thức</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Xem video hướng dẫn, đọc nghiên cứu thực tế, tham gia workshop nhóm cùng chuyên gia để nắm vững tư duy nghề nghiệp.
+                </p>
+                <button 
+                  onClick={() => navigate('/career-insights')}
+                  className="text-indigo-600 font-bold hover:underline flex items-center gap-2"
+                >
+                  → Xem Career Insights
+                </button>
+              </motion.div>
+
+              {/* Mobile Connector */}
+              <div className="md:hidden flex justify-center py-2">
+                <ChevronDown size={32} className="text-gray-300" />
+              </div>
+
+              {/* Bước 2: THỰC HÀNH */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.25 }}
+                className="bg-purple-50 border-2 border-purple-100 rounded-3xl p-8 relative overflow-hidden group hover:shadow-xl hover:shadow-purple-100 transition-all"
+              >
+                <div className="absolute -bottom-4 -right-4 text-7xl font-black text-purple-100/50 group-hover:scale-110 transition-transform">02</div>
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                  <Briefcase size={32} className="text-purple-600" />
+                </div>
+                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 block">Bước 2 — SÀN VIỆC LÀM</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">Thực hành thực chiến</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Ứng tuyển job thật, kiến tập cùng chuyên gia, hoàn thành nhiệm vụ có cấu trúc từ doanh nghiệp để tích lũy kinh nghiệm.
+                </p>
+                <button 
+                  onClick={() => navigate('/jobs')}
+                  className="text-purple-600 font-bold hover:underline flex items-center gap-2"
+                >
+                  → Xem việc làm
+                </button>
+              </motion.div>
+
+              {/* Mobile Connector */}
+              <div className="md:hidden flex justify-center py-2">
+                <ChevronDown size={32} className="text-gray-300" />
+              </div>
+
+              {/* Bước 3: CHỨNG MINH */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+                className="bg-pink-50 border-2 border-pink-100 rounded-3xl p-8 relative overflow-hidden group hover:shadow-xl hover:shadow-pink-100 transition-all"
+              >
+                <div className="absolute -bottom-4 -right-4 text-7xl font-black text-pink-100/50 group-hover:scale-110 transition-transform">03</div>
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                  <Award size={32} className="text-pink-600" />
+                </div>
+                <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-2 block">Bước 3 — PORTFOLIO</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">Chứng minh năng lực</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Nhận badge từ mentor, xây dựng Teen CV chuyên biệt, có bằng chứng thực tế để tự tin apply học bổng và việc làm tương lai.
+                </p>
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className="text-pink-600 font-bold hover:underline flex items-center gap-2"
+                >
+                  → Xem hồ sơ mẫu
+                </button>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Highlight Box */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="mt-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-10 text-white text-center shadow-2xl relative overflow-hidden"
+          >
+            <div className="relative z-10">
+              <p className="text-xl md:text-2xl font-bold leading-relaxed">
+                "TeenTask là nơi duy nhất tại Việt Nam kết hợp <span className="text-amber-300">Học viện kỹ năng</span> + <span className="text-amber-300">Sàn việc làm</span> + <span className="text-amber-300">Hệ thống Portfolio</span> — dành riêng cho học sinh 14–18 tuổi."
+              </p>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
+          </motion.div>
         </motion.div>
       </section>
 

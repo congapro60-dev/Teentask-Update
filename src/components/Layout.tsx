@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket } from 'lucide-react';
+import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -217,6 +217,8 @@ export default function Layout({ children }: LayoutProps) {
     { id: 'nav-home', icon: Home, label: 'Trang chủ', path: '/' },
     { id: 'nav-messages', icon: MessageSquare, label: 'Tin nhắn', path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
     { id: 'nav-notifications', icon: Bell, label: 'Thông báo', path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
+    { id: 'nav-career', icon: BookOpen, label: 'Kiến thức nghề nghiệp', path: '/career-insights' },
+    { id: 'nav-legal', icon: Scale, label: 'Pháp lý & An toàn', path: '/legal' },
     { id: 'nav-about', icon: Info, label: 'Thông tin dự án', path: '/about' },
   ];
 
@@ -336,12 +338,15 @@ export default function Layout({ children }: LayoutProps) {
           >
             <GraduationCap size={20} className="text-white" />
           </div>
-          <h1 
-            onClick={() => navigate('/')}
-            className="text-xl font-black tracking-tighter text-[#1877F2] hidden sm:block cursor-pointer"
-          >
-            TEENTASK
-          </h1>
+          <div className="flex flex-col">
+            <h1 
+              onClick={() => navigate('/')}
+              className="text-xl font-black tracking-tighter text-[#1877F2] hidden sm:block cursor-pointer leading-none"
+            >
+              TEENTASK
+            </h1>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">Học viện Kỹ năng Thực chiến</span>
+          </div>
         </div>
 
         <div className="flex-1 min-w-0 mx-2 sm:mx-4 flex items-center gap-2 sm:gap-4">

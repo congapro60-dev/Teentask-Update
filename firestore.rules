@@ -14,6 +14,12 @@ service cloud.firestore {
     // Collection: shadowing_events
     // Fields: id, mentorId, mentorName, companyName, title, description, date, price, slotsTotal, slotsRemaining, location, category, createdAt
     //
+    // Collection: shadowing_tasks
+    // Fields: id, businessId, businessName, name, description, daysToComplete, outputRequired, skillsLearned, maxStudents, status, createdAt
+    //
+    // Collection: shadowing_workshops
+    // Fields: id, businessId, businessName, title, description, date, time, price, slotsTotal, slotsRemaining, location, skills, status, createdAt
+    //
     // Collection: applications
     // Fields: id, jobId, businessId, studentId, studentName, parentEmail, portfolioUrl, parentStatus, finalStatus, createdAt
     //
@@ -135,6 +141,20 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isAuthenticated();
       allow update: if isAuthenticated() && resource.data.mentorId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /shadowing_tasks/{taskId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /shadowing_workshops/{workshopId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
       allow delete: if isAdmin();
     }
 

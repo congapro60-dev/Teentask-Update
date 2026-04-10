@@ -247,6 +247,47 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "title", "date", "type", "status", "createdAt"]
+    },
+    "ShadowingTask": {
+      "title": "Shadowing Task",
+      "description": "Structured tasks for shadowing students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "businessId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "daysToComplete": { "type": "number" },
+        "outputRequired": { "type": "string" },
+        "skillsLearned": { "type": "string" },
+        "maxStudents": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["businessId", "name", "description", "daysToComplete", "outputRequired", "skillsLearned", "status", "createdAt"]
+    },
+    "ShadowingWorkshop": {
+      "title": "Shadowing Workshop",
+      "description": "Group workshops for students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "businessId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "number" },
+        "time": { "type": "string" },
+        "price": { "type": "number" },
+        "slotsTotal": { "type": "number" },
+        "slotsRemaining": { "type": "number" },
+        "location": { "type": "string" },
+        "skills": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["businessId", "title", "date", "slotsTotal", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -305,6 +346,14 @@
     "events/{eventId}": {
       "schema": "Event",
       "description": "Calendar events."
+    },
+    "shadowing_tasks/{taskId}": {
+      "schema": "ShadowingTask",
+      "description": "Structured shadowing tasks."
+    },
+    "shadowing_workshops/{workshopId}": {
+      "schema": "ShadowingWorkshop",
+      "description": "Group shadowing workshops."
     }
   }
 }

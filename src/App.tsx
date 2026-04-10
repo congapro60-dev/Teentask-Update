@@ -58,6 +58,7 @@ import Profile from './components/Profile';
 import RoleSelection from './components/RoleSelection';
 import BusinessDashboard from './components/BusinessDashboard';
 import ManageJobs from './components/ManageJobs';
+import ManageShadowing from './components/ManageShadowing';
 import ParentDashboard from './components/ParentDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import BossManagement from './components/BossManagement';
@@ -79,6 +80,8 @@ import Vip from './components/Vip';
 import Wallet from './components/Wallet';
 import CVBuilder from './components/CVBuilder';
 import CalendarView from './components/CalendarView';
+import CareerInsights from './components/CareerInsights';
+import LegalGuide from './components/LegalGuide';
 import { FirebaseProvider, useFirebase } from './components/FirebaseProvider';
 
 function AppContent() {
@@ -322,6 +325,8 @@ function AppContent() {
                 <Route path="/company/:businessId" element={<CompanyProfile />} />
                 <Route path="/student/:studentId" element={<StudentProfile />} />
                 <Route path="/search-users" element={<SearchUsers />} />
+                <Route path="/career-insights" element={<CareerInsights />} />
+                <Route path="/legal" element={<LegalGuide />} />
                 <Route path="/about" element={<AboutApp />} />
                 <Route path="/survey" element={<SurveyForm />} />
                 <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <Navigate to="/" />} />
@@ -343,7 +348,7 @@ function AppContent() {
                 {userRole === 'business' ? (
                   <>
                     <Route path="/jobs-manage" element={<ManageJobs />} />
-                    <Route path="/shadowing-manage" element={<div className="p-6"><h1>Quản lý Kiến tập</h1></div>} />
+                    <Route path="/shadowing-manage" element={<ManageShadowing />} />
                   </>
                 ) : userRole === 'parent' ? (
                   <>

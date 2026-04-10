@@ -1,4 +1,4 @@
-import { Info, ArrowRight, Target, Rocket, Users, ShieldCheck, GraduationCap, BookOpen, Search, MessageSquare, Star, Briefcase, Award, Zap, Shield, Heart, Globe, TrendingUp, CheckCircle2, Eye, Clock, Building2, AlertTriangle } from 'lucide-react';
+import { Info, ArrowRight, Target, Rocket, Users, ShieldCheck, GraduationCap, BookOpen, Search, MessageSquare, Star, Briefcase, Award, Zap, Shield, Heart, Globe, TrendingUp, CheckCircle2, Eye, Clock, Building2, AlertTriangle, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -116,7 +116,37 @@ export default function AboutApp() {
   ];
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      {/* SECTION: MISSION STATEMENT (Ý TƯỞNG 1) */}
+      <section className="bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-indigo-50 rounded-[32px] flex items-center justify-center text-indigo-600 mb-8 shadow-inner">
+              <Sparkles size={40} />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 tracking-tight">Sứ mệnh của chúng tôi</h1>
+            <p className="text-xl text-gray-600 max-w-2xl leading-relaxed mb-12">
+              TeenTask không chỉ là một nền tảng kết nối. Sứ mệnh của chúng tôi là xây dựng một <span className="text-indigo-600 font-bold">Học viện Thực chiến</span> giúp học sinh Việt Nam phá vỡ rào cản giữa lý thuyết và thực tế, tự tin làm chủ tương lai thông qua những trải nghiệm làm việc thật.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+              <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100">
+                <div className="text-4xl font-black text-indigo-600 mb-2">14–18</div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Độ tuổi phục vụ</p>
+              </div>
+              <div className="p-6 bg-purple-50 rounded-3xl border border-purple-100">
+                <div className="text-4xl font-black text-purple-600 mb-2">3</div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Bên cùng có lợi</p>
+              </div>
+              <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+                <div className="text-4xl font-black text-emerald-600 mb-2">0đ</div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Chi phí cho học sinh</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <div className="relative h-[500px] bg-gradient-to-br from-[#1877F2] to-[#4F46E5] overflow-hidden flex items-center justify-center text-white text-center px-6">
         <div className="absolute inset-0 opacity-20">

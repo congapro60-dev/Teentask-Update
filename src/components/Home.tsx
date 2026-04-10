@@ -244,7 +244,7 @@ export default function Home() {
     }
   };
 
-  const CarouselSection = ({ title, icon: Icon, items, renderItem, viewAllPath }: any) => {
+  const CarouselSection = ({ title, subtitle, icon: Icon, items, renderItem, viewAllPath }: any) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const scroll = (direction: 'left' | 'right') => {
@@ -262,7 +262,10 @@ export default function Home() {
             <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-[#1877F2]">
               <Icon size={18} />
             </div>
-            <h2 className="text-lg font-black text-gray-900 tracking-tight">{title}</h2>
+            <div>
+              <h2 className="text-lg font-black text-gray-900 tracking-tight">{title}</h2>
+              {subtitle && <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{subtitle}</p>}
+            </div>
           </div>
           <button 
             onClick={() => navigate(viewAllPath)}
@@ -327,11 +330,12 @@ export default function Home() {
               </div>
               
               <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mb-6 leading-[1.1]">
-                Nơi khởi đầu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">sự nghiệp</span> cho Gen Z
+                Chào mừng bạn đến với <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">Học viện Kỹ năng Thực chiến</span>
               </h1>
               
               <p className="text-white/80 text-base sm:text-lg mb-10 leading-relaxed max-w-4xl mx-auto font-medium">
-                TeenTask kết nối hàng ngàn học sinh với các cơ hội việc làm và kiến tập thực tế từ những doanh nghiệp hàng đầu.
+                Nơi duy nhất tại Việt Nam giúp học sinh 14-18 tuổi học kỹ năng, thực hành qua việc làm thật và xây dựng Portfolio chuyên nghiệp.
               </p>
               
               <div className="max-w-6xl mx-auto mb-10">
@@ -606,7 +610,8 @@ export default function Home() {
 
       {/* Jobs Carousel */}
       <CarouselSection 
-        title="Việc làm mới nhất" 
+        title="Việc làm nổi bật" 
+        subtitle="Cơ hội học qua làm việc thật"
         icon={Briefcase}
         items={jobs.length > 0 ? jobs : MOCK_JOBS}
         renderItem={(job: any) => {
@@ -649,7 +654,8 @@ export default function Home() {
 
       {/* Shadowing Carousel */}
       <CarouselSection 
-        title="Kiến tập cao cấp" 
+        title="Kiến tập (Shadowing)" 
+        subtitle="Trải nghiệm bên chuyên gia 1-1"
         icon={GraduationCap}
         items={shadowingEvents.length > 0 ? shadowingEvents : MOCK_SHADOWING}
         renderItem={(item: any) => {

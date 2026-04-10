@@ -1,4 +1,4 @@
-import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, SlidersHorizontal, ArrowRight, Heart, TrendingUp, DollarSign, Award } from 'lucide-react';
+import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, SlidersHorizontal, ArrowRight, Heart, TrendingUp, DollarSign, Award, Video, Calendar, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -209,6 +209,160 @@ export default function Shadowing() {
             </button>
           ))}
         </div>
+
+        {/* 🎯 Workshop Nhóm — Bước khởi đầu lý tưởng */}
+        <section className="mb-20">
+          <motion.div 
+            whileInView={{ opacity: 1, x: 0 }} 
+            initial={{ opacity: 0, x: -30 }}
+            viewport={{ once: true }}
+            className="mb-8"
+          >
+            <h2 className="text-3xl font-black text-slate-900 mb-2">🎯 Workshop Nhóm — Bước khởi đầu lý tưởng</h2>
+            <p className="text-gray-500 font-medium">
+              Tham gia workshop nhóm trước để trải nghiệm thực tế, sau đó mới quyết định Shadowing 1-1
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-indigo-400 italic text-sm">
+              <span>↓ Cuộn xuống để xem các suất Shadowing 1-1</span>
+            </div>
+          </motion.div>
+
+          <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar md:grid md:grid-cols-3 md:overflow-visible">
+            {/* Card 1 */}
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              transition={{ delay: 0.1 }}
+              viewport={{ once: true }}
+              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="bg-green-100 text-green-700 rounded-full px-2 py-0.5 text-xs font-bold">🆓 Miễn phí</span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black">NA</div>
+                <div>
+                  <p className="text-sm font-black text-slate-900">Nguyễn Anh Khoa</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Creative Director @ TBWA Vietnam</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Ngày trong đời một Designer</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <Video size={14} className="text-indigo-500" />
+                  <span>Online · 10 người · 2 tiếng</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <Calendar size={14} className="text-indigo-500" />
+                  <span>Thứ 7, 19/04/2025</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {["Design", "Career", "Creative"].map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg">{tag}</span>
+                ))}
+              </div>
+              <button 
+                onClick={() => alert("Tính năng sắp ra mắt!")}
+                className="mt-auto bg-indigo-600 text-white rounded-xl py-3 w-full font-black text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+              >
+                Đăng ký tham gia <ArrowRight size={16} />
+              </button>
+            </motion.div>
+
+            {/* Card 2 */}
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              transition={{ delay: 0.2 }}
+              viewport={{ once: true }}
+              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 text-xs font-bold">🏆 Có chứng nhận</span>
+                <span className="text-sm font-black text-purple-600">50.000đ</span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-black">TB</div>
+                <div>
+                  <p className="text-sm font-black text-slate-900">Trần Bảo Ngọc</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Marketing Manager @ Unilever Vietnam</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Marketing 0 đồng cho học sinh</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <MapPin size={14} className="text-purple-500" />
+                  <span>TP.HCM · 15 người · 3 tiếng</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <Calendar size={14} className="text-purple-500" />
+                  <span>Chủ nhật, 20/04/2025</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {["Marketing", "Branding", "Strategy"].map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-600 text-[10px] font-bold rounded-lg">{tag}</span>
+                ))}
+              </div>
+              <button 
+                onClick={() => alert("Tính năng sắp ra mắt!")}
+                className="mt-auto bg-purple-600 text-white rounded-xl py-3 w-full font-black text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+              >
+                Đăng ký tham gia <ArrowRight size={16} />
+              </button>
+            </motion.div>
+
+            {/* Card 3 */}
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              transition={{ delay: 0.3 }}
+              viewport={{ once: true }}
+              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="bg-red-100 text-red-600 rounded-full px-2 py-0.5 text-xs font-bold">🔥 HOT · 3 slot còn lại</span>
+                <span className="text-sm font-black text-rose-600">100.000đ</span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-black">LC</div>
+                <div>
+                  <p className="text-sm font-black text-slate-900">Lê Công Thành</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Founder & CEO @ Startup X</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Startup 101 từ A đến Z</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <Video size={14} className="text-rose-500" />
+                  <span>Online · 20 người · 4 tiếng</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <Calendar size={14} className="text-rose-500" />
+                  <span>Thứ 7, 26/04/2025</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {["Startup", "Business", "Pitch"].map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg">{tag}</span>
+                ))}
+              </div>
+              <button 
+                onClick={() => alert("Tính năng sắp ra mắt!")}
+                className="mt-auto bg-[#DB2777] text-white rounded-xl py-3 w-full font-black text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              >
+                Đăng ký tham gia <ArrowRight size={16} />
+              </button>
+            </motion.div>
+          </div>
+
+          <div className="mt-12 flex items-center gap-4">
+            <div className="flex-1 h-px bg-slate-100"></div>
+            <span className="text-gray-400 text-sm font-medium">— hoặc đăng ký thẳng Shadowing 1-1 bên dưới —</span>
+            <div className="flex-1 h-px bg-slate-100"></div>
+          </div>
+        </section>
 
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
