@@ -45,6 +45,7 @@ export interface UserProfile {
   // Business specific
   representativeName?: string;
   businessName?: string;
+  businessLogo?: string;
   businessAddress?: string;
   businessField?: string;
   industry?: string;

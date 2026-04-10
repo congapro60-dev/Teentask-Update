@@ -51,6 +51,9 @@ export default function AdminDashboard() {
     popularPercentage: number;
     totalResponses: number;
     avgValue: number;
+    studentCourseBudget: { name: string; value: number }[];
+    parentMonthlyBudget: { name: string; value: number }[];
+    businessRecruitmentBudget: { name: string; value: number }[];
   } | null>(null);
 
   useEffect(() => {
@@ -64,10 +67,23 @@ export default function AdminDashboard() {
             'Không, tôi chỉ muốn miễn phí': 0
           };
 
+          const studentBudgets: Record<string, number> = {};
+          const parentBudgets: Record<string, number> = {};
+          const businessBudgets: Record<string, number> = {};
+
           snapshot.forEach(doc => {
             const data = doc.data();
             if (data.payForShadowing) {
               counts[data.payForShadowing] = (counts[data.payForShadowing] || 0) + 1;
+            }
+            if (data.skillCourseBudget) {
+              studentBudgets[data.skillCourseBudget] = (studentBudgets[data.skillCourseBudget] || 0) + 1;
+            }
+            if (data.monthlyDevelopmentBudget) {
+              parentBudgets[data.monthlyDevelopmentBudget] = (parentBudgets[data.monthlyDevelopmentBudget] || 0) + 1;
+            }
+            if (data.recruitmentBudget) {
+              businessBudgets[data.recruitmentBudget] = (businessBudgets[data.recruitmentBudget] || 0) + 1;
             }
           });
 
@@ -83,15 +99,25 @@ export default function AdminDashboard() {
           const popularPercentage = Math.round((counts[popularPrice] / total) * 100) || 0;
 
           // Estimate average ticket price based on willingness to pay
-          // If they are willing to pay, we assume a base ticket price of 300k
           const avgValue = popularPrice === 'Có, nếu chất lượng tốt' ? 300000 : 0;
+
+          const formatBudget = (budgets: Record<string, number>) => {
+            const totalBudget = Object.values(budgets).reduce((a, b) => a + b, 0);
+            return Object.entries(budgets).map(([name, value]) => ({
+              name,
+              value: Math.round((value / totalBudget) * 100) || 0
+            }));
+          };
 
           setSurveyPricingData({
             distribution,
             popularPrice,
             popularPercentage,
             totalResponses: total,
-            avgValue
+            avgValue,
+            studentCourseBudget: formatBudget(studentBudgets),
+            parentMonthlyBudget: formatBudget(parentBudgets),
+            businessRecruitmentBudget: formatBudget(businessBudgets)
           });
         }
       } catch (error) {
@@ -1276,7 +1302,58 @@ export default function AdminDashboard() {
                       >
                         Áp dụng vào Simulator
                       </button>
-                      <p className="text-[10px] text-center text-purple-400 mt-2">
+
+                      {/* New Financial Insights */}
+                      <div className="mt-6 space-y-4 pt-4 border-t border-purple-100">
+                        <h4 className="text-xs font-black text-purple-900 uppercase tracking-widest">Chi tiết ngân sách chi trả</h4>
+                        
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase">Học sinh (Khóa học kỹ năng)</p>
+                          {surveyPricingData.studentCourseBudget.map((item, idx) => (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex justify-between text-[10px]">
+                                <span className="text-gray-600">{item.name}</span>
+                                <span className="font-bold text-indigo-600">{item.value}%</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                <div className="bg-indigo-500 h-full" style={{ width: `${item.value}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase">Phụ huynh (Ngân sách tháng)</p>
+                          {surveyPricingData.parentMonthlyBudget.map((item, idx) => (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex justify-between text-[10px]">
+                                <span className="text-gray-600">{item.name}</span>
+                                <span className="font-bold text-emerald-600">{item.value}%</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                <div className="bg-emerald-500 h-full" style={{ width: `${item.value}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase">Doanh nghiệp (Phí tuyển dụng)</p>
+                          {surveyPricingData.businessRecruitmentBudget.map((item, idx) => (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex justify-between text-[10px]">
+                                <span className="text-gray-600">{item.name}</span>
+                                <span className="font-bold text-pink-600">{item.value}%</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                <div className="bg-pink-500 h-full" style={{ width: `${item.value}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <p className="text-[10px] text-center text-purple-400 mt-4">
                         Dựa trên {surveyPricingData.totalResponses} phản hồi khảo sát
                       </p>
                     </div>

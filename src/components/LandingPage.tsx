@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from './FirebaseProvider';
-import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle, BookOpen, Award, ChevronRight, ChevronDown, Globe, LogIn, Search } from 'lucide-react';
+import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle, BookOpen, Award, ChevronRight, ChevronDown, Globe, LogIn, Search, Users } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -180,7 +180,55 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* SECTION 1.2: HÀNH TRÌNH 3 BƯỚC (Ý TƯỞNG 2) */}
+      {/* SECTION: CHÚNG TÔI LÀ GÌ? */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-4">TeenTask là gì?</h2>
+            <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Định nghĩa mới về trải nghiệm học sinh</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: GraduationCap,
+                title: 'Học viện Thực chiến',
+                desc: 'Không chỉ học lý thuyết, bạn học thông qua việc thực hiện các nhiệm vụ thực tế từ doanh nghiệp.',
+                color: 'bg-blue-50 text-blue-600'
+              },
+              {
+                icon: Users,
+                title: 'Cộng đồng Kết nối',
+                desc: 'Mạng lưới chuyên gia và phụ huynh đồng hành, đảm bảo môi trường trải nghiệm an toàn nhất.',
+                color: 'bg-indigo-50 text-indigo-600'
+              },
+              {
+                icon: Award,
+                title: 'Chứng nhận Được công nhận',
+                desc: 'Mọi nỗ lực đều được ghi nhận bằng TrustScore và Certificate, làm đẹp hồ sơ du học và xin việc.',
+                color: 'bg-pink-50 text-pink-600'
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-8 rounded-[40px] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all group"
+              >
+                <div className={`w-16 h-16 ${item.color} rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <item.icon size={32} />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600 font-medium leading-relaxed text-sm">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 1.2: HÀNH TRÌNH 3 BƯỚC */}
       <section className="py-24 bg-white px-6 overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
@@ -207,7 +255,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-              {/* Bước 1: HỌC */}
+              {/* Bước 1: HỌC HỎI (LEARN) */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -219,7 +267,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <BookOpen size={32} className="text-indigo-600" />
                 </div>
-                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Bước 1 — HỌC VIỆN</span>
+                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Bước 1 — HỌC HỎI (LEARN)</span>
                 <h3 className="text-2xl font-black text-gray-900 mb-4">Trang bị kiến thức</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   Xem video hướng dẫn, đọc nghiên cứu thực tế, tham gia workshop nhóm cùng chuyên gia để nắm vững tư duy nghề nghiệp.
@@ -237,7 +285,7 @@ export default function LandingPage() {
                 <ChevronDown size={32} className="text-gray-300" />
               </div>
 
-              {/* Bước 2: THỰC HÀNH */}
+              {/* Bước 2: THỰC HÀNH (PRACTICE) */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -249,7 +297,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <Briefcase size={32} className="text-purple-600" />
                 </div>
-                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 block">Bước 2 — SÀN VIỆC LÀM</span>
+                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 block">Bước 2 — THỰC HÀNH (PRACTICE)</span>
                 <h3 className="text-2xl font-black text-gray-900 mb-4">Thực hành thực chiến</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   Ứng tuyển job thật, kiến tập cùng chuyên gia, hoàn thành nhiệm vụ có cấu trúc từ doanh nghiệp để tích lũy kinh nghiệm.
@@ -267,7 +315,7 @@ export default function LandingPage() {
                 <ChevronDown size={32} className="text-gray-300" />
               </div>
 
-              {/* Bước 3: CHỨNG MINH */}
+              {/* Bước 3: CHỨNG MINH (PROVE) */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -279,7 +327,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <Award size={32} className="text-pink-600" />
                 </div>
-                <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-2 block">Bước 3 — PORTFOLIO</span>
+                <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-2 block">Bước 3 — CHỨNG MINH (PROVE)</span>
                 <h3 className="text-2xl font-black text-gray-900 mb-4">Chứng minh năng lực</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   Nhận badge từ mentor, xây dựng Teen CV chuyên biệt, có bằng chứng thực tế để tự tin apply học bổng và việc làm tương lai.

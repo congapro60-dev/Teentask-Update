@@ -83,6 +83,7 @@ interface FirebaseContextType {
   getCV: (cvId: string) => Promise<CV | null>;
   bookShadowing: (event: any) => Promise<void>;
   getBookings: () => Promise<any[]>;
+  switchRole: (role: 'student' | 'parent' | 'business' | 'admin') => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -96,6 +97,13 @@ function cleanData(data: any) {
   });
   return clean;
 }
+
+const BOSS_EMAIL = "congapro60@gmail.com";
+const ADMIN_EMAILS = [
+  BOSS_EMAIL.toLowerCase(),
+  "cuong.vuviet@thedeweyschools.edu.vn".toLowerCase(),
+  "vuvietcuonglmnx@gmail.com".toLowerCase()
+];
 
 export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -116,10 +124,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           const pendingRole = localStorage.getItem('pendingRole') as any;
           localStorage.removeItem('pendingRole');
           
-          const BOSS_EMAIL = "congapro60@gmail.com";
-          const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
-          const ADMIN_EMAIL_2 = "vuvietcuonglmnx@gmail.com";
-          
           const path = `users/${user.uid}`;
           const profileRef = doc(db, 'users', user.uid);
           
@@ -133,7 +137,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           
           const userEmailLower = user.email?.toLowerCase();
           const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-          const isPredefinedAdmin = userEmailLower === ADMIN_EMAIL.toLowerCase() || userEmailLower === ADMIN_EMAIL_2.toLowerCase();
+          const isPredefinedAdmin = userEmailLower && ADMIN_EMAILS.includes(userEmailLower);
           const isAuthorizedAdmin = isBoss || isPredefinedAdmin || (profileSnap.exists() && profileSnap.data()?.role === 'admin');
 
           if (pendingRole === 'admin' && !isAuthorizedAdmin) {
@@ -253,10 +257,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      const BOSS_EMAIL = "congapro60@gmail.com";
-      const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
-      const ADMIN_EMAIL_2 = "vuvietcuonglmnx@gmail.com";
-      
       const path = `users/${user.uid}`;
       const profileRef = doc(db, 'users', user.uid);
       
@@ -270,7 +270,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       
       const userEmailLower = user.email?.toLowerCase();
       const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-      const isPredefinedAdmin = userEmailLower === ADMIN_EMAIL.toLowerCase() || userEmailLower === ADMIN_EMAIL_2.toLowerCase();
+      const isPredefinedAdmin = userEmailLower && ADMIN_EMAILS.includes(userEmailLower);
       const isAuthorizedAdmin = isBoss || isPredefinedAdmin || (profileSnap.exists() && profileSnap.data()?.role === 'admin');
 
       if (selectedRole === 'admin' && !isAuthorizedAdmin) {
@@ -711,6 +711,38 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const switchRole = async (role: 'student' | 'parent' | 'business' | 'admin') => {
+    if (checkDemo()) {
+      localStorage.setItem('demoRole', role);
+      window.location.reload();
+      return;
+    }
+    if (!user || !profile) return;
+
+    const userEmail = (user.email || profile.email || "").toLowerCase();
+    const isBoss = ADMIN_EMAILS.includes(userEmail);
+
+    // Restrictions
+    if (!isBoss) {
+      if (profile.role === 'student') {
+        throw new Error("Học sinh không thể chuyển đổi vai trò.");
+      }
+      // Allow switching between parent and business
+      // We remove the restriction on switching TO student as requested, 
+      // but note that non-boss users will be stuck once they become a student.
+      if (role === 'admin') {
+        throw new Error("Chỉ quản trị viên mới có thể chuyển đổi sang vai trò này.");
+      }
+    }
+
+    const path = `users/${user.uid}`;
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { role });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  };
+
   return (
     <FirebaseContext.Provider value={{ 
       user, profile, loading, login, logout, updateProfile, 
@@ -719,7 +751,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       submitRating, createChat, sendNotification,
       toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, submitNameChangeRequest,
       toggleFollowUser, unfriendUser, saveCV, getCV,
-      bookShadowing, getBookings
+      bookShadowing, getBookings, switchRole
     }}>
       {children}
     </FirebaseContext.Provider>

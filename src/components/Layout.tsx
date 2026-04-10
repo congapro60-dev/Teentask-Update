@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen } from 'lucide-react';
+import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -18,12 +18,16 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { profile } = useFirebase();
+  const { profile, switchRole } = useFirebase();
   const BOSS_EMAIL = "congapro60@gmail.com";
-  const ADMIN_EMAIL = "cuong.vuviet@thedeweyschools.edu.vn";
+  const ADMIN_EMAILS = [
+    BOSS_EMAIL.toLowerCase(),
+    "cuong.vuviet@thedeweyschools.edu.vn".toLowerCase(),
+    "vuvietcuonglmnx@gmail.com".toLowerCase()
+  ];
   const userEmailLower = profile?.email?.toLowerCase();
   const isBoss = userEmailLower === BOSS_EMAIL.toLowerCase();
-  const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
+  const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || (userEmailLower && ADMIN_EMAILS.includes(userEmailLower)) || isBoss;
   const userRole = profile?.role || 'student';
   const navigate = useNavigate();
   const location = useLocation();
@@ -204,11 +208,10 @@ export default function Layout({ children }: LayoutProps) {
     if (role === 'admin' && !isBoss) return;
     
     try {
-      const { updateDoc, doc } = await import('firebase/firestore');
-      await updateDoc(doc(db, 'users', profile.uid), { role });
+      await switchRole(role as any);
       setIsRoleSwitcherOpen(false);
-      // The profile will auto-update via onSnapshot in FirebaseProvider
-    } catch (error) {
+    } catch (error: any) {
+      alert(error.message);
       console.error("Error switching role:", error);
     }
   };
@@ -329,7 +332,7 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col">
-      {/* Top Header - Facebook Style */}
+      {/* HEADER CHÍNH - Phong cách Facebook */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-[60] px-2 sm:px-4 h-14 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
           <div 
@@ -402,7 +405,15 @@ export default function Layout({ children }: LayoutProps) {
                         { id: 'parent', label: 'Phụ huynh', color: 'text-green-600' },
                         { id: 'business', label: 'Doanh nghiệp', color: 'text-purple-600' },
                         { id: 'admin', label: 'Quản trị viên', color: 'text-indigo-600', bossOnly: true },
-                      ].filter(r => !r.bossOnly || isBoss).map((r) => (
+                      ].filter(r => {
+                        if (isBoss) return true;
+                        if (r.bossOnly) return false;
+                        // Student cannot switch to parent or business
+                        if (userRole === 'student') return r.id === 'student';
+                        // Parent and Business cannot switch to student
+                        if (userRole === 'parent' || userRole === 'business') return r.id !== 'student';
+                        return true;
+                      }).map((r) => (
                         <button
                           key={r.id}
                           onClick={() => handleSwitchRole(r.id)}
@@ -456,7 +467,9 @@ export default function Layout({ children }: LayoutProps) {
                 onClick={() => navigate('/profile')}
                 className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-all relative"
               >
-                {profile?.photoURL ? (
+                {userRole === 'business' && profile?.businessLogo ? (
+                  <img src={profile.businessLogo} alt="Business Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : profile?.photoURL ? (
                   <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <User size={24} className="text-gray-500 m-auto" />
@@ -472,7 +485,23 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Navigation Tabs - Facebook Style */}
+      {/* Thông báo hoàn thiện hồ sơ doanh nghiệp */}
+      {userRole === 'business' && !profile?.businessName && (
+        <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-700 text-xs font-bold">
+            <AlertTriangle size={14} />
+            <span>Bạn chưa hoàn thiện thông tin doanh nghiệp. Hãy cập nhật để tăng uy tín!</span>
+          </div>
+          <button 
+            onClick={() => navigate('/profile')}
+            className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-700 underline"
+          >
+            Cập nhật ngay
+          </button>
+        </div>
+      )}
+
+      {/* THANH ĐIỀU HƯỚNG TABS - Desktop & Mobile */}
       <nav className="bg-white border-b border-gray-200 sticky top-14 z-50 flex justify-center px-2 sm:px-4">
         <div className="flex w-full max-w-3xl justify-between">
           {mainNavItems.map((item) => (
@@ -517,14 +546,16 @@ export default function Layout({ children }: LayoutProps) {
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <MarketSurveyModal />
 
-      {/* Main Content Area */}
+      {/* KHU VỰC NỘI DUNG CHÍNH */}
       <div className="flex-1 flex justify-center py-4 px-0 sm:px-4">
         <div className="w-full max-w-[1360px] flex gap-0 lg:gap-6 justify-center">
-          {/* Left Sidebar - Desktop only */}
+          {/* SIDEBAR TRÁI - Chỉ hiện trên Desktop */}
           <aside className="hidden lg:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-2">
             <NavLink to="/profile" className="flex items-center gap-3 p-2 hover:bg-gray-200 rounded-xl transition-colors relative group">
               <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 relative">
-                {profile?.photoURL ? (
+                {userRole === 'business' && profile?.businessLogo ? (
+                  <img src={profile.businessLogo} alt="Business Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : profile?.photoURL ? (
                   <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <User size={20} className="text-gray-500 m-auto mt-2" />
@@ -536,7 +567,9 @@ export default function Layout({ children }: LayoutProps) {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm">{profile?.displayName || 'Người dùng'}</span>
+                <span className="font-bold text-sm">
+                  {userRole === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : (profile?.displayName || 'Người dùng')}
+                </span>
                 {profile?.isVip && (
                   <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest">VIP Member</span>
                 )}
@@ -584,17 +617,17 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </aside>
 
-          {/* Main Feed */}
+          {/* FEED CHÍNH - Hiển thị nội dung các trang */}
           <main className="flex-1 min-w-0 w-full max-w-[720px] px-2 sm:px-0">
             {children}
             
-            {/* Mobile-only widgets (rendered at bottom of feed) */}
+            {/* Widgets cho Mobile (hiện ở cuối feed) */}
             <div className="xl:hidden mt-8 mb-20 px-2">
               <RightSidebarWidgets />
             </div>
           </main>
 
-          {/* Right Sidebar - Desktop only */}
+          {/* SIDEBAR PHẢI - Chỉ hiện trên Desktop lớn */}
           <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
             <RightSidebarWidgets />
           </aside>
@@ -603,7 +636,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <OnboardingTutorial />
 
-      {/* Side Menu Overlay */}
+      {/* MENU OVERLAY - Khi bấm vào nút Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -650,7 +683,9 @@ export default function Layout({ children }: LayoutProps) {
                     </div>
                   )}
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100 relative">
-                    {profile?.photoURL ? (
+                    {userRole === 'business' && profile?.businessLogo ? (
+                      <img src={profile.businessLogo} alt="Business Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : profile?.photoURL ? (
                       <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <User size={28} className="text-gray-500 m-auto mt-2" />
@@ -662,7 +697,9 @@ export default function Layout({ children }: LayoutProps) {
                     )}
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">{profile?.displayName || 'Người dùng'}</h3>
+                    <h3 className="font-bold text-lg">
+                      {userRole === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : (profile?.displayName || 'Người dùng')}
+                    </h3>
                     <p className="text-xs text-gray-500 font-medium">Xem trang cá nhân của bạn</p>
                   </div>
                 </NavLink>

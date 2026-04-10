@@ -15,7 +15,7 @@ export default function Profile() {
     profile, logout, updateProfile, 
     acceptFriendRequest, rejectFriendRequest, 
     addRelationship, acceptRelationship, rejectRelationship,
-    submitRating, submitNameChangeRequest 
+    submitRating, submitNameChangeRequest, switchRole
   } = useFirebase();
   const [applications, setApplications] = useState<(Application & { job?: Job })[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -45,6 +45,9 @@ export default function Profile() {
     portfolioLinks: [] as { title: string; url: string }[]
   });
   const [businessEditData, setBusinessEditData] = useState({
+    businessName: '',
+    businessLogo: '',
+    businessAddress: '',
     industry: '',
     website: '',
     companySize: '',
@@ -74,6 +77,9 @@ export default function Profile() {
         portfolioLinks: profile.portfolioLinks || []
       });
       setBusinessEditData({
+        businessName: profile.businessName || '',
+        businessLogo: profile.businessLogo || '',
+        businessAddress: profile.businessAddress || '',
         industry: profile.industry || '',
         website: profile.website || '',
         companySize: profile.companySize || '',
@@ -357,16 +363,12 @@ export default function Profile() {
   const [bankInfo, setBankInfo] = useState({ bankName: '', accountNumber: '', accountHolder: '' });
 
   const handleRoleChange = async (newRole: 'student' | 'parent' | 'business') => {
-    if (newRole === 'student' && (profile?.role === 'parent' || profile?.role === 'business')) {
-      alert('Phụ huynh và doanh nghiệp không thể chuyển thành vai trò học sinh.');
-      return;
-    }
     try {
-      await updateProfile({ role: newRole });
+      await switchRole(newRole as any);
       setIsRoleModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      alert(error.message);
       console.error("Error changing role:", error);
-      alert('Có lỗi xảy ra khi chuyển đổi vai trò.');
     }
   };
 
@@ -480,7 +482,7 @@ export default function Profile() {
     try {
       await updateProfile(businessEditData);
       setIsBusinessEditModalOpen(false);
-      alert('Cập nhật hồ sơ thành công!');
+      alert('Cập nhật hồ sơ doanh nghiệp thành công!');
     } catch (error) {
       console.error("Error updating business profile:", error);
       alert('Có lỗi xảy ra khi cập nhật hồ sơ.');
@@ -510,7 +512,9 @@ export default function Profile() {
               className={`w-28 h-28 rounded-[40px] p-1 shadow-2xl ${profile?.isVip ? 'bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600' : 'bg-gradient-to-br from-[#1877F2] to-[#4F46E5]'}`}
             >
               <div className="w-full h-full bg-white rounded-[36px] flex items-center justify-center text-4xl overflow-hidden border-4 border-white relative">
-                {profile?.photoURL ? (
+                {profile?.role === 'business' && profile?.businessLogo ? (
+                  <img src={profile.businessLogo} alt={profile.businessName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : profile?.photoURL ? (
                   <img src={profile.photoURL} alt={profile.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full bg-gray-50 flex items-center justify-center">
@@ -530,7 +534,7 @@ export default function Profile() {
           
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-black text-gray-900 flex items-center justify-center gap-2">
-              {profile?.displayName}
+              {profile?.role === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : profile?.displayName}
               <button 
                 onClick={() => setIsNameChangeModalOpen(true)}
                 className="p-1.5 bg-gray-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors"
@@ -1910,6 +1914,40 @@ export default function Profile() {
               </div>
               
               <div className="p-6 space-y-6 overflow-y-auto no-scrollbar">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tên doanh nghiệp</label>
+                    <input
+                      type="text"
+                      value={businessEditData.businessName}
+                      onChange={(e) => setBusinessEditData({ ...businessEditData, businessName: e.target.value })}
+                      placeholder="Ví dụ: Công ty TNHH TeenTask Việt Nam"
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Logo doanh nghiệp (URL)</label>
+                    <input
+                      type="text"
+                      value={businessEditData.businessLogo}
+                      onChange={(e) => setBusinessEditData({ ...businessEditData, businessLogo: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Địa chỉ trụ sở</label>
+                  <input
+                    type="text"
+                    value={businessEditData.businessAddress}
+                    onChange={(e) => setBusinessEditData({ ...businessEditData, businessAddress: e.target.value })}
+                    placeholder="Số 1, Đường ABC, Quận XYZ, Hà Nội"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Lĩnh vực</label>
