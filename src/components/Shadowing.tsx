@@ -1,4 +1,5 @@
 import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, SlidersHorizontal, ArrowRight, Heart, TrendingUp, DollarSign, Award, Video, Calendar, ChevronRight } from 'lucide-react';
+import SmartImage from './SmartImage';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,19 +19,15 @@ export default function Shadowing() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tất cả');
-  const [shadowingEvents, setShadowingEvents] = useState<any[]>(MOCK_SHADOWING);
-  const [loading, setLoading] = useState(false);
+  const [shadowingEvents, setShadowingEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     const q = query(collection(db, 'shadowing_events'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setShadowingEvents(events);
-      } else {
-        setShadowingEvents(MOCK_SHADOWING);
-      }
+      const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setShadowingEvents(events);
       setLoading(false);
     }, (error) => {
       console.error("Shadowing listener error:", error);
@@ -40,6 +37,14 @@ export default function Shadowing() {
 
     return () => unsubscribe();
   }, []);
+
+  const workshops = useMemo(() => {
+    return shadowingEvents.filter(e => e.type === 'workshop' && e.status !== 'closed');
+  }, [shadowingEvents]);
+
+  const oneOnOneSlots = useMemo(() => {
+    return shadowingEvents.filter(e => e.type === '1-1' && e.status !== 'closed');
+  }, [shadowingEvents]);
 
   const filteredEvents = useMemo(() => {
     return shadowingEvents.filter(event => {
@@ -227,139 +232,107 @@ export default function Shadowing() {
             </div>
           </motion.div>
 
-          <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar md:grid md:grid-cols-3 md:overflow-visible">
-            {/* Card 1 */}
-            <motion.div 
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 30 }}
-              transition={{ delay: 0.1 }}
-              viewport={{ once: true }}
-              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-green-100 text-green-700 rounded-full px-2 py-0.5 text-xs font-bold">🆓 Miễn phí</span>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black">NA</div>
-                <div>
-                  <p className="text-sm font-black text-slate-900">Nguyễn Anh Khoa</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Creative Director @ TBWA Vietnam</p>
-                </div>
-              </div>
-              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Ngày trong đời một Designer</h3>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <Video size={14} className="text-indigo-500" />
-                  <span>Online · 10 người · 2 tiếng</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <Calendar size={14} className="text-indigo-500" />
-                  <span>Thứ 7, 19/04/2025</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {["Design", "Career", "Creative"].map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg">{tag}</span>
-                ))}
-              </div>
-              <button 
-                onClick={() => alert("Tính năng sắp ra mắt!")}
-                className="mt-auto bg-indigo-600 text-white rounded-xl py-3 w-full font-black text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-              >
-                Đăng ký tham gia <ArrowRight size={16} />
-              </button>
-            </motion.div>
+          {workshops.length > 0 ? (
+            <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar md:grid md:grid-cols-3 md:overflow-visible">
+              {workshops.map((workshop, i) => (
+                <motion.div 
+                  key={workshop.id}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  onClick={() => handleOpenDetail(workshop)}
+                  className="min-w-[320px] md:min-w-0 bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col cursor-pointer group overflow-hidden"
+                >
+                  <div className="h-40 -mx-8 -mt-8 mb-8 overflow-hidden">
+                    <SmartImage 
+                      title={workshop.title} 
+                      fallbackUrl={workshop.image} 
+                      type="banner"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
+                  </div>
+                  <div className="flex justify-between items-start mb-6">
+                    <span className={cn(
+                      "rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest",
+                      workshop.price === 0 || workshop.price === 'Miễn phí' 
+                        ? "bg-emerald-100 text-emerald-700" 
+                        : "bg-indigo-100 text-indigo-700"
+                    )}>
+                      {workshop.price === 0 || workshop.price === 'Miễn phí' ? '🆓 Miễn phí' : `${workshop.price}đ`}
+                    </span>
+                    {workshop.slotsRemaining <= 3 && workshop.slotsRemaining > 0 && (
+                      <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest animate-pulse">
+                        🔥 Chỉ còn {workshop.slotsRemaining} chỗ
+                      </span>
+                    )}
+                  </div>
 
-            {/* Card 2 */}
-            <motion.div 
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 30 }}
-              transition={{ delay: 0.2 }}
-              viewport={{ once: true }}
-              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 text-xs font-bold">🏆 Có chứng nhận</span>
-                <span className="text-sm font-black text-purple-600">50.000đ</span>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-black">TB</div>
-                <div>
-                  <p className="text-sm font-black text-slate-900">Trần Bảo Ngọc</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Marketing Manager @ Unilever Vietnam</p>
-                </div>
-              </div>
-              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Marketing 0 đồng cho học sinh</h3>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <MapPin size={14} className="text-purple-500" />
-                  <span>TP.HCM · 15 người · 3 tiếng</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <Calendar size={14} className="text-purple-500" />
-                  <span>Chủ nhật, 20/04/2025</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {["Marketing", "Branding", "Strategy"].map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-600 text-[10px] font-bold rounded-lg">{tag}</span>
-                ))}
-              </div>
-              <button 
-                onClick={() => alert("Tính năng sắp ra mắt!")}
-                className="mt-auto bg-purple-600 text-white rounded-xl py-3 w-full font-black text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-              >
-                Đăng ký tham gia <ArrowRight size={16} />
-              </button>
-            </motion.div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={`https://i.pravatar.cc/100?u=${workshop.mentorId || workshop.mentor}`} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{workshop.mentorName || workshop.mentor}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
+                        {workshop.mentorTitle || workshop.role} @ {workshop.companyName || workshop.company}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Card 3 */}
-            <motion.div 
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 30 }}
-              transition={{ delay: 0.3 }}
-              viewport={{ once: true }}
-              className="min-w-[300px] md:min-w-0 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-red-100 text-red-600 rounded-full px-2 py-0.5 text-xs font-bold">🔥 HOT · 3 slot còn lại</span>
-                <span className="text-sm font-black text-rose-600">100.000đ</span>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-black">LC</div>
-                <div>
-                  <p className="text-sm font-black text-slate-900">Lê Công Thành</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Founder & CEO @ Startup X</p>
-                </div>
-              </div>
-              <h3 className="text-lg font-black text-slate-900 mb-4 leading-tight">Startup 101 từ A đến Z</h3>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <Video size={14} className="text-rose-500" />
-                  <span>Online · 20 người · 4 tiếng</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <Calendar size={14} className="text-rose-500" />
-                  <span>Thứ 7, 26/04/2025</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {["Startup", "Business", "Pitch"].map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg">{tag}</span>
-                ))}
-              </div>
-              <button 
-                onClick={() => alert("Tính năng sắp ra mắt!")}
-                className="mt-auto bg-[#DB2777] text-white rounded-xl py-3 w-full font-black text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-              >
-                Đăng ký tham gia <ArrowRight size={16} />
-              </button>
-            </motion.div>
-          </div>
+                  <h3 className="text-xl font-black text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
+                    {workshop.title}
+                  </h3>
+
+                  <div className="space-y-3 mb-8">
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
+                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                        <Video size={14} className="text-indigo-500" />
+                      </div>
+                      <span>{workshop.location} · {workshop.slotsTotal} người</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
+                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                        <Calendar size={14} className="text-indigo-500" />
+                      </div>
+                      <span>{workshop.date} · {workshop.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {workshop.category && (
+                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                        {workshop.category}
+                      </span>
+                    )}
+                    <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                      {workshop.level || 'Cơ bản'}
+                    </span>
+                  </div>
+
+                  <button 
+                    className="mt-auto bg-indigo-600 text-white rounded-2xl py-4 w-full font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-3"
+                  >
+                    Xem chi tiết <ArrowRight size={16} strokeWidth={3} />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-slate-50 rounded-[40px] p-12 text-center border-2 border-dashed border-slate-200">
+              <p className="text-slate-400 font-bold">Hiện chưa có workshop nào đang mở. Quay lại sau nhé!</p>
+            </div>
+          )}
 
           <div className="mt-12 flex items-center gap-4">
             <div className="flex-1 h-px bg-slate-100"></div>
-            <span className="text-gray-400 text-sm font-medium">— hoặc đăng ký thẳng Shadowing 1-1 bên dưới —</span>
+            <span className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
+              — hoặc đăng ký thẳng Shadowing 1-1 bên dưới —
+            </span>
             <div className="flex-1 h-px bg-slate-100"></div>
           </div>
         </section>
@@ -367,7 +340,18 @@ export default function Shadowing() {
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           <AnimatePresence mode="popLayout">
-            {filteredEvents.map((event, i) => (
+            {oneOnOneSlots.filter(e => {
+              const title = e.title || '';
+              const mentor = e.mentorName || e.mentor || '';
+              const company = e.companyName || e.company || '';
+              const category = e.category || '';
+
+              const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                   mentor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                   company.toLowerCase().includes(searchQuery.toLowerCase());
+              const matchesCategory = activeCategory === 'Tất cả' || category === activeCategory;
+              return matchesSearch && matchesCategory;
+            }).map((event, i) => (
               <motion.div
                 layout
                 key={event.id}
@@ -386,7 +370,7 @@ export default function Shadowing() {
 
                 <div className="relative h-72 overflow-hidden">
                   <img 
-                    src={event.image} 
+                    src={event.image || `https://picsum.photos/seed/${event.id}/800/600`} 
                     alt={event.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     referrerPolicy="no-referrer"
@@ -428,16 +412,16 @@ export default function Shadowing() {
                   <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-slate-50 border-2 border-slate-100 overflow-hidden shadow-sm group-hover:border-amber-100 transition-colors">
-                        <img src={`https://i.pravatar.cc/100?u=${event.mentor}`} alt="" className="w-full h-full object-cover" />
+                        <img src={`https://i.pravatar.cc/100?u=${event.mentorId || event.mentor}`} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-900 tracking-tight">{event.mentor}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{event.role}</p>
+                        <p className="text-sm font-black text-slate-900 tracking-tight">{event.mentorName || event.mentor}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{event.mentorTitle || event.role}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Công ty</p>
-                      <p className="text-xs font-black text-primary tracking-tight">{event.company}</p>
+                      <p className="text-xs font-black text-primary tracking-tight">{event.companyName || event.company}</p>
                     </div>
                   </div>
 

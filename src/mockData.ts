@@ -98,6 +98,66 @@ export const MOCK_JOBS = [
       'Nhận giấy chứng nhận hỗ trợ sự kiện từ FPT.'
     ]
   },
+  {
+    id: '4',
+    businessId: 'business_4',
+    businessName: 'Grab Việt Nam',
+    title: 'Cộng tác viên Dữ liệu',
+    company: 'Grab',
+    location: 'Quận 7, TP.HCM',
+    salary: '400.000đ/ngày',
+    salaryValue: 400000,
+    deadline: '2025-04-15',
+    deadlineDisplay: '15/04',
+    type: 'Offline',
+    tags: ['Data', 'Tech'],
+    hot: true,
+    logo: 'https://picsum.photos/seed/grab/100/100',
+    color: 'bg-green-50 text-green-600 border-green-100',
+    jobStatus: 'Active',
+    responsibilities: [
+      'Nhập liệu và kiểm tra tính chính xác của dữ liệu bản đồ.',
+      'Hỗ trợ đội ngũ kỹ thuật trong việc phân loại dữ liệu.'
+    ],
+    qualifications: [
+      'Cẩn thận, tỉ mỉ.',
+      'Sử dụng máy tính cơ bản tốt.'
+    ],
+    benefits: [
+      'Môi trường làm việc năng động.',
+      'Thù lao cạnh tranh.'
+    ]
+  },
+  {
+    id: '5',
+    businessId: 'business_5',
+    businessName: 'Shopee',
+    title: 'Hỗ trợ Livestream',
+    company: 'Shopee',
+    location: 'Quận 1, TP.HCM',
+    salary: '150.000đ/giờ',
+    salaryValue: 150000,
+    deadline: '2025-04-12',
+    deadlineDisplay: '12/04',
+    type: 'Offline',
+    tags: ['E-commerce', 'Live'],
+    hot: true,
+    logo: 'https://picsum.photos/seed/shopee/100/100',
+    color: 'bg-orange-50 text-orange-600 border-orange-100',
+    jobStatus: 'Active',
+    responsibilities: [
+      'Chuẩn bị sản phẩm cho buổi livestream.',
+      'Hỗ trợ MC trong việc tương tác với khách hàng.'
+    ],
+    qualifications: [
+      'Nhanh nhẹn, hoạt ngôn.',
+      'Có kiến thức về các sản phẩm hot trên Shopee.'
+    ],
+    benefits: [
+      'Được làm việc với các KOL/KOC nổi tiếng.',
+      'Thưởng theo doanh số livestream.'
+    ]
+  },
 ];
 
 export const MOCK_SHADOWING = [

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Shield, Award, MapPin, ExternalLink, Download, ShieldCheck, Clock, XCircle, ChevronRight, Star, X, Bell, AlertTriangle, Check, Plus, Building2, UserPlus, UserCheck, Users, Heart, Briefcase as BriefcaseIcon, User, LogOut, Edit2, Trash2, Calendar, Phone, Mail, Globe, GraduationCap, Languages, FileText, CalendarDays } from 'lucide-react';
+import { Settings, Shield, Award, MapPin, ExternalLink, Download, ShieldCheck, Clock, XCircle, ChevronRight, Star, X, Bell, AlertTriangle, Check, Plus, Building2, UserPlus, UserCheck, Users, Heart, Briefcase as BriefcaseIcon, User, LogOut, Edit2, Trash2, Calendar, Phone, Mail, Globe, GraduationCap, Languages, FileText, CalendarDays, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -15,7 +15,8 @@ export default function Profile() {
     profile, logout, updateProfile, 
     acceptFriendRequest, rejectFriendRequest, 
     addRelationship, acceptRelationship, rejectRelationship,
-    submitRating, submitNameChangeRequest, switchRole
+    submitRating, submitNameChangeRequest, switchRole,
+    t, language, setLanguage
   } = useFirebase();
   const [applications, setApplications] = useState<(Application & { job?: Job })[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -69,6 +70,10 @@ export default function Profile() {
     proofUrl: ''
   });
   const [submittingNameChange, setSubmittingNameChange] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'activity' | 'saved'>('profile');
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [tempBio, setTempBio] = useState('');
+  const [quickSkillInput, setQuickSkillInput] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -500,6 +505,36 @@ export default function Profile() {
     }
   };
 
+  const addQuickSkill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickSkillInput.trim() || (profile?.skills || []).includes(quickSkillInput.trim())) return;
+    try {
+      const newSkills = [...(profile?.skills || []), quickSkillInput.trim()];
+      await updateProfile({ skills: newSkills });
+      setQuickSkillInput('');
+    } catch (error) {
+      console.error("Error adding quick skill:", error);
+    }
+  };
+
+  const removeSkill = async (skillToRemove: string) => {
+    try {
+      const newSkills = (profile?.skills || []).filter(s => s !== skillToRemove);
+      await updateProfile({ skills: newSkills });
+    } catch (error) {
+      console.error("Error removing skill:", error);
+    }
+  };
+
+  const getSkillLevel = (skill: string) => {
+    // In a real app, this might come from completed tasks/courses
+    // For now, we'll use a deterministic but varied level based on the skill name length
+    const hash = skill.length % 3;
+    if (hash === 0) return { percent: 33, label: 'Cơ bản' };
+    if (hash === 1) return { percent: 66, label: 'Khá' };
+    return { percent: 100, label: 'Thành thạo' };
+  };
+
   return (
     <div className="min-h-screen pb-24 bg-[#F8FAFC]">
       {/* Profile Header Section */}
@@ -634,11 +669,95 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* Tabs Section */}
+      <div className="max-w-5xl mx-auto px-6 mt-8">
+        <div className="flex p-1 bg-gray-100 rounded-2xl">
+          {[
+            { id: 'profile', label: 'Hồ sơ', icon: User },
+            { id: 'activity', label: 'Hoạt động', icon: Clock },
+            { id: 'saved', label: 'Đã lưu', icon: Heart }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all",
+                activeTab === tab.id ? "bg-white text-[#1877F2] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <div className="max-w-5xl mx-auto px-6 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <AnimatePresence mode="wait">
+          {activeTab === 'profile' && (
+            <motion.div
+              key="profile"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start"
+            >
           {/* Left Column: Social & Identity */}
           <div className="space-y-6">
+            {/* Bio Section */}
+            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <User size={18} className="text-indigo-600" />
+                  {t('bio')}
+                </h3>
+                {!isEditingBio && (
+                  <button 
+                    onClick={() => {
+                      setTempBio(profile?.bio || '');
+                      setIsEditingBio(true);
+                    }}
+                    className="p-1.5 bg-gray-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                )}
+              </div>
+              
+              {isEditingBio ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={tempBio}
+                    onChange={(e) => setTempBio(e.target.value)}
+                    className="w-full p-4 bg-gray-50 border-2 border-indigo-100 rounded-2xl text-sm focus:bg-white outline-none transition-all min-h-[120px]"
+                    placeholder="Viết gì đó về bản thân bạn..."
+                  />
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setIsEditingBio(false)}
+                      className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold"
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        await updateProfile({ bio: tempBio });
+                        setIsEditingBio(false);
+                      }}
+                      className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-100"
+                    >
+                      Lưu thay đổi
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {profile?.bio || 'Chưa có mô tả giới thiệu.'}
+                </p>
+              )}
+            </div>
+
             {/* CV Management */}
             {profile?.role === 'student' && (
               <div className="space-y-4">
@@ -884,24 +1003,78 @@ export default function Profile() {
                 <div className="space-y-6">
                   <div>
                     <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Kỹ năng</h4>
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('skillProgress')}</h4>
                       <button 
                         onClick={handleOpenSkillsModal}
-                        className="text-[10px] font-bold text-indigo-600 flex items-center gap-1"
+                        className="text-[10px] font-bold text-indigo-600 flex items-center gap-1 hover:underline"
                       >
-                        <Plus size={12} /> Chỉnh sửa
+                        <SlidersHorizontal size={12} /> {t('manage')}
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(profile?.skills || []).length > 0 ? (
-                        profile?.skills.map((skill) => (
-                          <span key={skill} className="px-3 py-1.5 bg-indigo-50 text-[#4F46E5] text-xs font-medium rounded-lg">
-                            {skill}
-                          </span>
-                        ))
-                      ) : (
-                        <p className="text-xs text-gray-400 italic">Chưa có kỹ năng nào được chọn</p>
-                      )}
+                    
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {(profile?.skills || []).length > 0 ? (
+                          profile?.skills.map((skill) => {
+                            const level = getSkillLevel(skill);
+                            return (
+                              <div key={skill} className="w-full bg-gray-50/50 p-3 rounded-2xl border border-gray-100 group/skill">
+                                <div className="flex justify-between items-center mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-gray-800">{skill}</span>
+                                    <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter ${
+                                      level.percent === 100 ? 'bg-green-100 text-green-600' :
+                                      level.percent === 66 ? 'bg-blue-100 text-blue-600' :
+                                      'bg-gray-100 text-gray-500'
+                                    }`}>
+                                      {level.label}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black text-indigo-600">{level.percent}%</span>
+                                    <button 
+                                      onClick={() => removeSkill(skill)}
+                                      className="opacity-0 group-hover/skill:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="h-1.5 w-full bg-gray-200/50 rounded-full overflow-hidden">
+                                  <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${level.percent}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    className={`h-full rounded-full ${
+                                      level.percent === 100 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
+                                      level.percent === 66 ? 'bg-gradient-to-r from-indigo-400 to-blue-500' :
+                                      'bg-gradient-to-r from-gray-400 to-slate-500'
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-xs text-gray-400 italic py-2">Chưa có kỹ năng nào được chọn</p>
+                        )}
+                      </div>
+
+                      <form onSubmit={addQuickSkill} className="relative">
+                        <input 
+                          type="text"
+                          value={quickSkillInput}
+                          onChange={(e) => setQuickSkillInput(e.target.value)}
+                          placeholder={t('quickAddSkill')}
+                          className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-medium focus:bg-white focus:border-indigo-200 outline-none transition-all"
+                        />
+                        <button 
+                          type="submit"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </form>
                     </div>
                   </div>
 
@@ -1004,10 +1177,49 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Giới thiệu doanh nghiệp</h4>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      {profile?.bio || 'Chưa có mô tả giới thiệu doanh nghiệp.'}
-                    </p>
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Giới thiệu doanh nghiệp</h4>
+                      <button 
+                        onClick={() => {
+                          setTempBio(profile?.bio || '');
+                          setIsEditingBio(true);
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg text-indigo-600 transition-colors"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    </div>
+                    {isEditingBio ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={tempBio}
+                          onChange={(e) => setTempBio(e.target.value)}
+                          className="w-full p-4 bg-gray-50 border-2 border-indigo-100 rounded-2xl text-sm focus:bg-white outline-none transition-all min-h-[100px]"
+                          placeholder="Viết gì đó về doanh nghiệp của bạn..."
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => setIsEditingBio(false)}
+                            className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold"
+                          >
+                            Hủy
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              await updateProfile({ bio: tempBio });
+                              setIsEditingBio(false);
+                            }}
+                            className="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                          >
+                            Lưu
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {profile?.bio || 'Chưa có mô tả giới thiệu doanh nghiệp.'}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1206,16 +1418,47 @@ export default function Profile() {
             <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Settings size={18} className="text-gray-400" />
-                Cài đặt tài khoản
+                {t('settingsPrivacy')}
               </h3>
               <div className="space-y-1">
                 <button 
                   onClick={() => setIsPersonalInfoModalOpen(true)}
                   className="w-full flex justify-between items-center p-3 hover:bg-gray-50 rounded-2xl transition-colors text-sm text-gray-600 group"
                 >
-                  <span className="font-medium group-hover:text-gray-900">Thông tin cá nhân</span>
+                  <span className="font-medium group-hover:text-gray-900">{t('accountSettings')}</span>
                   <ChevronRight size={16} className="text-gray-300" />
                 </button>
+
+                {/* Language Switcher */}
+                <div className="p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-600">{t('language')}</span>
+                    <Globe size={16} className="text-gray-300" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setLanguage('vi')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                        language === 'vi' 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-600' 
+                        : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      Tiếng Việt
+                    </button>
+                    <button 
+                      onClick={() => setLanguage('en')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                        language === 'en' 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-600' 
+                        : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
+
                 {(profile?.role === 'business' || profile?.role === 'parent') && (
                   <button 
                     onClick={() => setIsRoleModalOpen(true)}
@@ -1229,14 +1472,136 @@ export default function Profile() {
                   onClick={logout}
                   className="w-full flex justify-between items-center p-3 hover:bg-red-50 rounded-2xl transition-colors text-sm text-red-500 group mt-2"
                 >
-                  <span className="font-bold">Đăng xuất</span>
+                  <span className="font-bold">{t('logout')}</span>
                   <LogOut size={16} className="text-red-300" />
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'activity' && (
+        <motion.div
+          key="activity"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="space-y-6"
+        >
+          <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+            <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                <Clock size={20} />
+              </div>
+              Hoạt động gần đây
+            </h3>
+            
+            <div className="space-y-6">
+              {notifications.length > 0 ? (
+                notifications.map((notif, idx) => (
+                  <div key={notif.id || idx} className="flex gap-4 relative">
+                    {idx !== notifications.length - 1 && (
+                      <div className="absolute left-[19px] top-10 bottom-[-24px] w-0.5 bg-gray-100" />
+                    )}
+                    <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${
+                      notif.type === 'application' ? 'bg-blue-50 text-blue-600' :
+                      notif.type === 'friend_request' ? 'bg-purple-50 text-purple-600' :
+                      'bg-gray-50 text-gray-600'
+                    }`}>
+                      {notif.type === 'application' ? <BriefcaseIcon size={18} /> : 
+                       notif.type === 'friend_request' ? <UserPlus size={18} /> : 
+                       <Bell size={18} />}
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-sm font-bold text-gray-900">{notif.title}</h4>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                          {new Date(notif.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">{notif.message}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock size={32} className="text-gray-300" />
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium">Chưa có hoạt động nào được ghi lại.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'saved' && (
+        <motion.div
+          key="saved"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="space-y-6"
+        >
+          <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+            <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-pink-50 text-pink-600 rounded-xl">
+                <Heart size={20} />
+              </div>
+              Đã lưu ({profile?.savedJobs?.length || 0})
+            </h3>
+
+            {(profile?.savedJobs || []).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {applications.filter(app => profile?.savedJobs?.includes(app.jobId)).map(app => (
+                  <div key={app.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-pink-200 transition-all group">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-100">
+                        <img src={app.job?.businessLogo || 'https://picsum.photos/seed/company/100/100'} alt="Logo" className="w-full h-full object-cover" />
+                      </div>
+                      <button className="p-2 text-pink-500 hover:bg-pink-50 rounded-lg transition-colors">
+                        <Heart size={18} fill="currentColor" />
+                      </button>
+                    </div>
+                    <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{app.job?.title}</h4>
+                    <p className="text-xs text-gray-500 mb-4">{app.job?.businessName}</p>
+                    <button 
+                      onClick={() => navigate(`/jobs?id=${app.jobId}`)}
+                      className="w-full py-2 bg-white text-gray-600 border border-gray-200 rounded-xl text-xs font-bold hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all"
+                    >
+                      Xem chi tiết
+                    </button>
+                  </div>
+                ))}
+                {profile?.savedJobs?.length > applications.filter(app => profile?.savedJobs?.includes(app.jobId)).length && (
+                  <div className="col-span-full p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <p className="text-xs text-indigo-600 font-medium text-center">
+                      Bạn có một số mục đã lưu khác. Hãy khám phá thêm ở trang Việc làm!
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart size={32} className="text-gray-300" />
+                </div>
+                <p className="text-sm text-gray-400 font-medium">Bạn chưa lưu công việc nào.</p>
+                <button 
+                  onClick={() => navigate('/jobs')}
+                  className="mt-4 px-6 py-2 bg-[#1877F2] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-100"
+                >
+                  Khám phá ngay
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
 
       {/* Personal Info Modal */}
       <AnimatePresence>

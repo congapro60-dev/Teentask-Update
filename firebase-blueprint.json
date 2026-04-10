@@ -50,24 +50,68 @@
     },
     "ShadowingEvent": {
       "title": "Shadowing Event",
-      "description": "Job shadowing opportunities.",
+      "description": "Job shadowing opportunities (1-1 or Workshop).",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "mentorId": { "type": "string" },
         "mentorName": { "type": "string" },
+        "mentorTitle": { "type": "string" },
+        "companyId": { "type": "string" },
         "companyName": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "date": { "type": "number" },
+        "time": { "type": "string" },
         "price": { "type": "number" },
         "slotsTotal": { "type": "number" },
         "slotsRemaining": { "type": "number" },
         "location": { "type": "string" },
         "category": { "type": "string" },
+        "type": { "type": "string", "enum": ["1-1", "workshop"] },
+        "status": { "type": "string", "enum": ["upcoming", "ongoing", "completed", "closed"] },
+        "level": { "type": "string", "enum": ["Cơ bản", "Nâng cao", "Chuyên sâu"] },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "benefits": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "number" }
       },
-      "required": ["id", "mentorId", "title", "date", "price", "createdAt"]
+      "required": ["id", "mentorId", "companyId", "title", "date", "price", "type", "status", "createdAt"]
+    },
+    "PracticalTask": {
+      "title": "Practical Task",
+      "description": "Real-world tasks provided by businesses for students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "businessId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "durationDays": { "type": "number" },
+        "requiredOutput": { "type": "string" },
+        "skillsGained": { "type": "array", "items": { "type": "string" } },
+        "maxStudents": { "type": "number" },
+        "currentStudents": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "businessId", "title", "description", "status", "createdAt"]
+    },
+    "TaskSubmission": {
+      "title": "Task Submission",
+      "description": "Student submissions for practical tasks.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "outputUrl": { "type": "string" },
+        "feedback": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed"] },
+        "submittedAt": { "type": "number" }
+      },
+      "required": ["id", "taskId", "studentId", "outputUrl", "status", "submittedAt"]
     },
     "Application": {
       "title": "Job Application",
@@ -247,47 +291,6 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "title", "date", "type", "status", "createdAt"]
-    },
-    "ShadowingTask": {
-      "title": "Shadowing Task",
-      "description": "Structured tasks for shadowing students.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "businessId": { "type": "string" },
-        "businessName": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "daysToComplete": { "type": "number" },
-        "outputRequired": { "type": "string" },
-        "skillsLearned": { "type": "string" },
-        "maxStudents": { "type": "number" },
-        "status": { "type": "string", "enum": ["active", "closed"] },
-        "createdAt": { "type": "number" }
-      },
-      "required": ["businessId", "name", "description", "daysToComplete", "outputRequired", "skillsLearned", "status", "createdAt"]
-    },
-    "ShadowingWorkshop": {
-      "title": "Shadowing Workshop",
-      "description": "Group workshops for students.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "businessId": { "type": "string" },
-        "businessName": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "number" },
-        "time": { "type": "string" },
-        "price": { "type": "number" },
-        "slotsTotal": { "type": "number" },
-        "slotsRemaining": { "type": "number" },
-        "location": { "type": "string" },
-        "skills": { "type": "string" },
-        "status": { "type": "string", "enum": ["active", "closed"] },
-        "createdAt": { "type": "number" }
-      },
-      "required": ["businessId", "title", "date", "slotsTotal", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -301,7 +304,15 @@
     },
     "shadowing_events/{eventId}": {
       "schema": "ShadowingEvent",
-      "description": "Shadowing events."
+      "description": "Shadowing events (1-1 and Workshops)."
+    },
+    "practical_tasks/{taskId}": {
+      "schema": "PracticalTask",
+      "description": "Real-world practical tasks."
+    },
+    "task_submissions/{submissionId}": {
+      "schema": "TaskSubmission",
+      "description": "Student submissions for practical tasks."
     },
     "applications/{applicationId}": {
       "schema": "Application",
@@ -346,14 +357,6 @@
     "events/{eventId}": {
       "schema": "Event",
       "description": "Calendar events."
-    },
-    "shadowing_tasks/{taskId}": {
-      "schema": "ShadowingTask",
-      "description": "Structured shadowing tasks."
-    },
-    "shadowing_workshops/{workshopId}": {
-      "schema": "ShadowingWorkshop",
-      "description": "Group shadowing workshops."
     }
   }
 }

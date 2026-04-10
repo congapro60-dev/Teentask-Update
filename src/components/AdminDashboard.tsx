@@ -288,7 +288,8 @@ export default function AdminDashboard() {
     
     setIsAILoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         Bạn là một chuyên gia nghiên cứu thị trường việc làm tại Việt Nam.
         Hãy cung cấp dữ liệu thị trường thực tế mới nhất (hoặc ước tính sát thực tế nhất) về nhu cầu việc làm part-time, freelance dành cho học sinh/sinh viên (Gen Z) tại Việt Nam.
@@ -307,7 +308,7 @@ export default function AdminDashboard() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
           temperature: 0.7,
@@ -342,7 +343,8 @@ export default function AdminDashboard() {
     
     setIsAICompetitorLoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         Bạn là một chuyên gia phân tích thị trường việc làm tại Việt Nam.
         Hãy đánh giá và so sánh 4 nền tảng tìm việc: "TeenTask", "TopCV", "Việc làm tốt", "Facebook Groups" dựa trên 8 tiêu chí sau dành cho đối tượng học sinh 14-18 tuổi.
@@ -380,7 +382,7 @@ export default function AdminDashboard() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
           temperature: 0.7,

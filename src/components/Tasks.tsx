@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Award, CheckCircle2, Star, Zap, Trophy, ArrowLeft, ChevronRight, Clock, Target, Gift, MessageSquare, Info } from 'lucide-react';
+import { Award, CheckCircle2, Star, Zap, Trophy, ArrowLeft, ChevronRight, Clock, Target, Gift, MessageSquare, Info, Users, Briefcase, Calendar, MapPin, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFirebase, db } from './FirebaseProvider';
-import { doc, updateDoc, increment, arrayUnion, addDoc, collection } from 'firebase/firestore';
+import { doc, updateDoc, increment, arrayUnion, addDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 
 interface Task {
@@ -21,8 +21,23 @@ interface Task {
 export default function Tasks() {
   const navigate = useNavigate();
   const { profile } = useFirebase();
-  const [activeTab, setActiveTab] = useState<'daily' | 'achievement'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'achievement' | 'practical'>('daily');
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [practicalTasks, setPracticalTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'practical') {
+      setLoading(true);
+      const q = query(collection(db, 'practical_tasks'), orderBy('createdAt', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPracticalTasks(tasks);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    }
+  }, [activeTab]);
 
   const tasks: Task[] = [
     { 
@@ -207,18 +222,18 @@ export default function Tasks() {
 
         {/* Tabs */}
         <div className="flex p-1 bg-slate-100 rounded-2xl">
-          {(['daily', 'achievement'] as const).map((tab) => (
+          {(['daily', 'achievement', 'practical'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                 activeTab === tab 
                   ? "bg-white text-slate-900 shadow-sm" 
                   : "text-slate-500 hover:text-slate-700"
               )}
             >
-              {tab === 'daily' ? 'Hàng ngày' : 'Thành tựu'}
+              {tab === 'daily' ? 'Hàng ngày' : tab === 'achievement' ? 'Thành tựu' : 'Thực hành'}
             </button>
           ))}
         </div>
@@ -226,67 +241,134 @@ export default function Tasks() {
         {/* Task List */}
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
-            {filteredTasks.map((task, i) => (
-              <motion.div
-                key={task.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.05 }}
-                className={cn(
-                  "bg-white p-5 rounded-[32px] border transition-all flex items-center gap-4",
-                  task.status === 'claimed' ? "opacity-60 grayscale" : "border-slate-100 hover:shadow-xl hover:shadow-slate-200/50"
-                )}
-              >
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0",
-                  task.status === 'claimed' ? "bg-slate-100 text-slate-400" : "bg-blue-50 text-blue-500"
-                )}>
-                  <task.icon size={24} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-bold text-slate-900 truncate">{task.title}</h4>
-                    <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      +{task.reward}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium line-clamp-1">{task.desc}</p>
-                  
-                  {task.progress && (
-                    <div className="mt-2 space-y-1">
-                      <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500" 
-                          style={{ width: `${(task.progress.current / task.progress.total) * 100}%` }}
-                        />
+            {activeTab === 'practical' ? (
+              practicalTasks.length > 0 ? (
+                practicalTasks.map((task, i) => (
+                  <motion.div
+                    key={task.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white p-6 rounded-[32px] border border-slate-100 hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col gap-4"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                          <Target size={24} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-slate-900">{task.title}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {task.companyName || 'Doanh nghiệp'}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                        {task.progress.current} / {task.progress.total} Hoàn thành
-                      </p>
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                        {task.status === 'active' ? 'Đang mở' : 'Đã đóng'}
+                      </span>
                     </div>
-                  )}
-                </div>
 
-                <button
-                  disabled={task.status === 'claimed' || claiming === task.id}
-                  onClick={() => task.status === 'completed' ? handleClaimReward(task) : handlePerformTask(task)}
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+                      {task.description}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                        <Clock size={14} />
+                        <span>{task.duration} ngày hoàn thành</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                        <Users size={14} />
+                        <span>Tối đa {task.maxStudents} bạn</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {task.skillsGained?.map((skill: string) => (
+                        <span key={skill} className="px-2 py-1 bg-slate-50 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-md">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => alert("Tính năng nộp bài đang được phát triển!")}
+                      className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                    >
+                      Nhận nhiệm vụ
+                    </button>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-12 bg-white rounded-[32px] border border-dashed border-slate-200">
+                  <p className="text-slate-400 font-bold">Chưa có nhiệm vụ thực hành nào.</p>
+                </div>
+              )
+            ) : (
+              filteredTasks.map((task, i) => (
+                <motion.div
+                  key={task.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: i * 0.05 }}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                    task.status === 'available' ? "bg-slate-900 text-white hover:bg-slate-800" :
-                    task.status === 'completed' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100" :
-                    "bg-slate-100 text-slate-400"
+                    "bg-white p-5 rounded-[32px] border transition-all flex items-center gap-4",
+                    task.status === 'claimed' ? "opacity-60 grayscale" : "border-slate-100 hover:shadow-xl hover:shadow-slate-200/50"
                   )}
                 >
-                  {claiming === task.id ? 'Đang xử lý...' : 
-                   task.status === 'available' ? 'Thực hiện' :
-                   task.status === 'completed' ? 'Nhận quà' :
-                   'Đã nhận'}
-                </button>
-              </motion.div>
-            ))}
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0",
+                    task.status === 'claimed' ? "bg-slate-100 text-slate-400" : "bg-blue-50 text-blue-500"
+                  )}>
+                    <task.icon size={24} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-bold text-slate-900 truncate">{task.title}</h4>
+                      <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        +{task.reward}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium line-clamp-1">{task.desc}</p>
+                    
+                    {task.progress && (
+                      <div className="mt-2 space-y-1">
+                        <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500" 
+                            style={{ width: `${(task.progress.current / task.progress.total) * 100}%` }}
+                          />
+                        </div>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                          {task.progress.current} / {task.progress.total} Hoàn thành
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    disabled={task.status === 'claimed' || claiming === task.id}
+                    onClick={() => task.status === 'completed' ? handleClaimReward(task) : handlePerformTask(task)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                      task.status === 'available' ? "bg-slate-900 text-white hover:bg-slate-800" :
+                      task.status === 'completed' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100" :
+                      "bg-slate-100 text-slate-400"
+                    )}
+                  >
+                    {claiming === task.id ? 'Đang xử lý...' : 
+                     task.status === 'available' ? 'Thực hiện' :
+                     task.status === 'completed' ? 'Nhận quà' :
+                     'Đã nhận'}
+                  </button>
+                </motion.div>
+              ))
+            )}
           </AnimatePresence>
         </div>
 

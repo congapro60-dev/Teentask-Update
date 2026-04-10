@@ -71,6 +71,7 @@ export interface UserProfile {
   geminiApiKey?: string;
   paymentCode?: string;
   savedCourses?: string[];
+  language?: 'vi' | 'en';
 }
 
 export interface CV {
@@ -198,16 +199,49 @@ export interface ShadowingEvent {
   mentorName: string;
   mentorTitle: string;
   mentorPhoto?: string;
+  companyId: string;
   companyName: string;
   title: string;
   description: string;
   date: number;
+  time?: string;
   price: number;
   slotsTotal: number;
   slotsRemaining: number;
   location: string;
   category: string;
+  type: '1-1' | 'workshop';
+  status: 'upcoming' | 'ongoing' | 'completed' | 'closed';
+  level: 'Cơ bản' | 'Nâng cao' | 'Chuyên sâu';
+  requirements?: string[];
+  benefits?: string[];
   createdAt: number;
+}
+
+export interface PracticalTask {
+  id: string;
+  businessId: string;
+  businessName: string;
+  title: string;
+  description: string;
+  durationDays: number;
+  requiredOutput: string; // e.g., "File PDF báo cáo", "Link Figma"
+  skillsGained: string[];
+  maxStudents: number;
+  currentStudents: number;
+  status: 'active' | 'closed';
+  createdAt: number;
+}
+
+export interface TaskSubmission {
+  id: string;
+  taskId: string;
+  studentId: string;
+  studentName: string;
+  outputUrl: string;
+  feedback?: string;
+  status: 'pending' | 'reviewed';
+  submittedAt: number;
 }
 
 export interface Application {

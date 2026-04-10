@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db, handleFirestoreError, OperationType } from './FirebaseProvider';
+import { db, handleFirestoreError, OperationType, useFirebase } from './FirebaseProvider';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { ShieldCheck, BarChart3, PieChart, MessageSquare, Loader2, Sparkles, ChevronRight, ArrowLeft, Users, Calendar, Download, Copy, CheckCircle2, FileText, LayoutDashboard, Target, Lightbulb, Megaphone, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -41,6 +41,7 @@ interface AIAnalysis {
 }
 
 export default function SurveyAdmin() {
+  const { profile } = useFirebase();
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null);
@@ -90,7 +91,7 @@ export default function SurveyAdmin() {
     setAnalysis(null);
     setActiveSlide(0);
     try {
-      const ai = new GoogleGenAI({ apiKey: getGeminiApiKey() });
+      const ai = new GoogleGenAI({ apiKey: getGeminiApiKey(profile?.geminiApiKey) });
       
       const analysisData = responses.slice(0, 50).map(r => ({
         age: r.ageGroup,

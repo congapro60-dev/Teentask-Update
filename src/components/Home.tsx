@@ -14,7 +14,7 @@ import ParentVerificationModal from './ParentVerificationModal';
 import VipAdsSlider from './VipAdsSlider';
 
 export default function Home() {
-  const { profile, toggleSaveJob, toggleSaveShadowing, toggleSaveCourse } = useFirebase();
+  const { profile, toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, t } = useFirebase();
   const navigate = useNavigate();
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -191,7 +191,8 @@ export default function Home() {
         finalStatus: 'pending',
         createdAt: Date.now()
       });
-      alert('Ứng tuyển thành công!');
+      // Use a custom notification or just translate the alert for now
+      alert(t('applySuccess'));
       setIsJobDetailOpen(false);
     } catch (error) {
       console.error("Error applying:", error);
@@ -271,7 +272,7 @@ export default function Home() {
             onClick={() => navigate(viewAllPath)}
             className="text-[#1877F2] text-xs font-bold hover:underline flex items-center gap-1"
           >
-            Xem tất cả <ChevronRight size={14} />
+            {t('viewAll')} <ChevronRight size={14} />
           </button>
         </div>
         
@@ -306,11 +307,11 @@ export default function Home() {
   };
 
   const getUserLevel = (score: number) => {
-    if (score < 100) return { title: 'Tân binh', color: 'bg-gray-100 text-gray-600 border-gray-200' };
-    if (score < 300) return { title: 'Thực tập sinh', color: 'bg-blue-50 text-[#1877F2] border-blue-200' };
-    if (score < 600) return { title: 'Nhân viên', color: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
-    if (score < 1000) return { title: 'Chuyên gia', color: 'bg-purple-50 text-purple-600 border-purple-200' };
-    return { title: 'Bậc thầy', color: 'bg-amber-50 text-amber-600 border-amber-200' };
+    if (score < 100) return { title: t('levelNewbie'), color: 'bg-gray-100 text-gray-600 border-gray-200' };
+    if (score < 300) return { title: t('levelIntern'), color: 'bg-blue-50 text-[#1877F2] border-blue-200' };
+    if (score < 600) return { title: t('levelEmployee'), color: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
+    if (score < 1000) return { title: t('levelExpert'), color: 'bg-purple-50 text-purple-600 border-purple-200' };
+    return { title: t('levelMaster'), color: 'bg-amber-50 text-amber-600 border-amber-200' };
   };
 
   return (
@@ -326,16 +327,18 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-6">
                 <Sparkles size={14} className="text-amber-300" />
-                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Khám phá tương lai của bạn</span>
+                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">{t('exploreFuture')}</span>
               </div>
               
               <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mb-6 leading-[1.1]">
-                Chào mừng bạn đến với <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">Học viện Kỹ năng Thực chiến</span>
+                {t('welcomeHeroTitle').split('Academy')[0]} <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
+                  {t('welcomeHeroTitle').includes('Academy') ? 'Academy' : 'Học viện Kỹ năng Thực chiến'}
+                </span>
               </h1>
               
               <p className="text-white/80 text-base sm:text-lg mb-10 leading-relaxed max-w-4xl mx-auto font-medium">
-                Nơi duy nhất tại Việt Nam giúp học sinh 14-18 tuổi học kỹ năng, thực hành qua việc làm thật và xây dựng Portfolio chuyên nghiệp.
+                {t('welcomeHeroSubtitle')}
               </p>
               
               <div className="max-w-6xl mx-auto mb-10">
@@ -347,14 +350,14 @@ export default function Home() {
                   onClick={() => navigate('/profile')}
                   className="w-full sm:w-auto px-10 py-5 bg-white text-[#1877F2] rounded-[24px] font-black uppercase tracking-widest text-sm shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-3 group"
                 >
-                  Đăng nhập ngay
+                  {t('loginNow')}
                   <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
                   onClick={() => navigate('/about')}
                   className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-[24px] font-black uppercase tracking-widest text-sm hover:bg-white/20 transition-all"
                 >
-                  Tìm hiểu thêm
+                  {t('learnMore')}
                 </button>
               </div>
             </motion.div>
@@ -392,9 +395,9 @@ export default function Home() {
         <section className="px-4 sm:px-6 py-6 bg-white border-b border-gray-100 mb-4">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
             <div className="flex-1 min-w-[200px]">
-              <h2 className="text-xs text-gray-400 font-black uppercase tracking-[0.2em] mb-1">Chào buổi sáng,</h2>
+              <h2 className="text-xs text-gray-400 font-black uppercase tracking-[0.2em] mb-1">{t('goodMorning')}</h2>
               <h1 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center gap-2 flex-wrap">
-                <span className="truncate max-w-full">{profile?.displayName || 'TeenTasker'}</span>
+                <span className="truncate max-w-full">{profile?.displayName || t('welcomeTeenTasker')}</span>
                 {profile?.isVip && <Star size={24} className="text-amber-500 shrink-0" fill="currentColor" />}
                 <span className="text-[#1877F2] shrink-0">👋</span>
               </h1>
@@ -408,7 +411,7 @@ export default function Home() {
             
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Cấp độ</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('level')}</span>
                 <div className={`px-3 py-1.5 rounded-xl border font-bold text-xs shadow-sm ${getUserLevel(profile.trustScore).color}`}>
                   {getUserLevel(profile.trustScore).title}
                 </div>
@@ -422,18 +425,18 @@ export default function Home() {
 
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider mb-1">Việc làm</p>
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider mb-1">{t('jobs')}</p>
               <p className="text-xl font-black text-[#1877F2]">24</p>
             </div>
             <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100">
-              <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1">Kiến tập</p>
+              <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1">{t('shadowing')}</p>
               <p className="text-xl font-black text-purple-600">12</p>
             </div>
             <div 
               onClick={() => navigate('/trust-score')}
               className="bg-amber-50 p-3 rounded-2xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition-colors"
             >
-              <p className="text-[10px] font-black text-amber-400 uppercase tracking-wider mb-1">Điểm</p>
+              <p className="text-[10px] font-black text-amber-400 uppercase tracking-wider mb-1">{t('points')}</p>
               <p className="text-xl font-black text-amber-600">{profile?.trustScore ?? 0}</p>
             </div>
           </div>
@@ -444,10 +447,10 @@ export default function Home() {
       <section className="px-4 sm:px-6 mb-6">
         <div className="grid grid-cols-4 gap-4">
           {[
-            { icon: Award, label: 'Nhiệm vụ', color: 'bg-amber-500', path: '/tasks' },
-            { icon: Building2, label: 'Công ty', color: 'bg-blue-500', path: '/companies' },
-            { icon: Star, label: 'VIP', color: 'bg-purple-500', path: '/vip' },
-            { icon: Heart, label: 'Đã lưu', color: 'bg-red-500', path: '/saved' },
+            { icon: Award, label: t('tasks'), color: 'bg-amber-500', path: '/tasks' },
+            { icon: Building2, label: t('companies'), color: 'bg-blue-500', path: '/companies' },
+            { icon: Star, label: t('vip'), color: 'bg-purple-500', path: '/vip' },
+            { icon: Heart, label: t('saved'), color: 'bg-red-500', path: '/saved' },
           ].map((action, i) => (
             <button 
               key={i}
@@ -474,8 +477,8 @@ export default function Home() {
                   <MessageSquare size={20} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black tracking-tight">Cộng đồng nói gì về TeenTask?</h2>
-                  <p className="text-xs text-white/80 font-medium">Dữ liệu từ {surveyStats.total} người dùng thực tế</p>
+                  <h2 className="text-xl font-black tracking-tight">{t('communityFeedback')}</h2>
+                  <p className="text-xs text-white/80 font-medium">{t('feedbackData').replace('{total}', surveyStats.total.toString())}</p>
                 </div>
               </div>
               
@@ -483,25 +486,25 @@ export default function Home() {
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Heart size={16} className="text-pink-300" fill="currentColor" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">Hài lòng</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">{t('satisfied')}</span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black">{surveyStats.satisfiedRate}</span>
                     <span className="text-sm font-bold text-white/80">%</span>
                   </div>
-                  <p className="text-[10px] text-white/70 mt-1">Đánh giá giao diện dễ dùng (4-5★)</p>
+                  <p className="text-[10px] text-white/70 mt-1">{t('satisfiedDesc')}</p>
                 </div>
                 
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Star size={16} className="text-amber-300" fill="currentColor" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">Giới thiệu (NPS)</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white/80">{t('recommend')}</span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black">{surveyStats.npsRate}</span>
                     <span className="text-sm font-bold text-white/80">%</span>
                   </div>
-                  <p className="text-[10px] text-white/70 mt-1">Sẵn sàng giới thiệu bạn bè (8-10đ)</p>
+                  <p className="text-[10px] text-white/70 mt-1">{t('recommendDesc')}</p>
                 </div>
               </div>
             </div>
@@ -511,14 +514,14 @@ export default function Home() {
 
       {/* Featured News Carousel */}
       <CarouselSection 
-        title="Tin tức nổi bật" 
+        title={t('featuredNews')} 
         icon={Zap}
         items={[
-          { id: 'news-info', title: 'Thông tin dự án & Hướng dẫn sử dụng', image: 'https://picsum.photos/seed/project/400/250', date: 'Mới nhất', path: '/about' },
-          { id: 'news-survey', title: 'Tham gia khảo sát dự án TeenTask', image: 'https://picsum.photos/seed/survey/400/250', date: 'Mới nhất', path: '/survey' },
-          { id: 1, title: 'TeenTask ra mắt tính năng mới', image: 'https://picsum.photos/seed/news1/400/250', date: '2 giờ trước', path: '/news' },
-          { id: 2, title: 'Top 10 công việc mùa hè cho học sinh', image: 'https://picsum.photos/seed/news2/400/250', date: '5 giờ trước', path: '/news' },
-          { id: 3, title: 'Kỹ năng cần thiết trong kỷ nguyên AI', image: 'https://picsum.photos/seed/news3/400/250', date: '1 ngày trước', path: '/news' },
+          { id: 'news-info', title: 'Thông tin dự án & Hướng dẫn sử dụng', image: 'https://picsum.photos/seed/project/400/250', date: t('newest'), path: '/about' },
+          { id: 'news-survey', title: 'Tham gia khảo sát dự án TeenTask', image: 'https://picsum.photos/seed/survey/400/250', date: t('newest'), path: '/survey' },
+          { id: 1, title: 'TeenTask ra mắt tính năng mới', image: 'https://picsum.photos/seed/news1/400/250', date: t('hoursAgo').replace('{count}', '2'), path: '/news' },
+          { id: 2, title: 'Top 10 công việc mùa hè cho học sinh', image: 'https://picsum.photos/seed/news2/400/250', date: t('hoursAgo').replace('{count}', '5'), path: '/news' },
+          { id: 3, title: 'Kỹ năng cần thiết trong kỷ nguyên AI', image: 'https://picsum.photos/seed/news3/400/250', date: t('daysAgo').replace('{count}', '1'), path: '/news' },
         ]}
         renderItem={(item: any) => (
           <div 
@@ -537,7 +540,7 @@ export default function Home() {
 
       {/* Skill Courses Carousel */}
       <CarouselSection 
-        title="Khóa học kỹ năng" 
+        title={t('skillCourses')} 
         icon={GraduationCap}
         items={courses}
         renderItem={(course: any) => {
@@ -567,7 +570,7 @@ export default function Home() {
                 </button>
                 {course.price === 0 && (
                   <div className="absolute top-4 left-4 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                    Miễn phí
+                    {t('free')}
                   </div>
                 )}
               </div>
@@ -577,13 +580,13 @@ export default function Home() {
                 
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Học phí</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('tuition')}</span>
                     <span className="text-lg font-black text-[#1877F2]">
                       {course.price === 0 ? '0đ' : `${course.price.toLocaleString('vi-VN')}đ`}
                     </span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Đã đăng ký</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('registered')}</span>
                     <span className={cn("text-xs font-bold", isFull ? "text-red-500" : "text-gray-700")}>
                       {course.registeredCount}/{course.totalSlots}
                     </span>
@@ -599,7 +602,7 @@ export default function Home() {
                       : "bg-blue-50 text-[#1877F2] hover:bg-[#1877F2] hover:text-white"
                   )}
                 >
-                  {isFull ? 'Đã hết chỗ' : 'Đăng ký ngay'}
+                  {isFull ? t('noSlots') : t('registerNow')}
                 </button>
               </div>
             </div>
@@ -610,8 +613,8 @@ export default function Home() {
 
       {/* Jobs Carousel */}
       <CarouselSection 
-        title="Việc làm nổi bật" 
-        subtitle="Cơ hội học qua làm việc thật"
+        title={t('featuredJobs')} 
+        subtitle={t('jobSubtitle')}
         icon={Briefcase}
         items={jobs.length > 0 ? jobs : MOCK_JOBS}
         renderItem={(job: any) => {
@@ -654,8 +657,8 @@ export default function Home() {
 
       {/* Shadowing Carousel */}
       <CarouselSection 
-        title="Kiến tập (Shadowing)" 
-        subtitle="Trải nghiệm bên chuyên gia 1-1"
+        title={t('shadowingTitle')} 
+        subtitle={t('shadowingSubtitle')}
         icon={GraduationCap}
         items={shadowingEvents.length > 0 ? shadowingEvents : MOCK_SHADOWING}
         renderItem={(item: any) => {
@@ -695,7 +698,7 @@ export default function Home() {
 
       {/* Businesses Carousel */}
       <CarouselSection 
-        title="Doanh nghiệp tiêu biểu" 
+        title={t('featuredBusinesses')} 
         icon={Building2}
         items={[
           { id: 1, name: 'FPT Software', logo: 'https://picsum.photos/seed/fpt/100/100', jobs: 15 },
@@ -710,7 +713,7 @@ export default function Home() {
               <img src={item.logo} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             <h4 className="font-bold text-gray-900 text-xs mb-1 line-clamp-1">{item.name}</h4>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{item.jobs} công việc</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{item.jobs} {t('jobs').toLowerCase()}</p>
           </div>
         )}
         viewAllPath="/companies"
@@ -724,13 +727,13 @@ export default function Home() {
               <Award className="text-amber-400" size={24} />
               <span className="text-[10px] font-black uppercase tracking-[0.2em]">TeenTask TopCV</span>
             </div>
-            <h3 className="text-2xl font-black mb-2 tracking-tight">Tạo CV chuyên nghiệp trong 5 phút</h3>
-            <p className="text-white/80 text-xs mb-6 max-w-[200px]">Mẫu CV được thiết kế riêng cho học sinh, sinh viên.</p>
+            <h3 className="text-2xl font-black mb-2 tracking-tight">{t('createCvTitle')}</h3>
+            <p className="text-white/80 text-xs mb-6 max-w-[200px]">{t('createCvDesc')}</p>
             <button 
               onClick={() => navigate('/cv-builder')}
               className="bg-white text-[#1877F2] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform active:scale-95"
             >
-              Tạo CV ngay
+              {t('createCvNow')}
             </button>
           </div>
           <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
@@ -740,7 +743,7 @@ export default function Home() {
 
       {/* Featured Parents & Businesses Carousel */}
       <CarouselSection 
-        title="Phụ huynh & Doanh nghiệp" 
+        title={t('featuredUsers')} 
         icon={Users}
         items={featuredUsers}
         renderItem={(item: any) => (
@@ -755,9 +758,9 @@ export default function Home() {
                 />
               </div>
             </div>
-            <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{item.displayName || 'Người dùng'}</h4>
+            <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{item.displayName || t('user')}</h4>
             <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider line-clamp-1">
-              {item.bio || (item.role === 'parent' ? 'Phụ huynh' : 'Doanh nghiệp')}
+              {item.bio || (item.role === 'parent' ? t('parent') : t('business'))}
             </p>
           </div>
         )}
@@ -770,31 +773,31 @@ export default function Home() {
           <div className="w-8 h-8 bg-pink-50 rounded-lg flex items-center justify-center text-pink-500">
             <Sparkles size={18} />
           </div>
-          <h2 className="text-lg font-black text-gray-900 tracking-tight">Câu chuyện thành công</h2>
+          <h2 className="text-lg font-black text-gray-900 tracking-tight">{t('successStories')}</h2>
         </div>
         <div className="space-y-4">
           <div className="bg-pink-50/50 rounded-[32px] p-6 border border-pink-100">
             <div className="flex items-center gap-4 mb-4">
               <img src="https://i.pravatar.cc/100?u=success1" alt="student" className="w-12 h-12 rounded-2xl object-cover shadow-md" referrerPolicy="no-referrer" />
               <div>
-                <h4 className="font-bold text-gray-900 text-sm">Minh Anh, 17 tuổi</h4>
-                <p className="text-[10px] text-pink-600 font-black uppercase tracking-wider">Học sinh THPT Phan Đình Phùng</p>
+                <h4 className="font-bold text-gray-900 text-sm">Minh Anh, 17 {t('yearsOld')}</h4>
+                <p className="text-[10px] text-pink-600 font-black uppercase tracking-wider">{t('student')} THPT Phan Đình Phùng</p>
               </div>
             </div>
             <p className="text-xs text-gray-600 italic leading-relaxed">
-              "Nhờ TeenTask, mình đã tìm được công việc kiến tập tại một Agency Marketing. Trải nghiệm thực tế giúp mình định hướng nghề nghiệp rõ ràng hơn rất nhiều!"
+              {t('successStory1')}
             </p>
           </div>
           <div className="bg-blue-50/50 rounded-[32px] p-6 border border-blue-100">
             <div className="flex items-center gap-4 mb-4">
               <img src="https://i.pravatar.cc/100?u=success2" alt="student" className="w-12 h-12 rounded-2xl object-cover shadow-md" referrerPolicy="no-referrer" />
               <div>
-                <h4 className="font-bold text-gray-900 text-sm">Đức Huy, 16 tuổi</h4>
-                <p className="text-[10px] text-blue-600 font-black uppercase tracking-wider">Học sinh THPT Chu Văn An</p>
+                <h4 className="font-bold text-gray-900 text-sm">Đức Huy, 16 {t('yearsOld')}</h4>
+                <p className="text-[10px] text-blue-600 font-black uppercase tracking-wider">{t('student')} THPT Chu Văn An</p>
               </div>
             </div>
             <p className="text-xs text-gray-600 italic leading-relaxed">
-              "Mình đã kiếm được thu nhập đầu tiên từ việc thiết kế Canva cho một shop quần áo. Cảm ơn TeenTask đã kết nối mình với những cơ hội tuyệt vời."
+              {t('successStory2')}
             </p>
           </div>
         </div>

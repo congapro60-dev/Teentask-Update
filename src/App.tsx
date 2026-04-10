@@ -86,7 +86,7 @@ import { FirebaseProvider, useFirebase } from './components/FirebaseProvider';
 
 function AppContent() {
   const navigate = useNavigate();
-  const { user, profile, loading, login, updateProfile } = useFirebase();
+  const { user, profile, loading, login, updateProfile, t } = useFirebase();
   const [view, setView] = useState<'guest' | 'login'>('guest');
   const [selectedRole, setSelectedRole] = useState<'student' | 'parent' | 'business' | 'admin' | null>(null);
   const [skipVerification, setSkipVerification] = useState(() => {
@@ -149,7 +149,7 @@ function AppContent() {
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-500 font-medium animate-pulse">Đang tải TeenTask...</p>
+          <p className="text-gray-500 font-medium animate-pulse">{t('loading')}</p>
         </div>
       </div>
     );
@@ -178,16 +178,16 @@ function AppContent() {
                       <Route path="/profile" element={
                     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
                       <div className="w-full max-w-md mb-10 text-center md:text-left">
-                        <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Chào mừng trở lại!</h2>
-                        <p className="text-gray-500 font-medium">Chọn vai trò của bạn và đăng nhập để tiếp tục khám phá.</p>
+                        <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">{t('welcomeBack')}</h2>
+                        <p className="text-gray-500 font-medium">{t('selectRole')}</p>
                       </div>
 
                       <div className="w-full max-w-md grid grid-cols-2 gap-4 mb-6">
                         {[
-                          { id: 'student', label: 'Học sinh', icon: GraduationCap, desc: 'Tìm việc & kiến tập' },
-                          { id: 'parent', label: 'Phụ huynh', icon: ShieldCheck, desc: 'Giám sát con' },
-                          { id: 'business', label: 'Doanh nghiệp', icon: Building2, desc: 'Tuyển dụng' },
-                          { id: 'admin', label: 'Quản trị', icon: ShieldAlert, desc: 'Hệ thống' },
+                          { id: 'student', label: t('student'), icon: GraduationCap, desc: t('studentDesc') },
+                          { id: 'parent', label: t('parent'), icon: ShieldCheck, desc: t('parentDesc') },
+                          { id: 'business', label: t('business'), icon: Building2, desc: t('businessDesc') },
+                          { id: 'admin', label: t('adminRole'), icon: ShieldAlert, desc: t('adminDesc') },
                         ].map((role) => (
                           <button
                             key={role.id}
@@ -230,14 +230,14 @@ function AppContent() {
                         className="w-full max-w-md py-5 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-4 text-lg"
                       >
                         <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
-                        Đăng nhập với Google
+                        {t('loginWithGoogle')}
                       </button>
 
                       <button
                         onClick={handleDemoLogin}
                         className="w-full max-w-md py-4 mt-4 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
                       >
-                        👀 Xem thử không cần đăng nhập (Demo)
+                        👀 {t('demoMode')}
                       </button>
                     </div>
                   } />

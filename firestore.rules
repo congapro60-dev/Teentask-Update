@@ -12,13 +12,13 @@ service cloud.firestore {
     // Fields: id, businessId, businessName, title, description, salary, slotsTotal, slotsFilled, deadline, location, type, category, status, tags, createdAt
     //
     // Collection: shadowing_events
-    // Fields: id, mentorId, mentorName, companyName, title, description, date, price, slotsTotal, slotsRemaining, location, category, createdAt
+    // Fields: id, mentorId, mentorName, mentorTitle, companyId, companyName, title, description, date, time, price, slotsTotal, slotsRemaining, location, category, type, status, level, requirements, benefits, createdAt
     //
-    // Collection: shadowing_tasks
-    // Fields: id, businessId, businessName, name, description, daysToComplete, outputRequired, skillsLearned, maxStudents, status, createdAt
+    // Collection: practical_tasks
+    // Fields: id, businessId, businessName, title, description, durationDays, requiredOutput, skillsGained, maxStudents, currentStudents, status, createdAt
     //
-    // Collection: shadowing_workshops
-    // Fields: id, businessId, businessName, title, description, date, time, price, slotsTotal, slotsRemaining, location, skills, status, createdAt
+    // Collection: task_submissions
+    // Fields: id, taskId, studentId, studentName, outputUrl, feedback, status, submittedAt
     //
     // Collection: applications
     // Fields: id, jobId, businessId, studentId, studentName, parentEmail, portfolioUrl, parentStatus, finalStatus, createdAt
@@ -139,22 +139,33 @@ service cloud.firestore {
 
     match /shadowing_events/{eventId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.mentorId == request.auth.uid;
+      allow create: if isAuthenticated() && (isBusiness() || isAdmin());
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.mentorId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    match /shadowing_tasks/{taskId} {
+    match /practical_tasks/{taskId} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && (isBusiness() || isAdmin());
       allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    match /shadowing_workshops/{workshopId} {
-      allow read: if true;
+    match /task_submissions/{submissionId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.studentId || 
+        isAdmin() ||
+        // Allow the business who owns the task to read submissions
+        exists(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)) &&
+        get(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)).data.businessId == request.auth.uid
+      );
       allow create: if isAuthenticated();
-      allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.studentId ||
+        isAdmin() ||
+        exists(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)) &&
+        get(/databases/$(database)/documents/practical_tasks/$(resource.data.taskId)).data.businessId == request.auth.uid
+      );
       allow delete: if isAdmin();
     }
 

@@ -18,7 +18,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { profile, switchRole } = useFirebase();
+  const { profile, switchRole, t } = useFirebase();
   const BOSS_EMAIL = "congapro60@gmail.com";
   const ADMIN_EMAILS = [
     BOSS_EMAIL.toLowerCase(),
@@ -217,33 +217,33 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const mainNavItems = [
-    { id: 'nav-home', icon: Home, label: 'Trang chủ', path: '/' },
-    { id: 'nav-messages', icon: MessageSquare, label: 'Tin nhắn', path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
-    { id: 'nav-notifications', icon: Bell, label: 'Thông báo', path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
-    { id: 'nav-career', icon: BookOpen, label: 'Kiến thức nghề nghiệp', path: '/career-insights' },
-    { id: 'nav-legal', icon: Scale, label: 'Pháp lý & An toàn', path: '/legal' },
-    { id: 'nav-about', icon: Info, label: 'Thông tin dự án', path: '/about' },
+    { id: 'nav-home', icon: Home, label: t('home'), path: '/' },
+    { id: 'nav-messages', icon: MessageSquare, label: t('messages'), path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
+    { id: 'nav-notifications', icon: Bell, label: t('notifications'), path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
+    { id: 'nav-career', icon: BookOpen, label: t('careerInsights'), path: '/career-insights' },
+    { id: 'nav-legal', icon: Scale, label: t('legalSafety'), path: '/legal' },
+    { id: 'nav-about', icon: Info, label: t('aboutProject'), path: '/about' },
   ];
 
   const roleSpecificItems = {
     admin: [
-      { id: 'nav-surveys', icon: PieChart, label: 'Xem khảo sát', path: '/admin/surveys' },
-      { id: 'nav-admin', icon: ShieldCheck, label: 'Quản trị', path: '/admin' },
+      { id: 'nav-surveys', icon: PieChart, label: t('viewSurveys'), path: '/admin/surveys' },
+      { id: 'nav-admin', icon: ShieldCheck, label: t('admin'), path: '/admin' },
     ],
     boss: [
-      { id: 'nav-boss-manage', icon: Settings, label: 'Quản lý', path: '/boss-manage' },
-      { id: 'nav-surveys', icon: PieChart, label: 'Xem khảo sát', path: '/admin/surveys' },
-      { id: 'nav-admin', icon: ShieldCheck, label: 'Quản trị', path: '/admin' },
+      { id: 'nav-boss-manage', icon: Settings, label: t('manage'), path: '/boss-manage' },
+      { id: 'nav-surveys', icon: PieChart, label: t('viewSurveys'), path: '/admin/surveys' },
+      { id: 'nav-admin', icon: ShieldCheck, label: t('admin'), path: '/admin' },
     ],
     business: [
-      { id: 'nav-jobs-manage', icon: Briefcase, label: 'QL Việc làm', path: '/jobs-manage' },
-      { id: 'nav-shadowing-manage', icon: GraduationCap, label: 'QL Kiến tập', path: '/shadowing-manage' },
+      { id: 'nav-jobs-manage', icon: Briefcase, label: t('manageJobs'), path: '/jobs-manage' },
+      { id: 'nav-shadowing-manage', icon: GraduationCap, label: t('manageShadowing'), path: '/shadowing-manage' },
     ],
     parent: [
-      { id: 'nav-monitoring', icon: ShieldCheck, label: 'Giám sát', path: '/monitoring' },
+      { id: 'nav-monitoring', icon: ShieldCheck, label: t('monitoring'), path: '/monitoring' },
     ],
     student: [
-      { id: 'nav-saved', icon: Heart, label: 'Đã lưu', path: '/saved' },
+      { id: 'nav-saved', icon: Heart, label: t('saved'), path: '/saved' },
     ]
   };
 
@@ -358,8 +358,8 @@ export default function Layout({ children }: LayoutProps) {
             className="flex-1 bg-[#F0F2F5] hover:bg-gray-200 rounded-full py-2 px-3 sm:px-4 flex items-center gap-2 sm:gap-3 text-gray-500 transition-all text-xs sm:text-sm group truncate"
           >
             <Search size={16} className="group-hover:scale-110 transition-transform shrink-0" />
-            <span className="hidden md:inline truncate">Tìm kiếm trên TeenTask</span>
-            <span className="md:hidden inline truncate">Tìm kiếm...</span>
+            <span className="hidden md:inline truncate">{t('searchOnTeenTask')}</span>
+            <span className="md:hidden inline truncate">{t('search')}...</span>
           </button>
           <div className="hidden lg:block shrink-0">
             <Clock />
@@ -721,17 +721,23 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                  <button className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100">
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate('/profile');
+                    }}
+                    className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  >
                     <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600">
                       <Settings size={20} />
                     </div>
-                    <span className="font-bold text-sm flex-1 text-left text-gray-700">Cài đặt & quyền riêng tư</span>
+                    <span className="font-bold text-sm flex-1 text-left text-gray-700">{t('settingsPrivacy')}</span>
                   </button>
                   <button className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100">
                     <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600">
                       <HelpCircle size={20} />
                     </div>
-                    <span className="font-bold text-sm flex-1 text-left text-gray-700">Trợ giúp & hỗ trợ</span>
+                    <span className="font-bold text-sm flex-1 text-left text-gray-700">{t('helpSupport')}</span>
                   </button>
                   <button 
                     onClick={handleLogout}
@@ -740,7 +746,7 @@ export default function Layout({ children }: LayoutProps) {
                     <div className="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center">
                       <LogOut size={20} />
                     </div>
-                    <span className="font-bold text-sm flex-1 text-left">Đăng xuất</span>
+                    <span className="font-bold text-sm flex-1 text-left">{t('logout')}</span>
                   </button>
                 </div>
               </div>

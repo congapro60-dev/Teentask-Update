@@ -1,4 +1,5 @@
 import { Search, Filter, MapPin, Clock, DollarSign, Building2, Sparkles, Briefcase, MessageSquare, Heart, Bell, X, Zap, Check, ArrowRight } from 'lucide-react';
+import SmartImage from './SmartImage';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,8 @@ export default function Jobs() {
   const [selectedJobAppCount, setSelectedJobAppCount] = useState<number>(0);
   const [firestoreJobs, setFirestoreJobs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  
+  const [sortBy, setSortBy] = useState<'newest' | 'deadline'>('newest');
   
   // Filter states
   const [jobType, setJobType] = useState<'All' | 'Online' | 'Offline'>('All');
@@ -293,6 +296,11 @@ export default function Jobs() {
     );
 
     return matchesSearch && matchesCategory && matchesType && matchesSalary && matchesDeadline && matchesLocation && matchesSkills;
+  }).sort((a, b) => {
+    if (sortBy === 'deadline') {
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    }
+    return 0; // Default to newest (already sorted by firestore or mock order)
   });
 
   return (
@@ -337,16 +345,26 @@ export default function Jobs() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-black text-gray-900">Việc làm</h1>
-          <button 
-            onClick={() => setIsFilterOpen(true)}
-            className={`p-3 rounded-2xl transition-colors border shadow-sm ${
-              isFilterOpen || jobType !== 'All' || deadlineFilter || locationFilter || salaryRange[0] > 0 || salaryRange[1] < 1000000 || selectedSkills.length > 0 || activeCategory !== 'Tất cả'
-              ? 'bg-[#1877F2] text-white border-[#1877F2]' 
-              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <Filter size={20} />
-          </button>
+          <div className="flex gap-2">
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-xs font-bold outline-none focus:border-[#1877F2] transition-all shadow-sm"
+            >
+              <option value="newest">Mới nhất</option>
+              <option value="deadline">Hạn chót gần nhất</option>
+            </select>
+            <button 
+              onClick={() => setIsFilterOpen(true)}
+              className={`p-3 rounded-2xl transition-colors border shadow-sm ${
+                isFilterOpen || jobType !== 'All' || deadlineFilter || locationFilter || salaryRange[0] > 0 || salaryRange[1] < 1000000 || selectedSkills.length > 0 || activeCategory !== 'Tất cả'
+                ? 'bg-[#1877F2] text-white border-[#1877F2]' 
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Filter size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="relative mb-6 group">
@@ -529,7 +547,11 @@ export default function Jobs() {
                     }}
                     className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-inner cursor-pointer hover:opacity-80 transition-opacity"
                   >
-                    <img src={job.logo} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <SmartImage 
+                      title={job.company} 
+                      fallbackUrl={job.logo} 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base group-hover:text-[#4F46E5] transition-colors leading-tight">{job.title}</h3>

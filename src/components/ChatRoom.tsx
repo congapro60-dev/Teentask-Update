@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Send, ChevronLeft, MoreVertical, Phone, Video, Image, Paperclip, Smile, Sparkles, Bot, Zap, HelpCircle, BookOpen, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { TEENTASK_BOT_ID, TEENTASK_BOT_SYSTEM_INSTRUCTION, getGeminiModel } from '../lib/gemini';
+import { TEENTASK_BOT_ID, TEENTASK_BOT_SYSTEM_INSTRUCTION, getGeminiModel, countTokens } from '../lib/gemini';
 
 export default function ChatRoom() {
   const { chatId } = useParams();
@@ -17,8 +17,22 @@ export default function ChatRoom() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [estimatedTokens, setEstimatedTokens] = useState(0);
+  const [showAIInfo, setShowAIInfo] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (newMessage.trim() && (chatId === TEENTASK_BOT_ID || chatId?.startsWith(`${TEENTASK_BOT_ID}_`))) {
+        const tokens = await countTokens(newMessage, profile?.geminiApiKey);
+        setEstimatedTokens(tokens);
+      } else {
+        setEstimatedTokens(0);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [newMessage, chatId, profile?.geminiApiKey]);
 
   const BOT_SUGGESTIONS = [
     { icon: HelpCircle, text: "TeenTask là gì?", prompt: "TeenTask là gì và hoạt động như thế nào?" },
@@ -257,6 +271,12 @@ export default function ChatRoom() {
             </div>
 
           <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowAIInfo(true)}
+              className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all active:scale-90"
+            >
+              <HelpCircle size={18} strokeWidth={3} />
+            </button>
             <button className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all active:scale-90">
               <Phone size={18} strokeWidth={3} />
             </button>
@@ -373,6 +393,18 @@ export default function ChatRoom() {
 
       {/* Input Area */}
       <div className="p-6 bg-white border-t border-gray-100 pb-10">
+        {estimatedTokens > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mb-3 flex justify-end"
+          >
+            <div className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full border border-indigo-100 flex items-center gap-2">
+              <Zap size={10} />
+              Ước tính: ~{estimatedTokens} tokens
+            </div>
+          </motion.div>
+        )}
         <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-50 p-2 rounded-[32px] border border-gray-200 focus-within:bg-white focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all max-w-4xl mx-auto">
           <div className="flex items-center gap-1 pl-1">
             <button type="button" className="p-3 text-gray-400 hover:text-primary transition-all active:scale-90 hover:bg-primary/5 rounded-2xl">
@@ -405,6 +437,76 @@ export default function ChatRoom() {
           </motion.button>
         </form>
       </div>
+      {/* AI Transparency Modal */}
+      <AnimatePresence>
+        {showAIInfo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAIInfo(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[40px] p-8 shadow-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-6">
+                <button onClick={() => setShowAIInfo(false)} className="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100">
+                  <ChevronLeft size={20} className="rotate-90" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                  <Sparkles size={32} className="text-primary" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">Về TeenTask AI</h2>
+                  <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                    TeenTask sử dụng mô hình Gemini 1.5 Flash để hỗ trợ bạn trong quá trình học tập và tìm kiếm cơ hội.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <h4 className="text-xs font-black text-gray-900 mb-2 flex items-center gap-2">
+                      <Zap size={14} className="text-amber-500" />
+                      Mục đích sử dụng
+                    </h4>
+                    <ul className="text-[11px] text-gray-500 font-bold space-y-2">
+                      <li className="flex items-start gap-2">• Cá nhân hóa lộ trình phát triển kỹ năng.</li>
+                      <li className="flex items-start gap-2">• Gợi ý việc làm & kiến tập phù hợp nhất.</li>
+                      <li className="flex items-start gap-2">• Hỗ trợ Mentor 24/7 giải đáp thắc mắc.</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <h4 className="text-xs font-black text-indigo-900 mb-2 flex items-center gap-2">
+                      <Zap size={14} className="text-indigo-600" />
+                      Về Token & Giới hạn
+                    </h4>
+                    <p className="text-[10px] text-indigo-700 font-bold leading-relaxed">
+                      Mỗi yêu cầu tiêu tốn một lượng "tokens" nhất định. Nếu bạn sử dụng API key cá nhân, giới hạn sẽ phụ thuộc vào gói cước của bạn (thường là 15 yêu cầu/phút cho bản miễn phí).
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setShowAIInfo(false)}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                >
+                  Đã hiểu
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

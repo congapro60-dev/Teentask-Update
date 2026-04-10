@@ -168,7 +168,8 @@ export default function ManageJobs() {
 
     setAnalyzingId(app.id);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
         Hãy phân tích ứng viên sau cho công việc "${job.title}":
@@ -194,7 +195,7 @@ export default function ManageJobs() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt
       });
       setAiAnalysis(prev => ({ ...prev, [app.id]: response.text }));

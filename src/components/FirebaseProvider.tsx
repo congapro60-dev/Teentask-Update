@@ -3,6 +3,7 @@ import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut,
 import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, CV } from '../types';
+import { translations, Language, TranslationKey } from '../lib/translations';
 
 export { auth, db };
 
@@ -84,6 +85,9 @@ interface FirebaseContextType {
   bookShadowing: (event: any) => Promise<void>;
   getBookings: () => Promise<any[]>;
   switchRole: (role: 'student' | 'parent' | 'business' | 'admin') => Promise<void>;
+  t: (key: TranslationKey) => string;
+  language: Language;
+  setLanguage: (lang: Language) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -109,6 +113,24 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [language, setLanguageState] = useState<Language>('vi');
+
+  const t = (key: TranslationKey) => {
+    return translations[language][key] || key;
+  };
+
+  const setLanguage = async (lang: Language) => {
+    setLanguageState(lang);
+    if (user && profile) {
+      await updateProfile({ language: lang });
+    }
+  };
+
+  useEffect(() => {
+    if (profile?.language) {
+      setLanguageState(profile.language);
+    }
+  }, [profile?.language]);
 
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
@@ -751,7 +773,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       submitRating, createChat, sendNotification,
       toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, submitNameChangeRequest,
       toggleFollowUser, unfriendUser, saveCV, getCV,
-      bookShadowing, getBookings, switchRole
+      bookShadowing, getBookings, switchRole,
+      t, language, setLanguage
     }}>
       {children}
     </FirebaseContext.Provider>

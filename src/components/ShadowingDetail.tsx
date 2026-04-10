@@ -27,7 +27,8 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
     }
     setIsAnalyzing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
         Hãy phân tích độ phù hợp của học sinh này với chương trình Job Shadowing sau:
@@ -53,7 +54,7 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt
       });
       setAiAnalysis(response.text);
@@ -135,11 +136,13 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="flex items-center gap-5 mb-10 p-6 bg-white/5 rounded-[32px] border border-white/10 shadow-inner">
                     <div className="w-16 h-16 bg-slate-900 rounded-[24px] border-4 border-white/5 overflow-hidden shadow-2xl">
-                      <img src={`https://i.pravatar.cc/100?u=${event.mentor}`} alt={event.mentor} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={`https://i.pravatar.cc/100?u=${event.mentorId || event.mentor}`} alt={event.mentorName || event.mentor} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     <div>
-                      <h4 className="text-white font-black text-lg tracking-tight leading-tight">{event.mentor}</h4>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">{event.role} @ {event.company}</p>
+                      <h4 className="text-white font-black text-lg tracking-tight leading-tight">{event.mentorName || event.mentor}</h4>
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">
+                        {event.mentorTitle || event.role} @ {event.companyName || event.company}
+                      </p>
                       <div className="flex items-center gap-1.5 mt-2">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star key={s} size={12} fill={s <= 4 ? '#fbbf24' : 'none'} className={s <= 4 ? 'text-amber-400' : 'text-white/10'} strokeWidth={2.5} />
@@ -155,19 +158,19 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         <Calendar className="text-secondary" size={20} strokeWidth={2.5} />
                       </div>
                       <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Thời gian</p>
-                      <p className="text-xs font-black text-white uppercase tracking-widest">{event.date}</p>
+                      <p className="text-xs font-black text-white uppercase tracking-widest">{event.date} · {event.time}</p>
                     </div>
                     <div className="p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner">
                       <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
                         <MapPin className="text-primary" size={20} strokeWidth={2.5} />
                       </div>
                       <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Địa điểm</p>
-                      <p className="text-xs font-black text-white uppercase tracking-widest">{event.company}</p>
+                      <p className="text-xs font-black text-white uppercase tracking-widest">{event.location}</p>
                     </div>
                   </div>
 
-                  {(event.slotsTotal !== undefined || event.slotsRemaining !== undefined) && (
-                    <div className="mb-10 p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner flex items-center justify-between">
+                  <div className="grid grid-cols-2 gap-6 mb-10">
+                    <div className="p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner flex items-center justify-between">
                       <div>
                         <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Số lượng</p>
                         <p className="text-xs font-black text-white uppercase tracking-widest">
@@ -178,7 +181,18 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         <Users className="text-amber-500" size={20} strokeWidth={2.5} />
                       </div>
                     </div>
-                  )}
+                    <div className="p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner flex items-center justify-between">
+                      <div>
+                        <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Cấp độ</p>
+                        <p className="text-xs font-black text-white uppercase tracking-widest">
+                          {event.level || 'Cơ bản'}
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
+                        <ShieldCheck className="text-indigo-500" size={20} strokeWidth={2.5} />
+                      </div>
+                    </div>
+                  </div>
 
                   {event.company && (
                     <div className="w-full h-32 rounded-[28px] overflow-hidden border border-white/5 mb-10">
@@ -195,9 +209,18 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                   )}
 
                   <h3 className="text-white font-black text-lg tracking-tight mb-4">Mô tả chương trình</h3>
-                  <p className="text-sm leading-relaxed mb-10 font-bold text-slate-400">
-                    Trải nghiệm một ngày làm việc thực thụ tại {event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor {event.mentor}.
+                  <p className="text-sm leading-relaxed mb-10 font-bold text-slate-400 whitespace-pre-wrap">
+                    {event.description || `Trải nghiệm một ngày làm việc thực thụ tại ${event.companyName || event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor ${event.mentorName || event.mentor}.`}
                   </p>
+
+                  {event.requirements && (
+                    <div className="mb-10">
+                      <h3 className="text-white font-black text-lg tracking-tight mb-4">Yêu cầu</h3>
+                      <p className="text-sm leading-relaxed font-bold text-slate-400 whitespace-pre-wrap">
+                        {event.requirements}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 mb-10 shadow-inner">
                     <h4 className="text-white font-black text-base tracking-tight mb-6 flex items-center gap-3">
@@ -206,20 +229,26 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                       </div>
                       Quyền lợi độc quyền
                     </h4>
-                    <ul className="space-y-4 text-sm">
-                      <li className="flex items-start gap-4">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
-                        <span className="font-bold text-slate-300">Chứng nhận kinh nghiệm từ {event.company}</span>
-                      </li>
-                      <li className="flex items-start gap-4">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
-                        <span className="font-bold text-slate-300">Ăn trưa cùng chuyên gia</span>
-                      </li>
-                      <li className="flex items-start gap-4">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
-                        <span className="font-bold text-slate-300">Tư vấn định hướng nghề nghiệp 1-1</span>
-                      </li>
-                    </ul>
+                    {event.benefits ? (
+                      <p className="text-sm leading-relaxed font-bold text-slate-400 whitespace-pre-wrap">
+                        {event.benefits}
+                      </p>
+                    ) : (
+                      <ul className="space-y-4 text-sm">
+                        <li className="flex items-start gap-4">
+                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                          <span className="font-bold text-slate-300">Chứng nhận kinh nghiệm từ {event.companyName || event.company}</span>
+                        </li>
+                        <li className="flex items-start gap-4">
+                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                          <span className="font-bold text-slate-300">Ăn trưa cùng chuyên gia</span>
+                        </li>
+                        <li className="flex items-start gap-4">
+                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                          <span className="font-bold text-slate-300">Tư vấn định hướng nghề nghiệp 1-1</span>
+                        </li>
+                      </ul>
+                    )}
                   </div>
 
                   {/* AI Match Analysis */}
