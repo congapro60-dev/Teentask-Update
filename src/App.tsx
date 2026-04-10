@@ -79,6 +79,7 @@ import Saved from './components/Saved';
 import Vip from './components/Vip';
 import Wallet from './components/Wallet';
 import CVBuilder from './components/CVBuilder';
+import QuickSurvey from './components/QuickSurvey';
 import CalendarView from './components/CalendarView';
 import CareerInsights from './components/CareerInsights';
 import LegalGuide from './components/LegalGuide';
@@ -163,6 +164,7 @@ function AppContent() {
         <div className={appWrapperClass}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/quick-survey" element={<QuickSurvey />} />
             <Route path="*" element={
               <Layout>
                 <AnimatePresence mode="wait">

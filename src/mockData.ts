@@ -176,7 +176,8 @@ export const MOCK_SHADOWING = [
     category: 'Marketing',
     image: 'https://picsum.photos/seed/marketing/800/400',
     color: 'from-blue-500 to-indigo-600',
-    description: 'Khám phá cách xây dựng thương hiệu cá nhân mạnh mẽ trong kỷ nguyên số cùng chuyên gia hàng đầu.'
+    description: 'Khám phá cách xây dựng thương hiệu cá nhân mạnh mẽ trong kỷ nguyên số cùng chuyên gia hàng đầu.',
+    linkedInStatus: 'verified'
   },
   {
     id: '2',
@@ -193,7 +194,8 @@ export const MOCK_SHADOWING = [
     category: 'Design',
     image: 'https://picsum.photos/seed/design/800/400',
     color: 'from-purple-500 to-pink-600',
-    description: 'Trải nghiệm quy trình thiết kế sản phẩm thực tế tại một trong những tập đoàn lớn nhất Việt Nam.'
+    description: 'Trải nghiệm quy trình thiết kế sản phẩm thực tế tại một trong những tập đoàn lớn nhất Việt Nam.',
+    linkedInStatus: 'verified'
   },
   {
     id: '3',
@@ -210,6 +212,7 @@ export const MOCK_SHADOWING = [
     category: 'Management',
     image: 'https://picsum.photos/seed/management/800/400',
     color: 'from-emerald-500 to-teal-600',
-    description: 'Học cách vận hành dự án theo phương pháp Agile/Scrum hiện đại.'
+    description: 'Học cách vận hành dự án theo phương pháp Agile/Scrum hiện đại.',
+    linkedInStatus: 'pending'
   }
 ];

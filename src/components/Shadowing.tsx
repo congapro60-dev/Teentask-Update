@@ -269,15 +269,21 @@ export default function Shadowing() {
                   </div>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden relative">
                       <img 
                         src={`https://i.pravatar.cc/100?u=${workshop.mentorId || workshop.mentor}`} 
                         alt="" 
                         className="w-full h-full object-cover"
                       />
+                      {workshop.linkedInStatus === 'verified' && (
+                        <div className="absolute bottom-0 right-0 bg-[#0077B5] text-white text-[8px] font-bold px-1 rounded-tl-lg" title="LinkedIn Verified">in</div>
+                      )}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-slate-900">{workshop.mentorName || workshop.mentor}</p>
+                      <p className="text-sm font-black text-slate-900 flex items-center gap-1">
+                        {workshop.mentorName || workshop.mentor}
+                        {workshop.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
+                      </p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
                         {workshop.mentorTitle || workshop.role} @ {workshop.companyName || workshop.company}
                       </p>
@@ -411,11 +417,17 @@ export default function Shadowing() {
                 <div className="p-8 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border-2 border-slate-100 overflow-hidden shadow-sm group-hover:border-amber-100 transition-colors">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border-2 border-slate-100 overflow-hidden shadow-sm group-hover:border-amber-100 transition-colors relative">
                         <img src={`https://i.pravatar.cc/100?u=${event.mentorId || event.mentor}`} alt="" className="w-full h-full object-cover" />
+                        {event.linkedInStatus === 'verified' && (
+                          <div className="absolute bottom-0 right-0 bg-[#0077B5] text-white text-[8px] font-bold px-1 rounded-tl-lg" title="LinkedIn Verified">in</div>
+                        )}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-900 tracking-tight">{event.mentorName || event.mentor}</p>
+                        <p className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-1">
+                          {event.mentorName || event.mentor}
+                          {event.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
+                        </p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{event.mentorTitle || event.role}</p>
                       </div>
                     </div>

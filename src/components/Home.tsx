@@ -354,10 +354,10 @@ export default function Home() {
                   <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
-                  onClick={() => navigate('/about')}
+                  onClick={() => navigate('/quick-survey')}
                   className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-[24px] font-black uppercase tracking-widest text-sm hover:bg-white/20 transition-all"
                 >
-                  {t('learnMore')}
+                  {t('quickSurvey')}
                 </button>
               </div>
             </motion.div>

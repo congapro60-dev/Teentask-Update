@@ -268,7 +268,12 @@ export default function CompanyProfile() {
               {companyInfo?.displayName}
               {companyInfo?.email === BOSS_EMAIL && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter">Boss</span>}
               {companyInfo?.role === 'admin' && companyInfo?.email !== BOSS_EMAIL && <span className="bg-indigo-100 text-indigo-600 text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter">Admin</span>}
-              {companyInfo?.trustScore >= 4 && <ShieldCheck size={20} className="text-[#4F46E5]" />}
+              {companyInfo?.trustScore >= 4 && <ShieldCheck size={20} className="text-[#4F46E5]" title="Verified Business" />}
+              {companyInfo?.linkedInStatus === 'verified' && (
+                <a href={companyInfo.linkedInUrl} target="_blank" rel="noopener noreferrer" className="bg-[#0077B5] text-white text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter flex items-center gap-1 hover:bg-[#006097] transition-colors" title="LinkedIn Verified">
+                  <span className="font-bold">in</span> Verified
+                </a>
+              )}
             </h1>
             <p className="text-sm text-gray-500 font-medium mt-1">Công ty Công nghệ • 50-100 nhân viên</p>
             

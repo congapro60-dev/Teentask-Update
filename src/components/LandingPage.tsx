@@ -169,14 +169,28 @@ export default function LandingPage() {
               Bắt đầu ngay — Miễn phí
             </button>
             <button 
-              onClick={() => {
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/quick-survey')}
               className="px-8 py-4 bg-transparent text-white border-2 border-white/30 rounded-2xl font-bold text-lg hover:bg-white/10 transition-colors"
             >
-              Tìm hiểu thêm
+              Khảo sát nhanh
             </button>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="mt-16 flex flex-col items-center text-white/70 cursor-pointer hover:text-white transition-colors"
+            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <span className="text-sm font-medium mb-2 uppercase tracking-widest text-center">Trượt xuống để xem thêm thông tin</span>
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            >
+              <ChevronDown size={24} />
+            </motion.div>
+          </motion.div>
         </motion.div>
       </section>
 

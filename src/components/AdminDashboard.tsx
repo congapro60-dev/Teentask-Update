@@ -674,10 +674,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleVerifyLinkedIn = async (userId: string, status: 'verified' | 'rejected') => {
+    setActionLoading(true);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        linkedInStatus: status
+      });
+      // Send notification
+      await addDoc(collection(db, 'notifications'), {
+        userId,
+        title: status === 'verified' ? 'Xác minh LinkedIn thành công' : 'Xác minh LinkedIn bị từ chối',
+        message: status === 'verified' ? 'Hồ sơ LinkedIn của bạn đã được xác minh.' : 'Yêu cầu xác minh LinkedIn của bạn không hợp lệ.',
+        type: 'system',
+        read: false,
+        createdAt: Date.now()
+      });
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error updating LinkedIn status:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const filteredData = () => {
     if (activeTab === 'users') {
       return users.filter(user => {
-        const matchesFilter = filter === 'all' || user.verificationStatus === filter;
+        const matchesFilter = filter === 'all' || 
+                              (filter === 'linkedin_pending' ? user.linkedInStatus === 'pending' : user.verificationStatus === filter);
         const matchesSearch = !searchQuery || 
                              ((user.displayName?.toLowerCase() || '').includes(searchQuery.toLowerCase())) ||
                              ((user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()));
@@ -812,6 +836,7 @@ export default function AdminDashboard() {
                     { id: 'pending', label: 'Chờ duyệt' },
                     { id: 'verified', label: 'Đã duyệt' },
                     { id: 'rejected', label: 'Từ chối' },
+                    { id: 'linkedin_pending', label: 'Chờ duyệt LinkedIn' },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -867,6 +892,35 @@ export default function AdminDashboard() {
                      user.verificationStatus === 'rejected' ? 'Từ chối' : 'Chưa gửi'}
                   </div>
                 </div>
+                
+                {user.linkedInStatus === 'pending' && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#0077B5] flex items-center gap-1">
+                        <div className="w-4 h-4 bg-[#0077B5] text-white rounded flex items-center justify-center font-bold text-[8px]">in</div>
+                        Yêu cầu duyệt LinkedIn
+                      </span>
+                      <a href={user.linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline font-medium">
+                        Xem hồ sơ
+                      </a>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleVerifyLinkedIn(user.id, 'verified')}
+                        className="flex-1 py-1.5 bg-[#0077B5] text-white rounded-lg text-xs font-bold hover:bg-[#006097]"
+                      >
+                        Duyệt
+                      </button>
+                      <button 
+                        onClick={() => handleVerifyLinkedIn(user.id, 'rejected')}
+                        className="flex-1 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300"
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setSelectedUser(user)}
