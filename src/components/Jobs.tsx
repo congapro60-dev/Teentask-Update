@@ -1,4 +1,4 @@
-import { Search, Filter, MapPin, Clock, DollarSign, Building2, Sparkles, Briefcase, MessageSquare, Heart, Bell, X, Zap, Check, ArrowRight } from 'lucide-react';
+import { Search, Filter, MapPin, Clock, DollarSign, Building2, Sparkles, Briefcase, MessageSquare, Heart, Bell, X, Zap, Check, ArrowRight, GraduationCap, UserCheck, Users } from 'lucide-react';
 import SmartImage from './SmartImage';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useEffect } from 'react';
@@ -35,6 +35,7 @@ export default function Jobs() {
   const [deadlineFilter, setDeadlineFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [orgTypeFilter, setOrgTypeFilter] = useState<'All' | 'business' | 'school' | 'teacher' | 'ngo'>('All');
 
   // Initialize skills from profile
   useEffect(() => {
@@ -289,13 +290,14 @@ export default function Jobs() {
     const matchesSalary = job.salaryValue >= salaryRange[0] && job.salaryValue <= salaryRange[1];
     const matchesDeadline = !deadlineFilter || job.deadline <= deadlineFilter;
     const matchesLocation = !locationFilter || job.location.toLowerCase().includes(locationFilter.toLowerCase());
+    const matchesOrgType = orgTypeFilter === 'All' || job.businessOrgType === orgTypeFilter;
     const matchesSkills = selectedSkills.length === 0 || selectedSkills.some(skill => 
       job.tags.includes(skill) || 
       (job.qualifications && job.qualifications.some((q: string) => q.toLowerCase().includes(skill.toLowerCase()))) ||
       (job.responsibilities && job.responsibilities.some((r: string) => r.toLowerCase().includes(skill.toLowerCase())))
     );
 
-    return matchesSearch && matchesCategory && matchesType && matchesSalary && matchesDeadline && matchesLocation && matchesSkills;
+    return matchesSearch && matchesCategory && matchesType && matchesSalary && matchesDeadline && matchesLocation && matchesSkills && matchesOrgType;
   }).sort((a, b) => {
     if (sortBy === 'deadline') {
       return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
@@ -449,6 +451,34 @@ export default function Jobs() {
 
         {/* Quick Filters Bar */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          {/* OrgType Quick Filter */}
+          <div className="flex gap-2">
+            {[
+              { id: 'business', label: 'Doanh nghiệp', icon: Building2 },
+              { id: 'school', label: 'Nhà trường', icon: GraduationCap },
+              { id: 'teacher', label: 'Giáo viên', icon: UserCheck },
+              { id: 'ngo', label: 'NGO', icon: Users },
+            ].map((type) => {
+              const isSelected = orgTypeFilter === type.id;
+              return (
+                <button
+                  key={type.id}
+                  onClick={() => setOrgTypeFilter(isSelected ? 'All' : type.id as any)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border transition-all flex items-center gap-1.5 ${
+                    isSelected 
+                    ? 'bg-indigo-50 text-[#4F46E5] border-indigo-200' 
+                    : 'bg-gray-50 text-gray-500 border-transparent hover:border-gray-200'
+                  }`}
+                >
+                  <type.icon size={12} />
+                  {type.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="w-px h-6 bg-gray-100 mx-1 self-center"></div>
+
           {/* Salary Quick Filter */}
           <div className="flex gap-2">
             {[
@@ -575,6 +605,11 @@ export default function Jobs() {
                          'Hết hạn'}
                       </span>
                     </div>
+                    {job.isInternal && job.schoolName && (
+                      <p className="text-xs text-green-600 italic mt-1 font-medium">
+                        Dành cho học sinh: {job.schoolName}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -602,6 +637,16 @@ export default function Jobs() {
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1.5">
+                  {(job as any).businessOrgType === 'school' || (job as any).businessOrgType === 'teacher' ? (
+                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      AN TOÀN
+                    </span>
+                  ) : null}
+                  {job.isInternal && (
+                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                      🏫 Việc làm Nhà trường
+                    </span>
+                  )}
                   {job.tags.slice(0, 2).map((tag) => (
                     <span key={tag} className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
                       #{tag.toUpperCase()}
@@ -778,6 +823,32 @@ export default function Jobs() {
                     onChange={(e) => setLocationFilter(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#4F46E5] outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Org Type */}
+              <div>
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Đơn vị đăng tuyển</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'All', label: 'Tất cả' },
+                    { id: 'business', label: 'Doanh nghiệp' },
+                    { id: 'school', label: 'Nhà trường' },
+                    { id: 'teacher', label: 'Giáo viên' },
+                    { id: 'ngo', label: 'NGO' },
+                  ].map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setOrgTypeFilter(type.id as any)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        orgTypeFilter === type.id 
+                        ? 'bg-[#4F46E5] text-white border-[#4F46E5]' 
+                        : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 

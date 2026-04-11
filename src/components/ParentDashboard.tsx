@@ -162,6 +162,7 @@ export default function ParentDashboard() {
       businessId: auth.currentUser.uid,
       businessName: profile.displayName || 'Phụ huynh',
       businessLogo: profile.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName || 'P')}&background=random`,
+      businessOrgType: 'parent',
       title: formData.title,
       description: formData.description,
       salary: formData.salary,

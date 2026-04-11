@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ShieldCheck, Camera, Upload, CheckCircle2, ArrowRight, User, Calendar, GraduationCap, Building2, Briefcase, MapPin, X as CloseIcon, Check } from 'lucide-react';
+import { ShieldCheck, Camera, Upload, CheckCircle2, ArrowRight, User, Calendar, GraduationCap, Building2, Briefcase, MapPin, X as CloseIcon, Check, UserCheck, Users } from 'lucide-react';
 import { useFirebase } from './FirebaseProvider';
 import { PREDEFINED_SKILLS } from '../constants';
 
@@ -99,7 +99,7 @@ export default function VerificationFlow({ onClose }: VerificationFlowProps) {
       } else if (profile?.role === 'parent') {
         Object.assign(verificationData, { occupation, dob, workplaceName, workplaceAddress });
       } else if (profile?.role === 'business') {
-        Object.assign(verificationData, { representativeName, businessName, businessAddress, businessField });
+        Object.assign(verificationData, { representativeName, businessName, businessAddress, orgType: businessField || 'business' });
       } else if (profile?.role === 'admin') {
         Object.assign(verificationData, { fullName, dob, idNumber });
       }
@@ -230,8 +230,41 @@ export default function VerificationFlow({ onClose }: VerificationFlowProps) {
                 <>
                   <InputField label={t('representativeName')} value={representativeName} onChange={setRepresentativeName} icon={User} placeholder="Nguyễn Văn B" />
                   <InputField label={t('businessName')} value={businessName} onChange={setBusinessName} icon={Building2} placeholder="Công ty TNHH TeenTask" />
+                  
+                  <div className="pt-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Loại hình tổ chức *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { id: 'business', icon: Building2, title: 'Doanh nghiệp', sub: 'Công ty, hộ kinh doanh', color: 'indigo' },
+                        { id: 'school', icon: GraduationCap, title: 'Nhà trường', sub: 'Trường THPT, trung tâm GD', color: 'green' },
+                        { id: 'teacher', icon: UserCheck, title: 'Giáo viên / Chuyên gia', sub: 'GV hướng nghiệp, career coach', color: 'purple' },
+                        { id: 'ngo', icon: Users, title: 'Tổ chức phi lợi nhuận', sub: 'CLB, hội, tổ chức XH', color: 'amber' }
+                      ].map((type) => {
+                        const isSelected = businessField === type.id; // Reusing businessField state for orgType to avoid adding new state
+                        return (
+                          <button
+                            key={type.id}
+                            onClick={() => setBusinessField(type.id)}
+                            className={`p-3 rounded-xl text-left transition-all border-2 ${
+                              isSelected 
+                                ? `bg-${type.color}-50 border-${type.color}-500` 
+                                : 'bg-white border-gray-200 hover:border-indigo-300'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
+                              isSelected ? `bg-${type.color}-100 text-${type.color}-600` : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              <type.icon size={16} />
+                            </div>
+                            <div className="text-sm font-bold text-gray-900">{type.title}</div>
+                            <div className="text-xs text-gray-400">{type.sub}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <InputField label={t('businessAddress')} value={businessAddress} onChange={setBusinessAddress} icon={MapPin} placeholder="456 Cầu Giấy, Hà Nội" />
-                  <InputField label={t('businessField')} value={businessField} onChange={setBusinessField} icon={Briefcase} placeholder="Công nghệ thông tin" />
                 </>
               )}
             </div>

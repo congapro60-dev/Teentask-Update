@@ -268,7 +268,10 @@ export default function CompanyProfile() {
               {companyInfo?.displayName}
               {companyInfo?.email === BOSS_EMAIL && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter">Boss</span>}
               {companyInfo?.role === 'admin' && companyInfo?.email !== BOSS_EMAIL && <span className="bg-indigo-100 text-indigo-600 text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter">Admin</span>}
-              {companyInfo?.trustScore >= 4 && <ShieldCheck size={20} className="text-[#4F46E5]" title="Verified Business" />}
+              {companyInfo?.orgType === 'school' && <span className="bg-green-100 text-green-700 border border-green-200 text-[10px] px-2 py-0.5 rounded-full font-medium">🏫 Đối tác Giáo dục</span>}
+              {companyInfo?.orgType === 'teacher' && <span className="bg-purple-100 text-purple-700 border border-purple-200 text-[10px] px-2 py-0.5 rounded-full font-medium">👨‍🏫 Giáo viên Hướng nghiệp</span>}
+              {companyInfo?.orgType === 'ngo' && <span className="bg-amber-100 text-amber-700 border border-amber-200 text-[10px] px-2 py-0.5 rounded-full font-medium">🤝 Tổ chức Phi lợi nhuận</span>}
+              {companyInfo?.trustScore >= 4 && <span title="Verified Business"><ShieldCheck size={20} className="text-[#4F46E5]" /></span>}
               {companyInfo?.linkedInStatus === 'verified' && (
                 <a href={companyInfo.linkedInUrl} target="_blank" rel="noopener noreferrer" className="bg-[#0077B5] text-white text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter flex items-center gap-1 hover:bg-[#006097] transition-colors" title="LinkedIn Verified">
                   <span className="font-bold">in</span> Verified

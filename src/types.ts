@@ -48,6 +48,9 @@ export interface UserProfile {
   businessLogo?: string;
   businessAddress?: string;
   businessField?: string;
+  orgType?: 'business' | 'school' | 'teacher' | 'ngo';
+  linkedInStatus?: 'pending' | 'verified' | 'rejected';
+  linkedInUrl?: string;
   industry?: string;
   website?: string;
   companySize?: string;
@@ -151,6 +154,7 @@ export interface Job {
   businessId: string;
   businessName: string;
   businessLogo?: string;
+  businessOrgType?: string;
   title: string;
   description: string;
   salary: number;
@@ -165,6 +169,8 @@ export interface Job {
   tags: string[];
   qualifications?: string[];
   benefits?: string[];
+  isInternal?: boolean;
+  schoolName?: string;
   createdAt: number;
 }
 

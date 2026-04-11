@@ -19,6 +19,7 @@ export default function Home() {
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [schoolJobs, setSchoolJobs] = useState<Job[]>([]);
   const [shadowingEvents, setShadowingEvents] = useState<ShadowingEvent[]>([]);
   
   const [featuredUsers, setFeaturedUsers] = useState<any[]>([]);
@@ -55,6 +56,13 @@ export default function Home() {
     const qJobs = query(collection(db, 'jobs'), where('status', '==', 'active'), limit(10));
     const unsubJobs = onSnapshot(qJobs, (snapshot) => {
       setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Job)));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'jobs'));
+
+    const qSchoolJobs = query(collection(db, 'jobs'), where('businessOrgType', 'in', ['school', 'teacher']));
+    const unsubSchoolJobs = onSnapshot(qSchoolJobs, (snapshot) => {
+      const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Job));
+      const filtered = fetched.filter(job => job.status === 'active' && job.isApproved === true).slice(0, 4);
+      setSchoolJobs(filtered);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'jobs'));
 
     const qShadowing = query(collection(db, 'shadowing_events'), limit(10));
@@ -144,6 +152,7 @@ export default function Home() {
       unsubAds();
       unsubCourses();
       unsubJobs();
+      unsubSchoolJobs();
       unsubShadowing();
     };
   }, []);
@@ -654,6 +663,57 @@ export default function Home() {
         }}
         viewAllPath="/jobs"
       />
+
+      {/* School Jobs Carousel */}
+      {schoolJobs.length > 0 && (
+        <CarouselSection 
+          title="🏫 Việc làm từ Nhà trường & Giáo viên" 
+          subtitle="An toàn tuyệt đối · Đã được kiểm duyệt bởi đơn vị giáo dục"
+          icon={GraduationCap}
+          items={schoolJobs}
+          renderItem={(job: any) => {
+            const isSaved = profile?.savedJobs?.includes(job.id);
+            return (
+              <div 
+                onClick={() => handleJobClick(job)}
+                className="w-[240px] p-5 bg-white border-2 border-green-200 rounded-3xl shadow-sm hover:border-green-400 transition-all relative group cursor-pointer hover:shadow-md"
+              >
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
+                  <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    AN TOÀN
+                  </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSaveJob(job.id);
+                    }}
+                    className={cn(
+                      "p-2 rounded-full transition-all",
+                      isSaved ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                    )}
+                  >
+                    <Heart size={16} fill={isSaved ? "currentColor" : "none"} />
+                  </button>
+                </div>
+                <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-4 border border-green-100">
+                  {job.businessLogo || job.logo ? (
+                    <img src={job.businessLogo || job.logo} alt={job.businessName || job.company} className="w-full h-full object-cover rounded-2xl" referrerPolicy="no-referrer" />
+                  ) : (
+                    <Briefcase size={24} />
+                  )}
+                </div>
+                <h4 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-16">{job.title}</h4>
+                <p className="text-xs text-gray-500 mb-4">{job.businessName || job.company}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-black text-green-600">{typeof job.salary === 'number' ? `${job.salary.toLocaleString('vi-VN')}đ` : job.salary}</span>
+                  <span className="text-[10px] font-bold text-gray-400">{job.location}</span>
+                </div>
+              </div>
+            );
+          }}
+          viewAllPath="/jobs"
+        />
+      )}
 
       {/* Shadowing Carousel */}
       <CarouselSection 

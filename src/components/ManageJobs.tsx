@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Edit2, Trash2, Users, Briefcase, MapPin, DollarSign, Clock, X, CheckCircle2, User, ShieldCheck, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Briefcase, MapPin, DollarSign, Clock, X, CheckCircle2, User, ShieldCheck, ExternalLink, Sparkles, Loader2, Globe, Lock } from 'lucide-react';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth, useFirebase } from './FirebaseProvider';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,9 @@ export default function ManageJobs() {
     type: 'online' as 'online' | 'offline',
     category: 'Design',
     slotsTotal: 1,
-    tags: ''
+    tags: '',
+    isInternal: false,
+    schoolName: ''
   });
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function ManageJobs() {
       businessId: auth.currentUser.uid,
       businessName: profile.displayName || 'Doanh nghiệp',
       businessLogo: profile.photoURL || 'https://picsum.photos/seed/business/100/100',
+      businessOrgType: profile.orgType || 'business',
       title: formData.title,
       description: formData.description,
       salary: formData.salary,
@@ -73,6 +76,8 @@ export default function ManageJobs() {
       category: formData.category,
       status: editingJob ? editingJob.status : 'active',
       tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+      isInternal: formData.isInternal,
+      schoolName: formData.isInternal ? formData.schoolName : '',
       createdAt: editingJob ? editingJob.createdAt : Date.now(),
     };
 
@@ -121,7 +126,9 @@ export default function ManageJobs() {
       type: job.type,
       category: job.category,
       slotsTotal: job.slotsTotal,
-      tags: job.tags.join(', ')
+      tags: job.tags.join(', '),
+      isInternal: job.isInternal || false,
+      schoolName: job.schoolName || ''
     });
     setIsCreateModalOpen(true);
   };
@@ -137,7 +144,9 @@ export default function ManageJobs() {
       type: 'online',
       category: 'Design',
       slotsTotal: 1,
-      tags: ''
+      tags: '',
+      isInternal: false,
+      schoolName: ''
     });
   };
 
@@ -386,6 +395,58 @@ export default function ManageJobs() {
                   <label className="block text-xs font-bold text-gray-500 mb-1">Tags (cách nhau bằng dấu phẩy)</label>
                   <input type="text" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full p-4 bg-gray-50 rounded-2xl font-medium outline-none focus:ring-2 focus:ring-[#4F46E5]" placeholder="VD: Design, Micro-task" />
                 </div>
+
+                {(profile?.orgType === 'school' || profile?.orgType === 'teacher') && (
+                  <div className="space-y-4 border-t border-gray-100 pt-4 mt-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-2">Phạm vi tuyển dụng</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, isInternal: false })}
+                          className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                            !formData.isInternal
+                              ? 'border-[#4F46E5] bg-indigo-50 text-[#4F46E5] font-bold'
+                              : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Globe size={16} />
+                          <span className="text-sm">Công khai cho tất cả học sinh</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, isInternal: true })}
+                          className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                            formData.isInternal
+                              ? 'border-green-400 bg-green-50 text-green-700 font-bold'
+                              : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Lock size={16} />
+                          <span className="text-sm">Chỉ học sinh của trường tôi</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {formData.isInternal && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <label className="block text-xs font-bold text-gray-500 mb-1">Tên trường / Tổ chức *</label>
+                        <input
+                          required
+                          type="text"
+                          value={formData.schoolName}
+                          onChange={e => setFormData({ ...formData, schoolName: e.target.value })}
+                          className="w-full p-4 bg-gray-50 rounded-2xl font-medium outline-none focus:ring-2 focus:ring-green-400"
+                          placeholder="VD: THPT Nguyễn Du, Hà Nội"
+                        />
+                      </motion.div>
+                    )}
+                  </div>
+                )}
                 
                 <button type="submit" className="w-full py-4 bg-[#4F46E5] text-white rounded-2xl font-black mt-4 shadow-lg shadow-indigo-200">
                   {editingJob ? 'CẬP NHẬT' : 'ĐĂNG TIN'}

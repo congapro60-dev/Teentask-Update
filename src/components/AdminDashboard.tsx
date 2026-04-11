@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   const [nameChangeRequests, setNameChangeRequests] = useState<any[]>([]);
   const [shadowingBookings, setShadowingBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'verified' | 'rejected' | 'approved'>('pending');
+  const [filter, setFilter] = useState<string>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -700,8 +700,15 @@ export default function AdminDashboard() {
   const filteredData = () => {
     if (activeTab === 'users') {
       return users.filter(user => {
-        const matchesFilter = filter === 'all' || 
-                              (filter === 'linkedin_pending' ? user.linkedInStatus === 'pending' : user.verificationStatus === filter);
+        let matchesFilter = false;
+        if (filter === 'all') matchesFilter = true;
+        else if (filter === 'linkedin_pending') matchesFilter = user.linkedInStatus === 'pending';
+        else if (['business', 'school', 'teacher', 'ngo'].includes(filter)) {
+          matchesFilter = user.role === 'business' && user.orgType === filter;
+        } else {
+          matchesFilter = user.verificationStatus === filter;
+        }
+        
         const matchesSearch = !searchQuery || 
                              ((user.displayName?.toLowerCase() || '').includes(searchQuery.toLowerCase())) ||
                              ((user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()));
@@ -837,6 +844,12 @@ export default function AdminDashboard() {
                     { id: 'verified', label: 'Đã duyệt' },
                     { id: 'rejected', label: 'Từ chối' },
                     { id: 'linkedin_pending', label: 'Chờ duyệt LinkedIn' },
+                    ...(activeTab === 'users' ? [
+                      { id: 'business', label: 'Doanh nghiệp' },
+                      { id: 'school', label: 'Nhà trường' },
+                      { id: 'teacher', label: 'Giáo viên' },
+                      { id: 'ngo', label: 'NGO' }
+                    ] : [])
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -878,7 +891,21 @@ export default function AdminDashboard() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.role}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.role}</p>
+                        {user.role === 'business' && user.orgType && (
+                          <span className={`px-2 py-0.5 text-[8px] font-black rounded-full uppercase tracking-widest border ${
+                            user.orgType === 'school' ? 'bg-green-50 text-green-600 border-green-200' :
+                            user.orgType === 'teacher' ? 'bg-purple-50 text-purple-600 border-purple-200' :
+                            user.orgType === 'ngo' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                            'bg-indigo-50 text-indigo-600 border-indigo-200'
+                          }`}>
+                            {user.orgType === 'school' ? 'Nhà trường' :
+                             user.orgType === 'teacher' ? 'Giáo viên' :
+                             user.orgType === 'ngo' ? 'NGO' : 'Doanh nghiệp'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
