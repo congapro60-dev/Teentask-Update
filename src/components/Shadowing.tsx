@@ -26,8 +26,12 @@ export default function Shadowing() {
     setLoading(true);
     const q = query(collection(db, 'shadowing_events'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setShadowingEvents(events);
+      if (!snapshot.empty) {
+        const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setShadowingEvents(events);
+      } else {
+        setShadowingEvents(MOCK_SHADOWING);
+      }
       setLoading(false);
     }, (error) => {
       console.error("Shadowing listener error:", error);
@@ -171,7 +175,6 @@ export default function Shadowing() {
             Mở cánh cửa bước vào thế giới chuyên nghiệp cùng những người dẫn dắt xuất sắc nhất.
           </motion.p>
 
-          {/* Premium Search Bar */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -189,9 +192,17 @@ export default function Shadowing() {
                 className="w-full pl-20 pr-8 py-8 bg-white/5 backdrop-blur-3xl border-2 border-white/10 rounded-[32px] text-white placeholder:text-white/20 focus:bg-white/10 focus:border-amber-400/30 outline-none transition-all shadow-2xl font-bold text-lg"
               />
             </div>
-            <button className="px-14 py-8 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-600 text-black font-black rounded-[32px] shadow-[0_20px_40px_-12px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] text-xs border border-white/20">
-              Tìm kiếm ngay
-            </button>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => navigate('/mentors')}
+                className="px-8 py-8 bg-white/10 backdrop-blur-xl text-white font-black rounded-[32px] border border-white/20 hover:bg-white/20 transition-all uppercase tracking-[0.2em] text-xs"
+              >
+                Tìm Mentor
+              </button>
+              <button className="px-10 py-8 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-600 text-black font-black rounded-[32px] shadow-[0_20px_40px_-12px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] text-xs border border-white/20">
+                Tìm kiếm
+              </button>
+            </div>
           </motion.div>
         </div>
       </div>

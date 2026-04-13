@@ -54,6 +54,7 @@ import Home from './components/Home';
 import LandingPage from './components/LandingPage';
 import Jobs from './components/Jobs';
 import Shadowing from './components/Shadowing';
+import MentorSearch from './components/MentorSearch';
 import Profile from './components/Profile';
 import RoleSelection from './components/RoleSelection';
 import BusinessDashboard from './components/BusinessDashboard';
@@ -340,6 +341,7 @@ function AppContent() {
                 <Route path="/" element={<Home />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/shadowing" element={<Shadowing />} />
+                <Route path="/mentors" element={<MentorSearch />} />
                 <Route path="/mentor-apply" element={<MentorApplication />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trust-score" element={<TrustScore />} />

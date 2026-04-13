@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MapPin, Globe, Mail, Phone, Star, ShieldCheck, Briefcase, User } from 'lucide-react';
+import { ArrowLeft, MapPin, Globe, Mail, Phone, Star, ShieldCheck, Briefcase, User, GraduationCap } from 'lucide-react';
 import { collection, query, where, getDocs, doc, getDoc, orderBy, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, useFirebase } from './FirebaseProvider';
 import { Job, Rating, UserProfile, Relationship } from '../types';
@@ -102,6 +102,19 @@ export default function CompanyProfile() {
     }
   };
 
+  const handleMentorChat = async (mentor: UserProfile) => {
+    try {
+      const chatId = await createChat(mentor.uid, {
+        displayName: mentor.displayName,
+        photoURL: mentor.photoURL,
+        role: mentor.role
+      });
+      navigate(`/messages/${chatId}`);
+    } catch (error) {
+      console.error("Error starting mentor chat:", error);
+    }
+  };
+
   const BOSS_EMAIL = "congapro60@gmail.com";
   const isCurrentUserBoss = currentUserProfile?.email === BOSS_EMAIL;
 
@@ -126,6 +139,7 @@ export default function CompanyProfile() {
   const [companyJobs, setCompanyJobs] = useState<Job[]>([]);
   const [companyReviews, setCompanyReviews] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState<number>(0);
+  const [mentors, setMentors] = useState<UserProfile[]>([]);
 
   // Mock reviews for demonstration
   const mockReviews = [
@@ -193,6 +207,24 @@ export default function CompanyProfile() {
         );
         const relSnap = await getDocs(qRels);
         setRelationships(relSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Relationship)));
+
+        // Fetch Mentors associated with this company
+        if (info?.displayName) {
+          const mentorsQuery = query(
+            collection(db, 'users'),
+            where('isMentor', '==', true),
+            where('mentorProfile.company', '==', info.displayName)
+          );
+          const mentorsSnap = await getDocs(mentorsQuery);
+          const mentorList = mentorsSnap.docs.map(doc => doc.data() as UserProfile);
+          
+          // Also check if the company account itself is a mentor
+          if (info.isMentor && !mentorList.some(m => m.uid === businessId)) {
+            mentorList.push(info as UserProfile);
+          }
+          
+          setMentors(mentorList);
+        }
 
         setCompanyInfo(info || {
           displayName: 'Doanh nghiệp ẩn danh',
@@ -443,6 +475,53 @@ export default function CompanyProfile() {
                     </div>
                   </div>
                 </div>
+
+                {mentors.length > 0 && (
+                  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <GraduationCap size={18} className="text-indigo-600" />
+                      Đội ngũ Mentor ({mentors.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {mentors.map(mentor => (
+                        <div key={mentor.uid} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-white overflow-hidden border border-gray-100">
+                              {mentor.photoURL ? (
+                                <img src={mentor.photoURL} alt={mentor.displayName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <User size={24} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-gray-900 truncate">{mentor.displayName}</p>
+                              <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider truncate">
+                                {mentor.mentorProfile?.title || 'Mentor'}
+                              </p>
+                              <p className="text-[10px] text-gray-500 truncate">{mentor.mentorProfile?.company}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleMentorChat(mentor)}
+                              className="flex-1 py-2 bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-1"
+                            >
+                              <Mail size={12} /> Chat
+                            </button>
+                            <button 
+                              onClick={() => navigate(`/student/${mentor.uid}`)}
+                              className="flex-1 py-2 bg-indigo-600 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-1"
+                            >
+                              Hồ sơ
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {relationships.length > 0 && (
                   <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">

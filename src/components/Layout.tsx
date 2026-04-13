@@ -246,6 +246,7 @@ export default function Layout({ children }: LayoutProps) {
       ...(profile?.isMentor ? [{ id: 'nav-shadowing-manage', icon: GraduationCap, label: t('manageShadowing'), path: '/shadowing-manage' }] : []),
     ],
     student: [
+      { id: 'nav-mentors', icon: GraduationCap, label: 'Tìm Mentor', path: '/mentors', isNew: true },
       { id: 'nav-saved', icon: Heart, label: t('saved'), path: '/saved' },
     ]
   };
