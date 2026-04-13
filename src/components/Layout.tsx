@@ -220,7 +220,7 @@ export default function Layout({ children }: LayoutProps) {
     { id: 'nav-home', icon: Home, label: t('home'), path: '/' },
     { id: 'nav-messages', icon: MessageSquare, label: t('messages'), path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
     { id: 'nav-notifications', icon: Bell, label: t('notifications'), path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
-    { id: 'nav-career', icon: BookOpen, label: t('careerInsights'), path: '/career-insights' },
+    { id: 'nav-career', icon: BookOpen, label: 'Kiến thức', path: '/career-insights' },
     { id: 'nav-edu-network', icon: Globe, label: 'Edu Network', path: '/edu-network', isNew: true },
     { id: 'nav-legal', icon: Scale, label: t('legalSafety'), path: '/legal' },
     { id: 'nav-about', icon: Info, label: t('aboutProject'), path: '/about' },

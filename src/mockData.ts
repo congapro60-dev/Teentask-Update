@@ -174,7 +174,7 @@ export const MOCK_SHADOWING = [
     slots: 2,
     totalSlots: 5,
     category: 'Marketing',
-    type: 'workshop',
+    type: '1-1',
     status: 'upcoming',
     image: 'https://picsum.photos/seed/marketing/800/400',
     color: 'from-blue-500 to-indigo-600',
