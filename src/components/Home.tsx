@@ -155,7 +155,6 @@ export default function Home() {
           for (const course of initialCourses) {
             await addDoc(collection(db, 'courses'), course);
           }
-          console.log("Courses seeded successfully");
         }
       } catch (error) {
         console.error("Error seeding courses:", error);

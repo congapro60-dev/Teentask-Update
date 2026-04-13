@@ -81,19 +81,19 @@ export default function EduNetwork() {
           <div className="flex flex-wrap justify-center gap-4 w-full max-w-3xl">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-3 text-center border border-white/10 flex-1 min-w-[140px]">
               <div className="text-2xl md:text-3xl font-black text-white">
-                {loading ? <span className="animate-pulse">...</span> : (stats.schools > 0 ? stats.schools : '10+')}
+                {loading ? <span className="animate-pulse">...</span> : (stats.schools > 0 ? `${stats.schools}+` : '10+')}
               </div>
               <div className="text-white/70 text-xs font-medium mt-1">Trường đối tác</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-3 text-center border border-white/10 flex-1 min-w-[140px]">
               <div className="text-2xl md:text-3xl font-black text-white">
-                {loading ? <span className="animate-pulse">...</span> : (stats.teachers > 0 ? stats.teachers : '25+')}
+                {loading ? <span className="animate-pulse">...</span> : (stats.teachers > 0 ? `${stats.teachers}+` : '25+')}
               </div>
               <div className="text-white/70 text-xs font-medium mt-1">Giáo viên</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-3 text-center border border-white/10 flex-1 min-w-[140px]">
               <div className="text-2xl md:text-3xl font-black text-white">
-                {loading ? <span className="animate-pulse">...</span> : (stats.jobs > 0 ? stats.jobs : '50+')}
+                {loading ? <span className="animate-pulse">...</span> : (stats.jobs > 0 ? `${stats.jobs}+` : '50+')}
               </div>
               <div className="text-white/70 text-xs font-medium mt-1">Cơ hội học tập</div>
             </div>
@@ -328,15 +328,15 @@ export default function EduNetwork() {
               className="bg-gray-50 rounded-3xl p-12 text-center border border-dashed border-gray-200"
             >
               <School size={48} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có đối tác nào</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Mạng lưới đang được xây dựng</h3>
               <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-                Hãy là người đầu tiên tham gia Edu Network và mang lại cơ hội cho học sinh!
+                Hãy là đơn vị tiên phong!
               </p>
               <button 
                 onClick={() => navigate('/profile')}
                 className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors"
               >
-                Đăng ký ngay
+                Đăng ký Đối tác
               </button>
             </motion.div>
           )}

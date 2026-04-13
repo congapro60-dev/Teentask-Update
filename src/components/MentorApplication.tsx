@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useFirebase } from './FirebaseProvider';
 import { GraduationCap, Briefcase, Award, CheckCircle } from 'lucide-react';
 
