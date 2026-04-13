@@ -86,6 +86,44 @@ const sendParentReminders = async () => {
       const app = doc.data();
       const studentId = app.studentId;
 
+      // Check if it's a teacher verification
+      if (app.approvalChannel === 'teacher' && app.teacherStatus === 'pending') {
+        const teacherEmail = app.teacherEmail;
+        if (teacherEmail) {
+          const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: teacherEmail,
+            subject: `[TeenTask] Xác nhận cho học sinh ${app.studentName} ứng tuyển`,
+            text: `Học sinh ${app.studentName} đã nhờ Thầy/Cô xác nhận đơn ứng tuyển.`,
+            html: `
+              <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                <h2 style="color: #4F46E5;">Yêu cầu xác nhận từ TeenTask</h2>
+                <p>Học sinh <strong>${app.studentName}</strong> — lớp <strong>${app.studentClass || 'N/A'}</strong> tại <strong>${app.studentSchool || 'N/A'}</strong> đã nhờ Thầy/Cô xác nhận đơn ứng tuyển sau:</p>
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                  <p><strong>Công việc:</strong> ${app.jobTitle || 'TeenTasker'}</p>
+                  <p><strong>Công ty:</strong> ${app.businessName || 'N/A'}</p>
+                </div>
+                <p style="color: #d97706; font-size: 12px;"><em>Lưu ý: Phụ huynh của học sinh đã được thông báo về việc này qua email.</em></p>
+                <div style="margin-top: 20px;">
+                  <a href="#" style="display: inline-block; padding: 10px 20px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin-right: 10px;">✅ XÁC NHẬN</a>
+                  <a href="#" style="display: inline-block; padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px;">❌ TỪ CHỐI</a>
+                </div>
+                <br/>
+                <p style="color: #6b7280; font-size: 12px;">TeenTask — Học viện Kỹ năng Thực chiến</p>
+              </div>
+            `,
+          };
+
+          try {
+            await transporter.sendMail(mailOptions);
+            console.log(`Teacher verification email sent to ${teacherEmail} for application ${doc.id}`);
+          } catch (emailError) {
+            console.error(`Error sending email to ${teacherEmail}:`, emailError);
+          }
+        }
+        continue;
+      }
+
       // Fetch student profile to get parent email
       const studentDoc = await db.collection("users").doc(studentId).get();
       if (!studentDoc.exists) continue;
@@ -152,6 +190,47 @@ async function startServer() {
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // API to send teacher verification email
+  app.post("/api/send-teacher-verification", async (req, res) => {
+    try {
+      const { teacherEmail, studentName, studentClass, studentSchool, jobTitle, businessName } = req.body;
+      
+      if (!teacherEmail) {
+        return res.status(400).json({ error: "Missing teacher email" });
+      }
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: teacherEmail,
+        subject: `[TeenTask] Xác nhận cho học sinh ${studentName} ứng tuyển`,
+        text: `Học sinh ${studentName} đã nhờ Thầy/Cô xác nhận đơn ứng tuyển.`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4F46E5;">Yêu cầu xác nhận từ TeenTask</h2>
+            <p>Học sinh <strong>${studentName}</strong> — lớp <strong>${studentClass || 'N/A'}</strong> tại <strong>${studentSchool || 'N/A'}</strong> đã nhờ Thầy/Cô xác nhận đơn ứng tuyển sau:</p>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
+              <p><strong>Công việc:</strong> ${jobTitle || 'TeenTasker'}</p>
+              <p><strong>Công ty:</strong> ${businessName || 'N/A'}</p>
+            </div>
+            <p style="color: #d97706; font-size: 12px;"><em>Lưu ý: Phụ huynh của học sinh đã được thông báo về việc này qua email.</em></p>
+            <div style="margin-top: 20px;">
+              <a href="#" style="display: inline-block; padding: 10px 20px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin-right: 10px;">✅ XÁC NHẬN</a>
+              <a href="#" style="display: inline-block; padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px;">❌ TỪ CHỐI</a>
+            </div>
+            <br/>
+            <p style="color: #6b7280; font-size: 12px;">TeenTask — Học viện Kỹ năng Thực chiến</p>
+          </div>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error sending teacher email:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   // Webhook endpoint for automated deposits (e.g., PayOS / SePay)

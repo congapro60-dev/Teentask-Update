@@ -12,7 +12,7 @@ import jsPDF from 'jspdf';
 
 export default function AdminDashboard() {
   const { profile, loading: firebaseLoading } = useFirebase();
-  const [activeTab, setActiveTab] = useState<'users' | 'jobs' | 'messages' | 'ads' | 'transactions' | 'name_changes' | 'financial' | 'market'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'jobs' | 'messages' | 'ads' | 'transactions' | 'name_changes' | 'financial' | 'market' | 'applications' | 'mentors'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [ads, setAds] = useState<Advertisement[]>([]);
@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [nameChangeRequests, setNameChangeRequests] = useState<any[]>([]);
   const [shadowingBookings, setShadowingBookings] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('pending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -492,6 +493,12 @@ export default function AdminDashboard() {
       console.error("Error in shadowing bookings listener:", error);
     });
 
+    const unsubApplications = onSnapshot(query(collection(db, 'applications'), orderBy('createdAt', 'desc')), (snapshot) => {
+      setApplications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.error("Error in applications listener:", error);
+    });
+
     setLoading(false);
     return () => {
       unsubSettings();
@@ -502,6 +509,7 @@ export default function AdminDashboard() {
       unsubTransactions();
       unsubNameChanges();
       unsubShadowingBookings();
+      unsubApplications();
     };
   }, [firebaseLoading, isAdmin, autoApprove]);
 
@@ -647,6 +655,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveMentor = async (userId: string, status: 'approved' | 'rejected') => {
+    setActionLoading(true);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        mentorStatus: status,
+        isMentor: status === 'approved'
+      });
+      
+      await addDoc(collection(db, 'notifications'), {
+        userId,
+        title: status === 'approved' ? 'Đăng ký Mentor thành công' : 'Đăng ký Mentor bị từ chối',
+        message: status === 'approved' 
+          ? 'Chúc mừng! Bạn đã trở thành Mentor trên TeenTask. Bây giờ bạn có thể tạo các buổi Kiến tập.'
+          : 'Rất tiếc, yêu cầu đăng ký Mentor của bạn chưa được phê duyệt lúc này.',
+        type: 'system',
+        read: false,
+        createdAt: Date.now()
+      });
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error approving mentor:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSendReply = async () => {
     if (!selectedMessage || !replyText.trim()) return;
     setActionLoading(true);
@@ -734,6 +768,18 @@ export default function AdminDashboard() {
                              req.currentName.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesFilter && matchesSearch;
       });
+    } else if (activeTab === 'applications') {
+      return applications.filter(app => {
+        let matchesFilter = false;
+        if (filter === 'all') matchesFilter = true;
+        else if (filter === 'parent') matchesFilter = app.approvalChannel !== 'teacher';
+        else if (filter === 'teacher') matchesFilter = app.approvalChannel === 'teacher';
+        
+        const matchesSearch = !searchQuery || 
+                             ((app.studentName?.toLowerCase() || '').includes(searchQuery.toLowerCase())) ||
+                             ((app.jobTitle?.toLowerCase() || '').includes(searchQuery.toLowerCase()));
+        return matchesFilter && matchesSearch;
+      });
     } else {
       return messages.filter(msg => {
         const matchesFilter = filter === 'all' || (filter === 'pending' ? !msg.replied : msg.replied);
@@ -784,6 +830,7 @@ export default function AdminDashboard() {
               { id: 'messages', label: 'Tin nhắn', icon: MessageSquare },
               { id: 'ads', label: 'Quảng cáo', icon: Megaphone },
               { id: 'name_changes', label: 'Đổi tên', icon: UserCog },
+              { id: 'applications', label: 'Đơn ứng tuyển', icon: ClipboardList },
               { id: 'financial', label: 'Tài chính', icon: PieChartIcon },
               { id: 'market', label: 'Thị trường', icon: TrendingUp },
             ].map((tab) => (
@@ -840,10 +887,15 @@ export default function AdminDashboard() {
                 <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-200 gap-1 shrink-0 min-w-max">
                   {[
                     { id: 'all', label: 'Tất cả' },
-                    { id: 'pending', label: 'Chờ duyệt' },
-                    { id: 'verified', label: 'Đã duyệt' },
-                    { id: 'rejected', label: 'Từ chối' },
-                    { id: 'linkedin_pending', label: 'Chờ duyệt LinkedIn' },
+                    ...(activeTab === 'applications' ? [
+                      { id: 'parent', label: 'Qua Phụ huynh' },
+                      { id: 'teacher', label: 'Qua Giáo viên' }
+                    ] : [
+                      { id: 'pending', label: 'Chờ duyệt' },
+                      { id: 'verified', label: 'Đã duyệt' },
+                      { id: 'rejected', label: 'Từ chối' },
+                      { id: 'linkedin_pending', label: 'Chờ duyệt LinkedIn' }
+                    ]),
                     ...(activeTab === 'users' ? [
                       { id: 'business', label: 'Doanh nghiệp' },
                       { id: 'school', label: 'Nhà trường' },
@@ -1082,6 +1134,97 @@ export default function AdminDashboard() {
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setSelectedNameChange(req)}
+                    className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-2xl text-xs font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Eye size={14} /> Chi tiết
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
+            {activeTab === 'applications' && filteredData().map((app: any) => (
+              <motion.div
+                key={app.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-100/50 transition-all group"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{app.studentName}</h3>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider line-clamp-1">{app.jobTitle || `Job ID: ${app.jobId}`}</p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                    app.approvalChannel === 'teacher' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                  }`}>
+                    {app.approvalChannel === 'teacher' ? 'Giáo viên' : 'Phụ huynh'}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Trạng thái xác nhận:</span>
+                    <span className={`font-bold ${
+                      (app.approvalChannel === 'teacher' ? app.teacherStatus : app.parentStatus) === 'approved' ? 'text-green-600' :
+                      (app.approvalChannel === 'teacher' ? app.teacherStatus : app.parentStatus) === 'rejected' ? 'text-red-600' :
+                      'text-amber-600'
+                    }`}>
+                      {(app.approvalChannel === 'teacher' ? app.teacherStatus : app.parentStatus) === 'approved' ? 'Đã xác nhận' :
+                       (app.approvalChannel === 'teacher' ? app.teacherStatus : app.parentStatus) === 'rejected' ? 'Từ chối' : 'Đang chờ'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Trạng thái DN:</span>
+                    <span className={`font-bold ${
+                      app.finalStatus === 'accepted' ? 'text-green-600' :
+                      app.finalStatus === 'rejected' ? 'text-red-600' :
+                      app.finalStatus === 'completed' ? 'text-blue-600' :
+                      'text-amber-600'
+                    }`}>
+                      {app.finalStatus === 'accepted' ? 'Đã nhận' :
+                       app.finalStatus === 'rejected' ? 'Từ chối' :
+                       app.finalStatus === 'completed' ? 'Hoàn thành' : 'Đang chờ'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {activeTab === 'mentors' && filteredData().map((user: any) => (
+              <motion.div
+                key={user.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-100/50 transition-all group"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{user.displayName}</h3>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.email}</p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                    user.mentorStatus === 'approved' ? 'bg-green-50 text-green-600 border-green-100' :
+                    user.mentorStatus === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    'bg-red-50 text-red-600 border-red-100'
+                  }`}>
+                    {user.mentorStatus === 'approved' ? 'Đã duyệt' : user.mentorStatus === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                  </div>
+                </div>
+                {user.mentorProfile && (
+                  <div className="text-sm text-gray-600 mb-4 space-y-1">
+                    <p><strong>Chức danh:</strong> {user.mentorProfile.title}</p>
+                    <p><strong>Công ty:</strong> {user.mentorProfile.company}</p>
+                    <p><strong>Kinh nghiệm:</strong> {user.mentorProfile.yearsOfExperience} năm</p>
+                    <p><strong>Lĩnh vực:</strong> {user.mentorProfile.field}</p>
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setSelectedUser(user)}
                     className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-2xl text-xs font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
                   >
                     <Eye size={14} /> Chi tiết
@@ -1860,6 +2003,23 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
+              {selectedUser.mentorStatus === 'pending' && (
+                <div className="mb-8 p-6 bg-indigo-50 rounded-3xl">
+                  <h3 className="font-black text-indigo-900 mb-4">Yêu cầu đăng ký Mentor</h3>
+                  <div className="space-y-2 mb-6 text-sm text-indigo-800">
+                    <p><strong>Chức danh:</strong> {selectedUser.mentorProfile?.title}</p>
+                    <p><strong>Công ty:</strong> {selectedUser.mentorProfile?.company}</p>
+                    <p><strong>Kinh nghiệm:</strong> {selectedUser.mentorProfile?.yearsOfExperience} năm</p>
+                    <p><strong>Lĩnh vực:</strong> {selectedUser.mentorProfile?.field}</p>
+                    <p><strong>Bio:</strong> {selectedUser.mentorProfile?.bio}</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <button onClick={() => handleApproveMentor(selectedUser.id, 'rejected')} className="flex-1 py-4 bg-white text-red-600 rounded-2xl font-black">TỪ CHỐI</button>
+                    <button onClick={() => handleApproveMentor(selectedUser.id, 'approved')} className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black">PHÊ DUYỆT MENTOR</button>
+                  </div>
+                </div>
+              )}
+
               {selectedUser.verificationStatus === 'pending' && (
                 <div className="flex gap-4">
                   <button onClick={() => handleVerify(selectedUser.id, 'rejected')} className="flex-1 py-4 bg-red-50 text-red-600 rounded-2xl font-black">TỪ CHỐI</button>

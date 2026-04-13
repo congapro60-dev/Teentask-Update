@@ -59,6 +59,7 @@ import RoleSelection from './components/RoleSelection';
 import BusinessDashboard from './components/BusinessDashboard';
 import ManageJobs from './components/ManageJobs';
 import ManageShadowing from './components/ManageShadowing';
+import MentorApplication from './components/MentorApplication';
 import ParentDashboard from './components/ParentDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import BossManagement from './components/BossManagement';
@@ -83,6 +84,7 @@ import QuickSurvey from './components/QuickSurvey';
 import CalendarView from './components/CalendarView';
 import CareerInsights from './components/CareerInsights';
 import LegalGuide from './components/LegalGuide';
+import EduNetwork from './components/EduNetwork';
 import { FirebaseProvider, useFirebase } from './components/FirebaseProvider';
 
 function AppContent() {
@@ -177,6 +179,7 @@ function AppContent() {
                     <Routes>
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/shadowing" element={<Shadowing />} />
+                      <Route path="/edu-network" element={<EduNetwork />} />
                       <Route path="/profile" element={
                     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
                       <div className="w-full max-w-md mb-10 text-center md:text-left">
@@ -337,6 +340,7 @@ function AppContent() {
                 <Route path="/" element={<Home />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/shadowing" element={<Shadowing />} />
+                <Route path="/mentor-apply" element={<MentorApplication />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trust-score" element={<TrustScore />} />
                 <Route path="/tasks" element={<Tasks />} />
@@ -346,6 +350,7 @@ function AppContent() {
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/cv-builder" element={<CVBuilder />} />
                 <Route path="/schedule" element={<CalendarView />} />
+                <Route path="/edu-network" element={<EduNetwork />} />
                 <Route path="/verify" element={<VerificationFlow onClose={() => navigate('/profile')} />} />
                 {userRole === 'business' ? (
                   <>

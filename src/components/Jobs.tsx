@@ -242,7 +242,27 @@ export default function Jobs() {
       setApplications(prev => [...prev, { id: docRef.id, ...newApp } as any]);
       setSelectedJobAppCount(prev => prev + 1);
       setIsModalOpen(false);
-      alert('Đơn ứng tuyển đã được gửi! Đang chờ phụ huynh phê duyệt.');
+      
+      if (newApp.approvalChannel === 'teacher') {
+        try {
+          await fetch('/api/send-teacher-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              teacherEmail: newApp.teacherEmail,
+              studentName: newApp.studentName,
+              studentClass: newApp.studentClass,
+              studentSchool: newApp.studentSchool,
+              jobTitle: selectedJob.title,
+              businessName: selectedJob.businessName
+            })
+          });
+        } catch (e) {
+          console.error("Error sending teacher verification email:", e);
+        }
+      }
+      
+      alert('Đơn ứng tuyển đã được gửi! Đang chờ phê duyệt.');
     } catch (error) {
       console.error("Error submitting application:", error);
       alert('Có lỗi xảy ra khi nộp đơn. Vui lòng thử lại.');

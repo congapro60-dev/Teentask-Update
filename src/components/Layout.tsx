@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen, AlertTriangle } from 'lucide-react';
+import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen, AlertTriangle, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -221,6 +221,7 @@ export default function Layout({ children }: LayoutProps) {
     { id: 'nav-messages', icon: MessageSquare, label: t('messages'), path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
     { id: 'nav-notifications', icon: Bell, label: t('notifications'), path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
     { id: 'nav-career', icon: BookOpen, label: t('careerInsights'), path: '/career-insights' },
+    { id: 'nav-edu-network', icon: Globe, label: 'Edu Network', path: '/edu-network', isNew: true },
     { id: 'nav-legal', icon: Scale, label: t('legalSafety'), path: '/legal' },
     { id: 'nav-about', icon: Info, label: t('aboutProject'), path: '/about' },
   ];
@@ -241,6 +242,8 @@ export default function Layout({ children }: LayoutProps) {
     ],
     parent: [
       { id: 'nav-monitoring', icon: ShieldCheck, label: t('monitoring'), path: '/monitoring' },
+      { id: 'nav-jobs-manage', icon: Briefcase, label: t('manageJobs'), path: '/jobs-manage' },
+      ...(profile?.isMentor ? [{ id: 'nav-shadowing-manage', icon: GraduationCap, label: t('manageShadowing'), path: '/shadowing-manage' }] : []),
     ],
     student: [
       { id: 'nav-saved', icon: Heart, label: t('saved'), path: '/saved' },
@@ -583,6 +586,11 @@ export default function Layout({ children }: LayoutProps) {
               >
                 <item.icon size={24} className="text-[#1877F2]" />
                 <span className="font-bold text-sm">{item.label}</span>
+                {(item as any).isNew && (
+                  <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
+                    NEW
+                  </span>
+                )}
               </NavLink>
             ))}
             
@@ -710,12 +718,17 @@ export default function Layout({ children }: LayoutProps) {
                       key={item.path} 
                       to={item.path}
                       onClick={() => setIsMenuOpen(false)}
-                      className="bg-white p-4 rounded-xl shadow-sm flex flex-col gap-2 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
+                      className="bg-white p-4 rounded-xl shadow-sm flex flex-col gap-2 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200 relative"
                     >
                       <div className="w-10 h-10 bg-[#E7F3FF] rounded-full flex items-center justify-center">
                         <item.icon size={24} className="text-[#1877F2]" />
                       </div>
                       <span className="font-bold text-sm text-gray-700">{item.label}</span>
+                      {(item as any).isNew && (
+                        <span className="absolute top-3 right-3 bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          NEW
+                        </span>
+                      )}
                     </NavLink>
                   ))}
                 </div>

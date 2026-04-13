@@ -23,6 +23,12 @@ export default function ParentVerificationModal({ isOpen, onClose, onSuccess }: 
   const [selectedParent, setSelectedParent] = useState<UserProfile | null>(null);
   const [relation, setRelation] = useState(RELATIONSHIPS[0]);
   
+  // Teacher verification fields
+  const [useTeacher, setUseTeacher] = useState(false);
+  const [teacherEmail, setTeacherEmail] = useState('');
+  const [teacherName, setTeacherName] = useState('');
+  const [teacherNotified, setTeacherNotified] = useState(false);
+  
   // Manual fields
   const [manualData, setManualData] = useState({
     name: '',
@@ -108,17 +114,35 @@ export default function ParentVerificationModal({ isOpen, onClose, onSuccess }: 
         guardianName: selectedParent.displayName,
         parentEmail: selectedParent.email,
         guardianRelation: relation,
-        isManualGuardian: false
+        isManualGuardian: false,
+        approvalChannel: 'parent'
       };
     } else if (step === 'manual') {
-      guardianData = {
-        guardianName: manualData.name,
-        guardianPhone: manualData.phone,
-        guardianAddress: manualData.address,
-        parentEmail: manualData.email,
-        guardianRelation: relation,
-        isManualGuardian: true
-      };
+      if (useTeacher) {
+        guardianData = {
+          guardianName: manualData.name,
+          guardianPhone: manualData.phone,
+          guardianAddress: manualData.address,
+          parentEmail: manualData.email,
+          guardianRelation: relation,
+          isManualGuardian: true,
+          approvalChannel: 'teacher',
+          teacherEmail: teacherEmail,
+          teacherName: teacherName,
+          teacherStatus: 'pending',
+          parentNotified: true
+        };
+      } else {
+        guardianData = {
+          guardianName: manualData.name,
+          guardianPhone: manualData.phone,
+          guardianAddress: manualData.address,
+          parentEmail: manualData.email,
+          guardianRelation: relation,
+          isManualGuardian: true,
+          approvalChannel: 'parent'
+        };
+      }
     }
 
     setStep('sent');
@@ -350,6 +374,87 @@ export default function ParentVerificationModal({ isOpen, onClose, onSuccess }: 
                   >
                     {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
+                </div>
+
+                <div className="flex items-center gap-4 my-3">
+                  <div className="flex-1 h-px bg-gray-200"></div>
+                  <span className="text-gray-400 text-xs text-center">─── hoặc ───</span>
+                  <div className="flex-1 h-px bg-gray-200"></div>
+                </div>
+
+                <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setUseTeacher(!useTeacher)}
+                    className="w-full p-4 bg-gray-50 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Xác nhận qua Giáo viên</p>
+                      <p className="text-[10px] text-gray-500">Phụ huynh khó liên lạc? Dùng Giáo viên chủ nhiệm</p>
+                    </div>
+                    <ChevronRight size={18} className={`text-gray-400 transition-transform ${useTeacher ? 'rotate-90' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {useTeacher && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="p-4 space-y-4 bg-white border-t border-gray-100"
+                      >
+                        <div>
+                          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Email Giáo viên chủ nhiệm</label>
+                          <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                              type="email"
+                              required={useTeacher}
+                              value={teacherEmail}
+                              onChange={(e) => setTeacherEmail(e.target.value)}
+                              placeholder="giaovien@truong.edu.vn"
+                              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#4F46E5] outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tên Giáo viên</label>
+                          <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                              type="text"
+                              required={useTeacher}
+                              value={teacherName}
+                              onChange={(e) => setTeacherName(e.target.value)}
+                              placeholder="Thầy/Cô Nguyễn Văn A"
+                              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#4F46E5] outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            required={useTeacher}
+                            checked={teacherNotified}
+                            onChange={(e) => setTeacherNotified(e.target.checked)}
+                            className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-gray-600 leading-relaxed">
+                            Tôi xác nhận đã thông báo cho phụ huynh về việc nhờ giáo viên xác nhận thay
+                          </span>
+                        </label>
+
+                        <div className="bg-amber-50 p-3 rounded-xl flex gap-2">
+                          <AlertCircle className="text-amber-500 shrink-0" size={16} />
+                          <p className="text-[10px] text-amber-700 leading-relaxed">
+                            ⚠️ Giáo viên sẽ nhận email xác nhận. Phụ huynh vẫn được thông báo qua email nhưng không cần bấm đồng ý.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <button

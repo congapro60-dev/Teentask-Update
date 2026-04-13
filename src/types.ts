@@ -41,6 +41,15 @@ export interface UserProfile {
   occupation?: string;
   workplaceName?: string;
   workplaceAddress?: string;
+  isMentor?: boolean;
+  mentorStatus?: 'pending' | 'approved' | 'rejected';
+  mentorProfile?: {
+    title: string;
+    company: string;
+    yearsOfExperience: number;
+    field: string;
+    bio: string;
+  };
   
   // Business specific
   representativeName?: string;
@@ -271,6 +280,11 @@ export interface Application {
   portfolioUrl?: string;
   parentStatus: 'pending' | 'approved' | 'rejected';
   finalStatus: 'pending' | 'accepted' | 'rejected' | 'completed';
+  approvalChannel?: 'parent' | 'teacher';
+  teacherEmail?: string;
+  teacherName?: string;
+  teacherStatus?: 'pending' | 'approved' | 'rejected';
+  parentNotified?: boolean;
   createdAt: number;
 }
 

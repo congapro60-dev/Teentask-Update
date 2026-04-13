@@ -332,8 +332,18 @@ export default function ParentDashboard() {
                             </div>
                           </div>
                         </div>
-                        <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider">
-                          Đang chờ
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            Đang chờ
+                          </div>
+                          {app.approvalChannel === 'teacher' && (
+                            <div 
+                              className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full cursor-help"
+                              title={`Đơn này được xác nhận bởi ${app.teacherName} thay vì phụ huynh. Bạn vẫn được thông báo.`}
+                            >
+                              👨‍🏫 GV xác nhận
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -343,7 +353,7 @@ export default function ParentDashboard() {
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center gap-2 text-xs text-red-500 font-bold">
                             <Info size={14} />
-                            Cần phê duyệt trước khi con bắt đầu làm việc
+                            {app.approvalChannel === 'teacher' ? 'Đang chờ giáo viên xác nhận' : 'Cần phê duyệt trước khi con bắt đầu làm việc'}
                           </div>
                           {app.jobDeadline && app.jobDeadline - Date.now() < 86400000 * 3 && (
                             <div className="px-2 py-0.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase animate-pulse">
@@ -353,22 +363,28 @@ export default function ParentDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleAction(app.id, 'rejected')}
-                          className="flex-1 py-4 bg-red-50 text-red-600 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
-                        >
-                          <XCircle size={18} />
-                          Từ chối
-                        </button>
-                        <button
-                          onClick={() => handleAction(app.id, 'approved')}
-                          className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-100 hover:bg-green-700 transition-colors"
-                        >
-                          <CheckCircle2 size={18} />
-                          Đồng ý
-                        </button>
-                      </div>
+                      {app.approvalChannel !== 'teacher' ? (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleAction(app.id, 'rejected')}
+                            className="flex-1 py-4 bg-red-50 text-red-600 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                          >
+                            <XCircle size={18} />
+                            Từ chối
+                          </button>
+                          <button
+                            onClick={() => handleAction(app.id, 'approved')}
+                            className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-100 hover:bg-green-700 transition-colors"
+                          >
+                            <CheckCircle2 size={18} />
+                            Đồng ý
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-3 text-sm text-gray-500 italic">
+                          Đơn đang được xử lý bởi Giáo viên chủ nhiệm.
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </div>

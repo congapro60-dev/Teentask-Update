@@ -110,7 +110,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if true;
-      allow list: if isAuthenticated();
+      allow list: if isAuthenticated() || resource.data.role in ['business', 'parent'];
       allow create: if isOwner(userId);
       allow update: if isBoss() || 
                     (isAdmin() && resource.data.email != "congapro60@gmail.com") ||
@@ -132,14 +132,14 @@ service cloud.firestore {
 
     match /jobs/{jobId} {
       allow read: if resource.data.status == 'active' || isAuthenticated();
-      allow create: if isAuthenticated() && (isBusiness() || isAdmin());
+      allow create: if isAuthenticated() && (isBusiness() || isAdmin() || isParent());
       allow update: if isAdmin() || (isAuthenticated() && resource.data.businessId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
     match /shadowing_events/{eventId} {
       allow read: if true;
-      allow create: if isAuthenticated() && (isBusiness() || isAdmin());
+      allow create: if isAuthenticated() && (isBusiness() || isAdmin() || isParent());
       allow update: if isAdmin() || (isAuthenticated() && resource.data.mentorId == request.auth.uid);
       allow delete: if isAdmin();
     }
@@ -174,14 +174,14 @@ service cloud.firestore {
         request.auth.uid == resource.data.studentId || 
         resource.data.businessId == request.auth.uid ||
         request.auth.token.email == resource.data.parentEmail ||
-        isAdmin()
+        isAdmin() || isParent()
       );
-      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isParent());
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.studentId ||
         resource.data.businessId == request.auth.uid ||
         request.auth.token.email == resource.data.parentEmail ||
-        isAdmin()
+        isAdmin() || isParent()
       );
     }
 
@@ -198,6 +198,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
       allow create: if isAuthenticated() && (
         isAdmin() || 
+        isParent() ||
         request.resource.data.userId == request.auth.uid ||
         (request.resource.data.keys().hasAll(['userId', 'title', 'message', 'type', 'createdAt', 'read']) &&
          request.resource.data.read == false &&

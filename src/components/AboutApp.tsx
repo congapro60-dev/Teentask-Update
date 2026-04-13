@@ -147,6 +147,63 @@ export default function AboutApp() {
         </div>
       </section>
 
+      {/* SECTION: TRIẾT LÝ CỦA CHÚNG TÔI */}
+      <motion.section 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="max-w-5xl mx-auto px-6 py-8"
+      >
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-8">
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <BookOpen className="text-indigo-600" size={32} />
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Nền tảng học thuật của TeenTask</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Card 1 */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-indigo-500">
+              <div className="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+                Thuyết Y — McGregor, 1960
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Con người muốn phát triển</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Học sinh không cần được bảo vệ khỏi thị trường lao động — họ cần được trao cơ hội đúng đắn để khai thác tiềm năng của mình.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-purple-500">
+              <div className="inline-block bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+                Tổng cục Thống kê VN
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Học sinh là NNL quốc gia</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Theo định nghĩa chính thức, học sinh từ 15 tuổi đang đi học đã là một bộ phận của Nguồn Nhân Lực quốc gia — chỉ chưa có nền tảng phục vụ họ đúng cách.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+              <div className="inline-block bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+                Chỉ số HDI — UNDP, 2023
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Khoảng cách cần lấp đầy</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Việt Nam xếp hạng 93/193 về HDI. Khoảng cách giữa giáo dục và thực tiễn lao động là một nguyên nhân chính. TeenTask là cầu nối thu hẹp khoảng cách đó.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center border-t border-indigo-100/50 pt-8">
+            <p className="text-xl italic text-indigo-700 font-medium mb-3">
+              "Vì lợi ích mười năm trồng cây.<br/>Vì lợi ích trăm năm trồng người."
+            </p>
+            <p className="text-sm text-gray-500 font-medium">— Chủ tịch Hồ Chí Minh</p>
+          </div>
+        </div>
+      </motion.section>
+
       {/* Hero Section */}
       <div className="relative h-[500px] bg-gradient-to-br from-[#1877F2] to-[#4F46E5] overflow-hidden flex items-center justify-center text-white text-center px-6">
         <div className="absolute inset-0 opacity-20">

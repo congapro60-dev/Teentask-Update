@@ -32,6 +32,7 @@ export default function Home() {
 
   // New states for stats
   const [surveyStats, setSurveyStats] = useState({ total: 0, satisfiedRate: 0, npsRate: 0 });
+  const [eduStats, setEduStats] = useState({ schools: 0, teachers: 0, jobs: 0 });
 
   useEffect(() => {
     const qAds = query(collection(db, 'advertisements'), where('status', '==', 'approved'), limit(10));
@@ -58,10 +59,10 @@ export default function Home() {
       setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Job)));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'jobs'));
 
-    const qSchoolJobs = query(collection(db, 'jobs'), where('businessOrgType', 'in', ['school', 'teacher']));
+    const qSchoolJobs = query(collection(db, 'jobs'), where('businessOrgType', 'in', ['school', 'teacher']), where('status', '==', 'active'));
     const unsubSchoolJobs = onSnapshot(qSchoolJobs, (snapshot) => {
       const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Job));
-      const filtered = fetched.filter(job => job.status === 'active' && job.isApproved === true).slice(0, 4);
+      const filtered = fetched.filter(job => job.isApproved === true).slice(0, 4);
       setSchoolJobs(filtered);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'jobs'));
 
@@ -95,6 +96,22 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Error fetching survey stats:", error);
+      }
+    };
+
+    const fetchEduStats = async () => {
+      try {
+        const schoolsSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'business'), where('orgType', '==', 'school')));
+        const teachersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'business'), where('orgType', '==', 'teacher')));
+        const jobsSnap = await getDocs(query(collection(db, 'jobs'), where('businessOrgType', 'in', ['school', 'teacher']), where('status', '==', 'active')));
+        
+        setEduStats({
+          schools: schoolsSnap.size,
+          teachers: teachersSnap.size,
+          jobs: jobsSnap.size
+        });
+      } catch (error) {
+        console.error("Error fetching edu stats:", error);
       }
     };
 
@@ -145,6 +162,7 @@ export default function Home() {
       }
     };
     fetchSurveyStats();
+    fetchEduStats();
     fetchFeaturedUsers();
     seedCourses();
 
@@ -863,6 +881,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 🎓 TeenTask Edu Network Section */}
+      <section className="mx-4 mb-6 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div>
+            <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full px-2 py-0.5 mb-2">
+              Mạng lưới Giáo dục
+            </span>
+            <h2 className="text-lg font-bold text-[#1E1B4B]">
+              Kết nối với Nhà trường & Giáo viên Hướng nghiệp
+            </h2>
+            <p className="text-sm text-gray-600 mt-2">
+              Tham gia mạng lưới đang kết nối các trường THPT, giáo viên hướng nghiệp và cơ hội thực tế trên toàn quốc.
+            </p>
+            <button 
+              onClick={() => navigate('/edu-network')}
+              className="bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-xl mt-4 hover:bg-indigo-700 transition-colors"
+            >
+              Khám phá Edu Network →
+            </button>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-indigo-600">{eduStats.schools > 0 ? eduStats.schools : '10+'}</span>
+              <span className="text-sm text-gray-600">🏫 Nhà trường đối tác</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-indigo-600">{eduStats.teachers > 0 ? eduStats.teachers : '25+'}</span>
+              <span className="text-sm text-gray-600">👨‍🏫 Giáo viên hướng nghiệp</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-indigo-600">{eduStats.jobs > 0 ? eduStats.jobs : '50+'}</span>
+              <span className="text-sm text-gray-600">📚 Cơ hội học tập</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <JobDetail 
         job={selectedJob}
         isOpen={isJobDetailOpen}
@@ -886,7 +941,53 @@ export default function Home() {
       <ParentVerificationModal 
         isOpen={isParentModalOpen}
         onClose={() => setIsParentModalOpen(false)}
-        onSuccess={() => setIsParentModalOpen(false)}
+        onSuccess={async (guardianData) => {
+          setIsParentModalOpen(false);
+          if (!auth.currentUser || !selectedJob) return;
+          try {
+            const newApp = {
+              jobId: selectedJob.id,
+              businessId: selectedJob.businessId,
+              studentId: auth.currentUser?.uid,
+              studentName: profile?.displayName || auth.currentUser.displayName || 'Học sinh',
+              studentPhoto: profile?.photoURL || '',
+              studentEmail: profile?.email || auth.currentUser.email || '',
+              studentPhone: profile?.idNumber || '',
+              studentSchool: profile?.school || '',
+              studentClass: profile?.class || '',
+              ...guardianData,
+              parentStatus: 'pending',
+              finalStatus: 'pending',
+              createdAt: Date.now()
+            };
+            await addDoc(collection(db, 'applications'), newApp);
+
+            if (guardianData.approvalChannel === 'teacher') {
+              try {
+                await fetch('/api/send-teacher-verification', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    teacherEmail: guardianData.teacherEmail,
+                    studentName: profile?.displayName || auth.currentUser.displayName || 'Học sinh',
+                    studentClass: profile?.class || '',
+                    studentSchool: profile?.school || '',
+                    jobTitle: selectedJob.title,
+                    businessName: selectedJob.businessName
+                  })
+                });
+              } catch (e) {
+                console.error("Error sending teacher verification email:", e);
+              }
+            }
+
+            alert(t('applySuccess'));
+            setIsJobDetailOpen(false);
+          } catch (error) {
+            console.error("Error submitting application:", error);
+            alert('Có lỗi xảy ra khi nộp đơn. Vui lòng thử lại.');
+          }
+        }}
       />
     </div>
   );

@@ -530,7 +530,7 @@ export default function Shadowing() {
 
           <div className="text-center">
             <button 
-              onClick={() => navigate('/verify')}
+              onClick={() => navigate('/mentor-apply')}
               className="inline-flex items-center gap-2 px-10 py-5 bg-slate-900 text-white rounded-full font-black text-lg shadow-xl hover:scale-105 transition-transform"
             >
               Đăng ký trở thành Mentor
