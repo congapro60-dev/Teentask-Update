@@ -1,24 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Star, ArrowRight, X } from 'lucide-react';
-import { useFirebase } from './FirebaseProvider';
+import { useFirebase, db } from './FirebaseProvider';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 
 export default function CalendarView() {
-  const { getBookings } = useFirebase();
+  const { getBookings, profile } = useFirebase();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      const data = await getBookings();
-      setBookings(data);
+    const fetchAllData = async () => {
+      const bookingsData = await getBookings();
+      setBookings(bookingsData);
+
+      if (profile) {
+        let fetchedTasks: any[] = [];
+        if (profile.uid === 'demo-user') {
+          fetchedTasks = [
+            {
+              id: 'demo-job-1',
+              title: 'Thiết kế Poster Sự kiện',
+              businessName: 'Tech Startup VN',
+              deadline: Date.now() + 86400000 * 2,
+              status: 'active'
+            },
+            {
+              id: 'demo-parent-job-1',
+              title: 'Gia sư Toán lớp 9',
+              businessName: 'Người dùng Demo',
+              deadline: Date.now() + 86400000 * 5,
+              status: 'active'
+            }
+          ];
+        } else if (profile.role === 'student') {
+          // Fetch applications to get jobIds
+          const qApps = query(collection(db, 'applications'), where('studentId', '==', profile.uid));
+          const appSnap = await getDocs(qApps);
+          const jobIds = appSnap.docs.map(doc => doc.data().jobId);
+          
+          if (jobIds.length > 0) {
+            // For simplicity, fetch all active jobs and filter. In production, chunk the query.
+            const jobsSnap = await getDocs(collection(db, 'jobs'));
+            fetchedTasks = jobsSnap.docs
+              .map(doc => ({ id: doc.id, ...doc.data() }))
+              .filter(job => jobIds.includes(job.id));
+          }
+        } else {
+          // Fetch jobs created by this user
+          const qJobs = query(collection(db, 'jobs'), where('businessId', '==', profile.uid));
+          const jobsSnap = await getDocs(qJobs);
+          fetchedTasks = jobsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        setTasks(fetchedTasks);
+      }
+      
       setLoading(false);
     };
-    fetchBookings();
-  }, [getBookings]);
+    fetchAllData();
+  }, [getBookings, profile]);
 
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -53,6 +97,12 @@ export default function CalendarView() {
       return day === d && month === (currentDate.getMonth() + 1) && year === currentDate.getFullYear();
     });
 
+    const hasTask = tasks.some(t => {
+      if (!t.deadline) return false;
+      const taskDate = new Date(t.deadline);
+      return taskDate.getDate() === d && taskDate.getMonth() === currentDate.getMonth() && taskDate.getFullYear() === currentDate.getFullYear();
+    });
+
     days.push(
       <button
         key={d}
@@ -69,9 +119,14 @@ export default function CalendarView() {
         )}>
           {d}
         </span>
-        {hasBooking && (
-          <div className="absolute bottom-2 w-1.5 h-1.5 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-        )}
+        <div className="absolute bottom-2 flex gap-1">
+          {hasBooking && (
+            <div className="w-1.5 h-1.5 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+          )}
+          {hasTask && (
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+          )}
+        </div>
         {isSelected && (
           <motion.div
             layoutId="activeDay"
@@ -91,6 +146,14 @@ export default function CalendarView() {
            year === selectedDate.getFullYear();
   });
 
+  const selectedDateTasks = tasks.filter(t => {
+    if (!selectedDate || !t.deadline) return false;
+    const taskDate = new Date(t.deadline);
+    return taskDate.getDate() === selectedDate.getDate() && 
+           taskDate.getMonth() === selectedDate.getMonth() && 
+           taskDate.getFullYear() === selectedDate.getFullYear();
+  });
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
       <div className="bg-white border-b border-slate-200 px-6 py-8">
@@ -101,8 +164,8 @@ export default function CalendarView() {
             </div>
             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Lịch trình cá nhân</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kế hoạch kiến tập</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium">Theo dõi các buổi kiến tập và sự kiện đã đăng ký.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kế hoạch kiến tập & Công việc</h1>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Theo dõi các buổi kiến tập và hạn chót công việc.</p>
         </div>
       </div>
 
@@ -145,22 +208,17 @@ export default function CalendarView() {
                   <Star className="text-amber-600" size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đã đăng ký</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kiến tập</p>
                   <p className="text-xl font-black text-slate-900">{bookings.length} buổi</p>
                 </div>
               </div>
               <div className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                  <Clock className="text-emerald-600" size={24} />
+                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                  <Clock className="text-blue-600" size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sắp tới</p>
-                  <p className="text-xl font-black text-slate-900">
-                    {bookings.filter(b => {
-                      const [day, month, year] = b.eventDate.split('/').map(Number);
-                      return new Date(year, month - 1, day) >= new Date();
-                    }).length} buổi
-                  </p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Công việc</p>
+                  <p className="text-xl font-black text-slate-900">{tasks.length} mục</p>
                 </div>
               </div>
             </div>
@@ -174,7 +232,7 @@ export default function CalendarView() {
                   {selectedDate?.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long' })}
                 </h3>
                 <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  {selectedDateBookings.length} sự kiện
+                  {selectedDateBookings.length + selectedDateTasks.length} mục
                 </span>
               </div>
 
@@ -184,36 +242,67 @@ export default function CalendarView() {
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     <p className="text-xs font-bold text-slate-400">Đang tải lịch trình...</p>
                   </div>
-                ) : selectedDateBookings.length > 0 ? (
-                  selectedDateBookings.map((booking) => (
-                    <motion.div
-                      key={booking.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="group p-5 bg-slate-50 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-xl hover:shadow-primary/5 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                          booking.status === 'confirmed' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
-                        )}>
-                          {booking.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ duyệt'}
-                        </span>
-                        <Clock size={14} className="text-slate-400" />
-                      </div>
-                      <h4 className="text-sm font-black text-slate-900 mb-1 group-hover:text-primary transition-colors">
-                        {booking.eventTitle}
-                      </h4>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                        <MapPin size={12} />
-                        {booking.company}
-                      </div>
-                      <button className="mt-4 w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center justify-center gap-2">
-                        Chi tiết
-                        <ArrowRight size={12} />
-                      </button>
-                    </motion.div>
-                  ))
+                ) : (selectedDateBookings.length > 0 || selectedDateTasks.length > 0) ? (
+                  <>
+                    {selectedDateBookings.map((booking) => (
+                      <motion.div
+                        key={booking.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group p-5 bg-slate-50 rounded-3xl border border-transparent hover:border-amber-500/20 hover:bg-white hover:shadow-xl hover:shadow-amber-500/5 transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                            booking.status === 'confirmed' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                          )}>
+                            Kiến tập • {booking.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ duyệt'}
+                          </span>
+                          <Clock size={14} className="text-slate-400" />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900 mb-1 group-hover:text-amber-500 transition-colors">
+                          {booking.eventTitle}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                          <MapPin size={12} />
+                          {booking.company}
+                        </div>
+                        <button className="mt-4 w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center justify-center gap-2">
+                          Chi tiết
+                          <ArrowRight size={12} />
+                        </button>
+                      </motion.div>
+                    ))}
+                    {selectedDateTasks.map((task) => (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group p-5 bg-slate-50 rounded-3xl border border-transparent hover:border-blue-500/20 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                            task.status === 'active' ? "bg-blue-100 text-blue-600" : "bg-slate-200 text-slate-600"
+                          )}>
+                            Công việc • {task.status === 'active' ? 'Đang mở' : 'Đã đóng'}
+                          </span>
+                          <Clock size={14} className="text-slate-400" />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900 mb-1 group-hover:text-blue-500 transition-colors">
+                          {task.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                          <MapPin size={12} />
+                          {task.businessName || 'Doanh nghiệp'}
+                        </div>
+                        <button className="mt-4 w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center justify-center gap-2">
+                          Chi tiết
+                          <ArrowRight size={12} />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">

@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
-import React, { useState } from 'react';
-import { useFirebase } from './FirebaseProvider';
+import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart, Sparkles, Loader2, CheckCircle2, ClipboardList, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useFirebase, db } from './FirebaseProvider';
 import { cn } from '../lib/utils';
 import { GoogleGenAI } from '@google/genai';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { ShadowingFeedback } from '../types';
 
 interface ShadowingDetailProps {
   event: any;
@@ -14,9 +16,25 @@ interface ShadowingDetailProps {
 
 export default function ShadowingDetail({ event, isOpen, onClose, onChat }: ShadowingDetailProps) {
   const [step, setStep] = useState<'detail' | 'booking' | 'success'>('detail');
-  const { profile, toggleSaveShadowing, bookShadowing } = useFirebase();
+  const { profile, toggleSaveShadowing, bookShadowing, submitShadowingFeedback } = useFirebase();
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<ShadowingFeedback[]>([]);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [newFeedback, setNewFeedback] = useState({ rating: 5, comment: '' });
+
+  useEffect(() => {
+    if (!event?.id) return;
+    const q = query(
+      collection(db, 'shadowing_feedback'),
+      where('eventId', '==', event.id),
+      orderBy('createdAt', 'desc')
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setFeedbacks(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShadowingFeedback)));
+    });
+    return () => unsub();
+  }, [event?.id]);
 
   if (!event) return null;
 
@@ -71,7 +89,15 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
     setStep('success');
   };
 
-  const isSaved = profile?.savedShadowing?.includes(event.id);
+  const isSaved = profile?.savedShadowing?.includes(event?.id);
+
+  const formatDate = (date: any) => {
+    if (!date) return '';
+    if (typeof date === 'number') {
+      return new Date(date).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+    return date;
+  };
 
   return (
     <AnimatePresence>
@@ -158,7 +184,7 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         <Calendar className="text-secondary" size={20} strokeWidth={2.5} />
                       </div>
                       <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Thời gian</p>
-                      <p className="text-xs font-black text-white uppercase tracking-widest">{event.date} · {event.time}</p>
+                      <p className="text-xs font-black text-white uppercase tracking-widest">{formatDate(event.date)} · {event.time}</p>
                     </div>
                     <div className="p-5 bg-white/5 rounded-[28px] border border-white/5 shadow-inner">
                       <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
@@ -213,6 +239,26 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                     {event.description || `Trải nghiệm một ngày làm việc thực thụ tại ${event.companyName || event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor ${event.mentorName || event.mentor}.`}
                   </p>
 
+                  {event.roadmap && event.roadmap.length > 0 && (
+                    <div className="mb-10">
+                      <h3 className="text-white font-black text-lg tracking-tight mb-6 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-indigo-500/10 rounded-xl flex items-center justify-center">
+                          <ClipboardList className="text-indigo-500" size={18} strokeWidth={2.5} />
+                        </div>
+                        Lộ trình kiến tập
+                      </h3>
+                      <div className="space-y-6 relative ml-4 border-l-2 border-white/5 pl-8">
+                        {event.roadmap.map((step: any, idx: number) => (
+                          <div key={idx} className="relative">
+                            <div className="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-slate-900 border-2 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                            <h4 className="text-white font-black text-sm mb-1">{step.step}</h4>
+                            <p className="text-xs text-slate-500 font-bold leading-relaxed">{step.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {event.requirements && (
                     <div className="mb-10">
                       <h3 className="text-white font-black text-lg tracking-tight mb-4">Yêu cầu</h3>
@@ -254,6 +300,12 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         {event.perks.map((perk: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-4">
                             <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={18} />
+                            <span className="font-bold text-slate-300">{perk}</span>
+                          </li>
+                        ))}
+                        {event.customPerks && event.customPerks.map((perk: string, idx: number) => (
+                          <li key={`custom-${idx}`} className="flex items-start gap-4">
+                            <CheckCircle2 className="text-amber-500 shrink-0 mt-0.5" size={18} />
                             <span className="font-bold text-slate-300">{perk}</span>
                           </li>
                         ))}
@@ -345,6 +397,89 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                       </p>
                     )}
                   </div>
+
+                  {/* Feedbacks */}
+                  <div className="mb-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-white font-black text-lg tracking-tight flex items-center gap-3">
+                        <div className="w-8 h-8 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                          <MessageSquare className="text-amber-500" size={18} strokeWidth={2.5} />
+                        </div>
+                        Đánh giá ({feedbacks.length})
+                      </h3>
+                      {profile?.role === 'student' && !showFeedbackForm && (
+                        <button 
+                          onClick={() => setShowFeedbackForm(true)}
+                          className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300"
+                        >
+                          Viết đánh giá
+                        </button>
+                      )}
+                    </div>
+
+                    {showFeedbackForm && (
+                      <div className="bg-white/5 p-6 rounded-[32px] border border-white/10 mb-8">
+                        <div className="flex gap-2 mb-4">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <button key={s} onClick={() => setNewFeedback({...newFeedback, rating: s})}>
+                              <Star size={24} fill={s <= newFeedback.rating ? '#fbbf24' : 'none'} className={s <= newFeedback.rating ? 'text-amber-400' : 'text-white/10'} />
+                            </button>
+                          ))}
+                        </div>
+                        <textarea 
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+                          placeholder="Chia sẻ trải nghiệm của bạn..."
+                          value={newFeedback.comment}
+                          onChange={e => setNewFeedback({...newFeedback, comment: e.target.value})}
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={async () => {
+                              await submitShadowingFeedback({
+                                eventId: event.id,
+                                mentorId: event.mentorId,
+                                rating: newFeedback.rating,
+                                comment: newFeedback.comment
+                              });
+                              setShowFeedbackForm(false);
+                              setNewFeedback({ rating: 5, comment: '' });
+                            }}
+                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                          >
+                            Gửi đánh giá
+                          </button>
+                          <button 
+                            onClick={() => setShowFeedbackForm(false)}
+                            className="px-6 py-3 bg-white/5 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                          >
+                            Hủy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-6">
+                      {feedbacks.length > 0 ? feedbacks.map(f => (
+                        <div key={f.id} className="p-6 bg-white/5 rounded-[32px] border border-white/5">
+                          <div className="flex items-center gap-3 mb-3">
+                            <img src={f.studentPhoto || `https://i.pravatar.cc/100?u=${f.studentId}`} className="w-8 h-8 rounded-full" />
+                            <div>
+                              <p className="text-xs font-black text-white">{f.studentName}</p>
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                  <Star key={s} size={8} fill={s <= f.rating ? '#fbbf24' : 'none'} className={s <= f.rating ? 'text-amber-400' : 'text-white/10'} />
+                                ))}
+                              </div>
+                            </div>
+                            <span className="ml-auto text-[8px] font-bold text-slate-600">{new Date(f.createdAt).toLocaleDateString('vi-VN')}</span>
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium leading-relaxed">{f.comment}</p>
+                        </div>
+                      )) : (
+                        <p className="text-center py-10 text-slate-600 text-xs font-bold italic">Chưa có đánh giá nào cho chương trình này.</p>
+                      )}
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -354,7 +489,7 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                   <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 mb-10 shadow-inner">
                     <div className="flex justify-between mb-5">
                       <span className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Suất kiến tập</span>
-                      <span className="text-white font-black">{event.price}</span>
+                      <span className="text-white font-black">{Number(event.price).toLocaleString('vi-VN')}đ</span>
                     </div>
                     <div className="flex justify-between mb-5">
                       <span className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Phí dịch vụ</span>
@@ -362,7 +497,7 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                     </div>
                     <div className="pt-6 border-t border-white/10 flex justify-between items-end">
                       <span className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Tổng cộng</span>
-                      <span className="text-3xl font-black text-amber-400 tracking-tighter">{event.price}</span>
+                      <span className="text-3xl font-black text-amber-400 tracking-tighter">{(Number(event.price) + 10000).toLocaleString('vi-VN')}đ</span>
                     </div>
                   </div>
 

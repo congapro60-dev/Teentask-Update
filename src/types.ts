@@ -239,6 +239,8 @@ export interface ShadowingEvent {
   durationHours?: number;
   maxStudents?: number;
   perks?: string[];
+  customPerks?: string[];
+  roadmap?: { step: string; description: string; isCompleted?: boolean }[];
   includesLunch?: boolean;
   includesCertificate?: boolean;
   includesBadge?: boolean;
@@ -314,6 +316,18 @@ export interface Review {
   comment: string;
   jobId: string;
   jobTitle: string;
+  createdAt: number;
+}
+
+export interface ShadowingFeedback {
+  id: string;
+  eventId: string;
+  studentId: string;
+  studentName: string;
+  studentPhoto?: string;
+  mentorId: string;
+  rating: number;
+  comment: string;
   createdAt: number;
 }
 

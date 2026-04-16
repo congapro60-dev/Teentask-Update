@@ -84,6 +84,10 @@ interface FirebaseContextType {
   getCV: (cvId: string) => Promise<CV | null>;
   bookShadowing: (event: any) => Promise<void>;
   getBookings: () => Promise<any[]>;
+  approveApplication: (appId: string, jobId: string, type: 'job' | 'shadowing') => Promise<void>;
+  rejectApplication: (appId: string) => Promise<void>;
+  submitShadowingFeedback: (feedback: any) => Promise<void>;
+  updateShadowingRoadmap: (eventId: string, stepIndex: number, isCompleted: boolean) => Promise<void>;
   switchRole: (role: 'student' | 'parent' | 'business' | 'admin') => Promise<void>;
   t: (key: TranslationKey) => string;
   language: Language;
@@ -720,9 +724,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     if (!user) return [];
     const path = 'shadowing_bookings';
     try {
-      // For simplicity, we'll use a basic fetch. In a real app, we'd use a query.
-      // But since we don't have indexes set up yet, we'll just fetch all or use onSnapshot.
-      // Let's use getDocs for now.
       const { getDocs, query, where, collection } = await import('firebase/firestore');
       const q = query(collection(db, 'shadowing_bookings'), where('userId', '==', user.uid));
       const snap = await getDocs(q);
@@ -730,6 +731,96 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, path);
       return [];
+    }
+  };
+
+  const approveApplication = async (appId: string, jobId: string, type: 'job' | 'shadowing') => {
+    if (checkDemo()) return;
+    const appRef = doc(db, 'applications', appId);
+    try {
+      await updateDoc(appRef, { finalStatus: 'accepted' });
+      
+      if (type === 'shadowing') {
+        const eventRef = doc(db, 'shadowing_events', jobId);
+        const { increment } = await import('firebase/firestore');
+        await updateDoc(eventRef, { slotsRemaining: increment(-1) });
+      }
+      
+      const appSnap = await getDoc(appRef);
+      if (appSnap.exists()) {
+        const appData = appSnap.data();
+        await sendNotification(
+          appData.studentId,
+          'Đơn ứng tuyển được chấp nhận',
+          `Chúc mừng! Đơn ứng tuyển của bạn cho "${appData.jobTitle || 'kiến tập'}" đã được chấp nhận.`,
+          'application'
+        );
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `applications/${appId}`);
+    }
+  };
+
+  const rejectApplication = async (appId: string) => {
+    if (checkDemo()) return;
+    const appRef = doc(db, 'applications', appId);
+    try {
+      await updateDoc(appRef, { finalStatus: 'rejected' });
+      const appSnap = await getDoc(appRef);
+      if (appSnap.exists()) {
+        const appData = appSnap.data();
+        await sendNotification(
+          appData.studentId,
+          'Đơn ứng tuyển không được chấp nhận',
+          `Rất tiếc, đơn ứng tuyển của bạn cho "${appData.jobTitle || 'kiến tập'}" đã bị từ chối.`,
+          'application'
+        );
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `applications/${appId}`);
+    }
+  };
+
+  const submitShadowingFeedback = async (feedback: any) => {
+    if (checkDemo()) return;
+    if (!user || !profile) return;
+    const path = 'shadowing_feedback';
+    try {
+      await addDoc(collection(db, 'shadowing_feedback'), {
+        ...feedback,
+        studentId: user.uid,
+        studentName: profile.displayName,
+        studentPhoto: profile.photoURL,
+        createdAt: Date.now()
+      });
+      
+      // Update mentor's trust score slightly
+      const mentorRef = doc(db, 'users', feedback.mentorId);
+      const mentorSnap = await getDoc(mentorRef);
+      if (mentorSnap.exists()) {
+        const currentScore = mentorSnap.data().trustScore || 0;
+        const newScore = (currentScore + feedback.rating) / 2; // Simple average for demo
+        await updateDoc(mentorRef, { trustScore: Math.round(newScore * 10) / 10 });
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  };
+
+  const updateShadowingRoadmap = async (eventId: string, stepIndex: number, isCompleted: boolean) => {
+    if (checkDemo()) return;
+    const eventRef = doc(db, 'shadowing_events', eventId);
+    try {
+      const eventSnap = await getDoc(eventRef);
+      if (eventSnap.exists()) {
+        const roadmap = eventSnap.data().roadmap || [];
+        if (roadmap[stepIndex]) {
+          roadmap[stepIndex].isCompleted = isCompleted;
+          await updateDoc(eventRef, { roadmap });
+        }
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `shadowing_events/${eventId}`);
     }
   };
 
@@ -773,7 +864,9 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       submitRating, createChat, sendNotification,
       toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, submitNameChangeRequest,
       toggleFollowUser, unfriendUser, saveCV, getCV,
-      bookShadowing, getBookings, switchRole,
+      bookShadowing, getBookings, 
+      approveApplication, rejectApplication, submitShadowingFeedback, updateShadowingRoadmap,
+      switchRole,
       t, language, setLanguage
     }}>
       {children}

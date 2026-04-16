@@ -16,10 +16,17 @@ import { cn } from '../lib/utils';
 type TabType = 'slots' | 'workshops' | 'tasks';
 
 const ManageShadowing: React.FC = () => {
-  const { profile } = useFirebase();
+  const { profile, approveApplication, rejectApplication } = useFirebase();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('slots');
   const [loading, setLoading] = useState(true);
+
+  // Stats
+  const [stats, setStats] = useState({
+    totalIncome: 0,
+    totalStudents: 0,
+    trustScore: profile?.trustScore || 0
+  });
 
   // Data states
   const [slots, setSlots] = useState<ShadowingEvent[]>([]);
@@ -167,7 +174,16 @@ const ManageShadowing: React.FC = () => {
     );
 
     const unsubApps = onSnapshot(qApps, (snapshot) => {
-      setApplications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application)));
+      const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+      setApplications(apps);
+      
+      // Calculate stats
+      const completedApps = apps.filter(a => a.finalStatus === 'accepted' || a.finalStatus === 'completed');
+      setStats(prev => ({
+        ...prev,
+        totalStudents: completedApps.length,
+        totalIncome: completedApps.reduce((acc, curr) => acc + (curr.status === 'paid' ? 300000 : 0), 0) // Simplified for demo
+      }));
     });
 
     return () => {
@@ -227,6 +243,8 @@ const ManageShadowing: React.FC = () => {
           durationHours: formData.durationHours,
           maxStudents: formData.maxStudents,
           perks: formData.perks,
+          customPerks: formData.customPerks.split(',').map((s: string) => s.trim()).filter(Boolean),
+          roadmap: formData.roadmap.filter((r: any) => r.step.trim()),
           includesLunch: formData.includesLunch,
           includesCertificate: formData.includesCertificate,
           includesBadge: formData.includesBadge,
@@ -240,6 +258,26 @@ const ManageShadowing: React.FC = () => {
       resetForm();
     } catch (error) {
       console.error("Error creating:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApprove = async (app: Application) => {
+    if (!window.confirm(`Duyệt ứng viên ${app.studentName}?`)) return;
+    setActionLoading(true);
+    try {
+      await approveApplication(app.id, app.jobId, 'shadowing');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async (app: Application) => {
+    if (!window.confirm(`Từ chối ứng viên ${app.studentName}?`)) return;
+    setActionLoading(true);
+    try {
+      await rejectApplication(app.id);
     } finally {
       setActionLoading(false);
     }
@@ -267,6 +305,12 @@ const ManageShadowing: React.FC = () => {
       durationHours: 3,
       maxStudents: 15,
       perks: ['Certificate PDF', 'Q&A với mentor'],
+      customPerks: '',
+      roadmap: [
+        { step: 'Giới thiệu', description: 'Làm quen và giới thiệu về công việc' },
+        { step: 'Quan sát', description: 'Theo dõi quy trình làm việc thực tế' },
+        { step: 'Thực hành', description: 'Thực hiện task nhỏ dưới sự hướng dẫn' }
+      ],
       includesLunch: false,
       includesCertificate: true,
       includesBadge: false,
@@ -351,6 +395,22 @@ const ManageShadowing: React.FC = () => {
       </div>
 
       <div className="p-6 max-w-5xl mx-auto">
+        {/* Stats Section */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tổng thu nhập</p>
+            <h3 className="text-2xl font-black text-emerald-600">{stats.totalIncome.toLocaleString()}đ</h3>
+          </div>
+          <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Học sinh</p>
+            <h3 className="text-2xl font-black text-indigo-600">{stats.totalStudents}</h3>
+          </div>
+          <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">TrustScore</p>
+            <h3 className="text-2xl font-black text-amber-500">{stats.trustScore}</h3>
+          </div>
+        </div>
+
         {/* Info Banner */}
         <div className="mb-8 bg-indigo-50 border border-indigo-100 rounded-[32px] p-6 flex gap-4">
           <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
@@ -438,31 +498,82 @@ const ManageShadowing: React.FC = () => {
                     <div className="grid grid-cols-3 gap-4">
                       {/* Explorer */}
                       <div 
-                        onClick={() => setFormData({...formData, tier: 'explorer', tierLabel: 'Explorer', price: 150000, durationHours: 3, maxStudents: 15, slotsTotal: 15, perks: ['Certificate PDF', 'Q&A với mentor'], includesLunch: false, includesCertificate: true, includesBadge: false, includesLinkedIn: false, includesGiftBag: false})}
+                        onClick={() => {
+                          const minPrice = 150000;
+                          setFormData({
+                            ...formData, 
+                            tier: 'explorer', 
+                            tierLabel: 'Explorer', 
+                            price: Math.max(formData.price, minPrice), 
+                            durationHours: 3, 
+                            maxStudents: 15, 
+                            slotsTotal: 15, 
+                            perks: ['Certificate PDF', 'Q&A với mentor'], 
+                            includesLunch: false, 
+                            includesCertificate: true, 
+                            includesBadge: false, 
+                            includesLinkedIn: false, 
+                            includesGiftBag: false
+                          });
+                        }}
                         className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all", formData.tier === 'explorer' ? "border-gray-400 bg-gray-50" : "border-gray-100 hover:border-gray-200 bg-white")}
                       >
                         <div className="text-xl mb-1">🥉</div>
                         <div className="font-black text-gray-900 text-sm">Explorer</div>
-                        <div className="text-[10px] text-gray-500 font-bold mt-1">150k • 3h • Tối đa 15 HS</div>
+                        <div className="text-[10px] text-gray-500 font-bold mt-1">Sàn 150k • 3h</div>
                       </div>
                       {/* Insider */}
                       <div 
-                        onClick={() => setFormData({...formData, tier: 'insider', tierLabel: 'Insider', price: 350000, durationHours: 5, maxStudents: 8, slotsTotal: 8, perks: ['Certificate + Badge hồ sơ', 'Thực hành task nhỏ', 'Q&A', 'Bữa trưa'], includesLunch: true, includesCertificate: true, includesBadge: true, includesLinkedIn: false, includesGiftBag: false})}
+                        onClick={() => {
+                          const minPrice = 350000;
+                          setFormData({
+                            ...formData, 
+                            tier: 'insider', 
+                            tierLabel: 'Insider', 
+                            price: Math.max(formData.price, minPrice), 
+                            durationHours: 5, 
+                            maxStudents: 8, 
+                            slotsTotal: 8, 
+                            perks: ['Certificate + Badge hồ sơ', 'Thực hành task nhỏ', 'Q&A', 'Bữa trưa'], 
+                            includesLunch: true, 
+                            includesCertificate: true, 
+                            includesBadge: true, 
+                            includesLinkedIn: false, 
+                            includesGiftBag: false
+                          });
+                        }}
                         className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all relative", formData.tier === 'insider' ? "border-indigo-500 bg-indigo-50" : "border-indigo-100 hover:border-indigo-200 bg-white")}
                       >
                         <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">Phổ biến</div>
                         <div className="text-xl mb-1">🥈</div>
                         <div className="font-black text-indigo-900 text-sm">Insider</div>
-                        <div className="text-[10px] text-indigo-600/70 font-bold mt-1">350k • 5h • Tối đa 8 HS</div>
+                        <div className="text-[10px] text-indigo-600/70 font-bold mt-1">Sàn 350k • 5h</div>
                       </div>
                       {/* Elite */}
                       <div 
-                        onClick={() => setFormData({...formData, tier: 'elite', tierLabel: 'Elite', price: 700000, durationHours: 8, maxStudents: 5, slotsTotal: 5, perks: ['Certificate + Badge', 'LinkedIn recommendation', 'Shadowing cá nhân', 'Task thực tế', 'Bữa trưa', 'Networking session', 'Gift bag'], includesLunch: true, includesCertificate: true, includesBadge: true, includesLinkedIn: true, includesGiftBag: true})}
+                        onClick={() => {
+                          const minPrice = 700000;
+                          setFormData({
+                            ...formData, 
+                            tier: 'elite', 
+                            tierLabel: 'Elite', 
+                            price: Math.max(formData.price, minPrice), 
+                            durationHours: 8, 
+                            maxStudents: 5, 
+                            slotsTotal: 5, 
+                            perks: ['Certificate + Badge', 'LinkedIn recommendation', 'Shadowing cá nhân', 'Task thực tế', 'Bữa trưa', 'Networking session', 'Gift bag'], 
+                            includesLunch: true, 
+                            includesCertificate: true, 
+                            includesBadge: true, 
+                            includesLinkedIn: true, 
+                            includesGiftBag: true
+                          });
+                        }}
                         className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all", formData.tier === 'elite' ? "border-amber-500 bg-amber-50" : "border-amber-100 hover:border-amber-200 bg-white")}
                       >
                         <div className="text-xl mb-1">🥇</div>
                         <div className="font-black text-amber-900 text-sm">Elite</div>
-                        <div className="text-[10px] text-amber-600/70 font-bold mt-1">700k • 8h • Tối đa 5 HS</div>
+                        <div className="text-[10px] text-amber-600/70 font-bold mt-1">Sàn 700k • 8h</div>
                       </div>
                     </div>
                   </div>
@@ -477,7 +588,61 @@ const ManageShadowing: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Select label="Cấp độ" value={formData.level} onChange={(v: string) => setFormData({...formData, level: v})} options={['Cơ bản', 'Nâng cao', 'Chuyên sâu']} />
-                    <Input label="Phí (VNĐ)" type="number" value={formData.price} onChange={(v: string) => setFormData({...formData, price: parseInt(v)})} />
+                    <Input 
+                      label="Phí (VNĐ)" 
+                      type="number" 
+                      value={formData.price} 
+                      onChange={(v: string) => {
+                        const val = parseInt(v);
+                        const floor = formData.tier === 'elite' ? 700000 : formData.tier === 'insider' ? 350000 : 150000;
+                        setFormData({...formData, price: val});
+                      }} 
+                      onBlur={(e: any) => {
+                        const val = parseInt(e.target.value);
+                        const floor = formData.tier === 'elite' ? 700000 : formData.tier === 'insider' ? 350000 : 150000;
+                        if (val < floor) {
+                          alert(`Giá tối thiểu cho gói ${formData.tierLabel} là ${floor.toLocaleString()}đ`);
+                          setFormData({...formData, price: floor});
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <Input label="Quyền lợi bổ sung" value={formData.customPerks} onChange={(v: string) => setFormData({...formData, customPerks: v})} placeholder="VD: Tặng sách chuyên ngành, Review CV (cách nhau bằng dấu phẩy)" />
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lộ trình kiến tập (Roadmap)</label>
+                    {formData.roadmap.map((step: any, idx: number) => (
+                      <div key={idx} className="flex gap-2">
+                        <input 
+                          className="flex-1 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none"
+                          value={step.step}
+                          onChange={e => {
+                            const newRoadmap = [...formData.roadmap];
+                            newRoadmap[idx].step = e.target.value;
+                            setFormData({...formData, roadmap: newRoadmap});
+                          }}
+                          placeholder={`Bước ${idx + 1}`}
+                        />
+                        <input 
+                          className="flex-[2] px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none"
+                          value={step.description}
+                          onChange={e => {
+                            const newRoadmap = [...formData.roadmap];
+                            newRoadmap[idx].description = e.target.value;
+                            setFormData({...formData, roadmap: newRoadmap});
+                          }}
+                          placeholder="Mô tả ngắn"
+                        />
+                      </div>
+                    ))}
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, roadmap: [...formData.roadmap, { step: '', description: '' }]})}
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
+                    >
+                      + Thêm bước lộ trình
+                    </button>
                   </div>
                 </>
               )}
@@ -544,12 +709,32 @@ const ManageShadowing: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => navigate(`/student/${app.studentId}`)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                      >
-                        <ChevronRight size={18} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => navigate(`/student/${app.studentId}`)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                        {app.finalStatus === 'pending' && (
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => handleApprove(app)}
+                              className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-all"
+                              title="Duyệt"
+                            >
+                              <Check size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleReject(app)}
+                              className="w-8 h-8 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center hover:bg-rose-100 transition-all"
+                              title="Từ chối"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -602,21 +787,21 @@ const ShadowCard = ({ item, type, candidates, onUpdateStatus, onDelete, onViewCa
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <span className={cn("text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg", getStatusColor(item.status))}>
-              {getStatusLabel(item.status)}
+            <span className={cn("text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg", getStatusColor(item?.status))}>
+              {getStatusLabel(item?.status)}
             </span>
-            {item.level && (
+            {item?.level && (
               <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg">
-                {item.level}
+                {item?.level}
               </span>
             )}
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
-              {item.type === '1-1' ? 'Kiến tập 1-1' : item.type === 'workshop' ? 'Workshop' : 'Nhiệm vụ'}
+              {item?.type === '1-1' ? 'Kiến tập 1-1' : item?.type === 'workshop' ? 'Workshop' : 'Nhiệm vụ'}
             </span>
           </div>
-          <h3 className="text-xl font-black text-gray-900 mb-1 leading-tight">{item.title || item.name}</h3>
+          <h3 className="text-xl font-black text-gray-900 mb-1 leading-tight">{item?.title || item?.name}</h3>
           <p className="text-sm font-bold text-gray-400">
-            {item.mentorName ? `Mentor: ${item.mentorName}` : `Hạn: ${item.durationDays} ngày`}
+            {item?.mentorName ? `Mentor: ${item?.mentorName}` : `Hạn: ${item?.durationDays} ngày`}
           </p>
         </div>
         
@@ -646,11 +831,11 @@ const ShadowCard = ({ item, type, candidates, onUpdateStatus, onDelete, onViewCa
                     }}
                     className={cn(
                       "w-full text-left px-3 py-2 text-xs font-bold rounded-xl transition-colors flex items-center justify-between",
-                      item.status === s ? "bg-gray-50 text-indigo-600" : "text-gray-600 hover:bg-gray-50"
+                      item?.status === s ? "bg-gray-50 text-indigo-600" : "text-gray-600 hover:bg-gray-50"
                     )}
                   >
                     {getStatusLabel(s)}
-                    {item.status === s && <Check size={12} />}
+                    {item?.status === s && <Check size={12} />}
                   </button>
                 ))}
                 <div className="h-px bg-gray-50 my-1" />
@@ -676,7 +861,7 @@ const ShadowCard = ({ item, type, candidates, onUpdateStatus, onDelete, onViewCa
           </div>
           <div>
             <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Ứng viên</p>
-            <p className="text-xs font-black text-gray-900">{candidates.length}/{item.slotsTotal || item.maxStudents}</p>
+            <p className="text-xs font-black text-gray-900">{candidates?.length || 0}/{item?.slotsTotal || item?.maxStudents}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -685,7 +870,7 @@ const ShadowCard = ({ item, type, candidates, onUpdateStatus, onDelete, onViewCa
           </div>
           <div>
             <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Thời gian</p>
-            <p className="text-xs font-black text-gray-900">{item.date ? new Date(item.date).toLocaleDateString('vi-VN') : `${item.durationDays} ngày`}</p>
+            <p className="text-xs font-black text-gray-900">{item?.date ? new Date(item.date).toLocaleDateString('vi-VN') : `${item?.durationDays} ngày`}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -694,7 +879,7 @@ const ShadowCard = ({ item, type, candidates, onUpdateStatus, onDelete, onViewCa
           </div>
           <div>
             <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Địa điểm</p>
-            <p className="text-xs font-black text-gray-900 truncate max-w-[100px]">{item.location || item.outputRequired}</p>
+            <p className="text-xs font-black text-gray-900 truncate max-w-[100px]">{item?.location || item?.outputRequired}</p>
           </div>
         </div>
         <button 
