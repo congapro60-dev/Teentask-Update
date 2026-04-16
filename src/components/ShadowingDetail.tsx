@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart, Sparkles, Loader2 } from 'lucide-react';
+import { X, Calendar, MapPin, Users, Star, ShieldCheck, ChevronRight, Heart, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useFirebase } from './FirebaseProvider';
 import { cn } from '../lib/utils';
@@ -227,28 +227,72 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                       <div className="w-8 h-8 bg-emerald-500/10 rounded-xl flex items-center justify-center">
                         <ShieldCheck className="text-emerald-500" size={18} strokeWidth={2.5} />
                       </div>
-                      Quyền lợi độc quyền
+                      Quyền lợi khi tham gia
                     </h4>
-                    {event.benefits ? (
-                      <p className="text-sm leading-relaxed font-bold text-slate-400 whitespace-pre-wrap">
+                    
+                    {event.tier && (
+                      <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-wrap gap-3">
+                        <span className={cn(
+                          "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                          event.tier === 'elite' ? "bg-amber-500/20 text-amber-400" :
+                          event.tier === 'insider' ? "bg-indigo-500/20 text-indigo-400" :
+                          "bg-slate-500/20 text-slate-300"
+                        )}>
+                          Gói kiến tập: {event.tierLabel || event.tier}
+                        </span>
+                        <span className="px-3 py-1 bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-300">
+                          Thời lượng: {event.durationHours || 3} tiếng
+                        </span>
+                        <span className="px-3 py-1 bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-300">
+                          Tối đa: {event.maxStudents || event.slotsTotal || 10} người
+                        </span>
+                      </div>
+                    )}
+
+                    {event.perks && event.perks.length > 0 ? (
+                      <ul className="space-y-4 text-sm mb-6">
+                        {event.perks.map((perk: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-4">
+                            <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={18} />
+                            <span className="font-bold text-slate-300">{perk}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : event.benefits ? (
+                      <p className="text-sm leading-relaxed font-bold text-slate-400 whitespace-pre-wrap mb-6">
                         {event.benefits}
                       </p>
                     ) : (
-                      <ul className="space-y-4 text-sm">
+                      <ul className="space-y-4 text-sm mb-6">
                         <li className="flex items-start gap-4">
-                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                          <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={18} />
                           <span className="font-bold text-slate-300">Chứng nhận kinh nghiệm từ {event.companyName || event.company}</span>
                         </li>
                         <li className="flex items-start gap-4">
-                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
-                          <span className="font-bold text-slate-300">Ăn trưa cùng chuyên gia</span>
-                        </li>
-                        <li className="flex items-start gap-4">
-                          <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                          <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={18} />
                           <span className="font-bold text-slate-300">Tư vấn định hướng nghề nghiệp 1-1</span>
                         </li>
                       </ul>
                     )}
+
+                    {/* Extra Chips */}
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5">
+                      {event.includesLunch && (
+                        <span className="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-rose-500/20">
+                          🍱 Có bữa trưa
+                        </span>
+                      )}
+                      {event.includesLinkedIn && (
+                        <span className="px-3 py-1.5 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-500/20">
+                          🔗 LinkedIn recommendation
+                        </span>
+                      )}
+                      {event.includesGiftBag && (
+                        <span className="px-3 py-1.5 bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-500/20">
+                          🎁 Gift bag
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* AI Match Analysis */}

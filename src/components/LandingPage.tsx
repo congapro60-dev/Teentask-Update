@@ -365,7 +365,8 @@ export default function LandingPage() {
           >
             <div className="relative z-10">
               <p className="text-xl md:text-2xl font-bold leading-relaxed">
-                "TeenTask là nơi duy nhất tại Việt Nam kết hợp <span className="text-amber-300">Học viện kỹ năng</span> + <span className="text-amber-300">Sàn việc làm</span> + <span className="text-amber-300">Hệ thống Portfolio</span> — dành riêng cho học sinh 14–18 tuổi."
+                {/* Cập nhật nội dung 1: Thay "duy nhất" bằng "tiên phong" */}
+                "TeenTask là nền tảng tiên phong tại Việt Nam kết hợp <span className="text-amber-300">Học viện kỹ năng</span> + <span className="text-amber-300">Sàn việc làm</span> + <span className="text-amber-300">Hệ thống Portfolio</span> — dành riêng cho học sinh 14–18 tuổi."
               </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
@@ -473,12 +474,15 @@ export default function LandingPage() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-100">
             <div className="text-center py-6">
-              <div className="text-5xl font-black text-indigo-600 mb-2">7M+</div>
+              {/* Cập nhật nội dung 2: Thay "7M+" bằng "~3M" và thêm nguồn */}
+              <div className="text-5xl font-black text-indigo-600 mb-2">~3M</div>
               <div className="text-gray-500 font-medium text-lg">Học sinh THPT Việt Nam</div>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter font-bold">(Nguồn: Bộ GD&ĐT, 2024–2025)</p>
             </div>
             <div className="text-center py-6">
-              <div className="text-5xl font-black text-rose-500 mb-2">0</div>
-              <div className="text-gray-500 font-medium text-lg">Nền tảng tương tự tồn tại</div>
+              {/* Cập nhật nội dung 1: Thay "0" bằng "1st" và cập nhật mô tả */}
+              <div className="text-5xl font-black text-rose-500 mb-2">1st</div>
+              <div className="text-gray-500 font-medium text-lg">Nền tảng tiên phong tại VN</div>
             </div>
             <div className="text-center py-6">
               <div className="text-5xl font-black text-fuchsia-600 mb-2">3</div>
@@ -515,7 +519,34 @@ export default function LandingPage() {
                 <GraduationCap size={28} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Job Shadowing</h3>
-              <p className="text-gray-600 leading-relaxed">Kiến tập cùng chuyên gia thực thụ. Trải nghiệm một ngày làm việc thực tế để định hướng nghề nghiệp.</p>
+              <p className="text-gray-600 leading-relaxed mb-4">Kiến tập cùng chuyên gia thực thụ. Trải nghiệm một ngày làm việc thực tế để định hướng nghề nghiệp.</p>
+              
+              {/* Hiển thị 3 gói kiến tập dạng card ngang */}
+              <div className="flex flex-row gap-3 overflow-x-auto pt-3 pb-2 hide-scrollbar">
+                {/* Card Explorer */}
+                <div className="min-w-[200px] flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm shrink-0">
+                  <div className="font-bold text-gray-800 mb-1">🥉 Explorer · 150,000đ</div>
+                  <div className="text-gray-500 text-xs mb-2">3 tiếng · 10-15 học sinh</div>
+                  <div className="text-emerald-600 text-xs font-medium">✅ Certificate</div>
+                </div>
+
+                {/* Card Insider */}
+                <div className="min-w-[200px] flex-1 bg-indigo-50 border border-indigo-300 rounded-xl p-3 text-sm shrink-0 relative">
+                  <div className="absolute -top-2 right-2 bg-indigo-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Phổ biến</div>
+                  <div className="font-bold text-indigo-900 mb-1">🥈 Insider · 350,000đ</div>
+                  <div className="text-indigo-600/70 text-xs mb-2">Nửa ngày · 5-8 học sinh</div>
+                  <div className="text-emerald-600 text-xs font-medium">✅ Certificate + Badge + Bữa trưa</div>
+                </div>
+
+                {/* Card Elite */}
+                <div className="min-w-[200px] flex-1 bg-amber-50 border border-amber-400 rounded-xl p-3 text-sm shrink-0 relative">
+                  <div className="absolute -top-2 right-2 bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Exclusive</div>
+                  <div className="font-bold text-amber-900 mb-1">🥇 Elite · 700,000đ</div>
+                  <div className="text-amber-700/70 text-xs mb-2">Cả ngày · Chỉ 3-5 chỗ</div>
+                  <div className="text-emerald-600 text-xs font-medium">✅ Full package + LinkedIn recommendation</div>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400 italic mt-2">Từ 150,000đ · Phụ huynh phê duyệt trước khi đặt vé</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">

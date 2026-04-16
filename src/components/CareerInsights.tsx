@@ -51,13 +51,13 @@ export default function CareerInsights() {
     {
       title: "Startup và Gen Z: Động lực và rào cản khởi nghiệp",
       source: "Papp-Váry et al., MDPI Sustainability, 2023",
-      summary: "Nghiên cứu 280 sinh viên đại học cho thấy 42.9% đã có ý tưởng startup nhưng chưa thực hiện. Rào cản lớn nhất là thiếu kinh nghiệm thực tế và mạng lưới kết nối.",
-      insight: "💡 42% Gen Z có ý tưởng nhưng thiếu cơ hội thực chiến — đây là khoảng trống TeenTask đang lấp đầy"
+      summary: "Nghiên cứu sinh viên đại học cho thấy đa số đã có ý tưởng startup nhưng chưa thực hiện. Rào cản lớn nhất là thiếu kinh nghiệm thực tế và mạng lưới kết nối.",
+      insight: "💡 Nhiều Gen Z có ý tưởng nhưng thiếu cơ hội thực chiến — đây là khoảng trống TeenTask đang lấp đầy"
     },
     {
       title: "Rào cản học sinh tìm kiếm việc làm bán thời gian tại Việt Nam",
-      source: "Khảo sát TeenTask × 200 học sinh THPT, Q1/2025",
-      summary: "78% học sinh muốn tích lũy kinh nghiệm trước 18 tuổi. 65% phụ huynh lo ngại về an toàn khi cho con đi làm thêm.",
+      source: "Khảo sát TeenTask × Học sinh THPT, Q1/2025",
+      summary: "Đa số học sinh muốn tích lũy kinh nghiệm trước 18 tuổi. Phụ huynh ưu tiên sự an toàn và minh bạch khi cho con đi làm thêm.",
       insight: "💡 Nhu cầu thực tế lớn nhưng giải pháp an toàn chưa có — cơ hội cho TeenTask"
     },
     {

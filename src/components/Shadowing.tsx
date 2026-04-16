@@ -2,7 +2,7 @@ import { Timer, MapPin, Users, Star, Trophy, MessageSquare, Search, Filter, Slid
 import SmartImage from './SmartImage';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { doc, getDoc, setDoc, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
 import { db, auth, useFirebase } from './FirebaseProvider';
 import ShadowingDetail from './ShadowingDetail';
@@ -12,8 +12,104 @@ import { MOCK_SHADOWING } from '../mockData';
 
 const CATEGORIES = ['Tất cả', 'Marketing', 'Design', 'Management', 'Tech', 'Finance'];
 
+// Component con để tránh lặp code UI cho Workshop Card
+const WorkshopCard = ({ workshop, index, onClick }: { workshop: any, index: number, onClick: (w: any) => void }) => (
+  <motion.div 
+    key={workshop.id}
+    whileInView={{ opacity: 1, y: 0 }}
+    initial={{ opacity: 0, y: 30 }}
+    transition={{ delay: index * 0.1 }}
+    viewport={{ once: true }}
+    onClick={() => onClick(workshop)}
+    className="min-w-[320px] md:min-w-0 bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col cursor-pointer group overflow-hidden"
+  >
+    <div className="h-40 -mx-8 -mt-8 mb-8 overflow-hidden">
+      <SmartImage 
+        title={workshop.title} 
+        fallbackUrl={workshop.image} 
+        type="banner"
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+      />
+    </div>
+    <div className="flex justify-between items-start mb-6">
+      <span className={cn(
+        "rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest",
+        workshop.price === 0 || workshop.price === 'Miễn phí' 
+          ? "bg-emerald-100 text-emerald-700" 
+          : "bg-indigo-100 text-indigo-700"
+      )}>
+        {workshop.price === 0 || workshop.price === 'Miễn phí' ? '🆓 Miễn phí' : `${workshop.price}đ`}
+      </span>
+      {workshop.slotsRemaining <= 3 && workshop.slotsRemaining > 0 && (
+        <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest animate-pulse">
+          🔥 Chỉ còn {workshop.slotsRemaining} chỗ
+        </span>
+      )}
+    </div>
+
+    <div className="flex items-center gap-4 mb-6">
+      <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden relative">
+        <img 
+          src={`https://i.pravatar.cc/100?u=${workshop.mentorId || workshop.mentor}`} 
+          alt="" 
+          className="w-full h-full object-cover"
+        />
+        {workshop.linkedInStatus === 'verified' && (
+          <div className="absolute bottom-0 right-0 bg-[#0077B5] text-white text-[8px] font-bold px-1 rounded-tl-lg" title="LinkedIn Verified">in</div>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-black text-slate-900 flex items-center gap-1">
+          {workshop.mentorName || workshop.mentor}
+          {workshop.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
+        </p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
+          {workshop.mentorTitle || workshop.role} @ {workshop.companyName || workshop.company}
+        </p>
+      </div>
+    </div>
+
+    <h3 className="text-xl font-black text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
+      {workshop.title}
+    </h3>
+
+    <div className="space-y-3 mb-8">
+      <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
+        <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+          <Video size={14} className="text-indigo-500" />
+        </div>
+        <span>{workshop.location} · {workshop.slotsTotal} người</span>
+      </div>
+      <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
+        <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+          <Calendar size={14} className="text-indigo-500" />
+        </div>
+        <span>{workshop.date} · {workshop.time}</span>
+      </div>
+    </div>
+
+    <div className="flex flex-wrap gap-2 mb-8">
+      {workshop.category && (
+        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+          {workshop.category}
+        </span>
+      )}
+      <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg">
+        {workshop.level || 'Cơ bản'}
+      </span>
+    </div>
+
+    <button 
+      className="mt-auto bg-indigo-600 text-white rounded-2xl py-4 w-full font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-3"
+    >
+      Xem chi tiết <ArrowRight size={16} strokeWidth={3} />
+    </button>
+  </motion.div>
+);
+
 export default function Shadowing() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile, toggleSaveShadowing } = useFirebase();
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -27,7 +123,32 @@ export default function Shadowing() {
     const q = query(collection(db, 'shadowing_events'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Security: Whitelist fields to avoid exposing sensitive data
+        const events = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            mentorName: data.mentorName,
+            mentorTitle: data.mentorTitle,
+            mentorId: data.mentorId,
+            companyName: data.companyName,
+            price: data.price,
+            location: data.location,
+            date: data.date,
+            time: data.time,
+            category: data.category,
+            level: data.level,
+            slotsTotal: data.slotsTotal,
+            slotsRemaining: data.slotsRemaining,
+            image: data.image,
+            type: data.type,
+            status: data.status,
+            tier: data.tier,
+            perks: data.perks,
+            linkedInStatus: data.linkedInStatus
+          };
+        });
         setShadowingEvents(events);
       } else {
         setShadowingEvents(MOCK_SHADOWING);
@@ -66,16 +187,17 @@ export default function Shadowing() {
   }, [searchQuery, activeCategory, shadowingEvents]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const eventId = params.get('id');
     if (eventId) {
-      const event = MOCK_SHADOWING.find(e => e.id.toString() === eventId);
+      const event = shadowingEvents.find(e => e.id.toString() === eventId) || 
+                    MOCK_SHADOWING.find(e => e.id.toString() === eventId);
       if (event) {
         setSelectedEvent(event);
         setIsDetailOpen(true);
       }
     }
-  }, [window.location.search]);
+  }, [location.search, shadowingEvents]);
 
   const handleOpenDetail = (event: any) => {
     setSelectedEvent(event);
@@ -246,97 +368,12 @@ export default function Shadowing() {
           {workshops.length > 0 ? (
             <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar md:grid md:grid-cols-3 md:overflow-visible">
               {workshops.map((workshop, i) => (
-                <motion.div 
-                  key={workshop.id}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  onClick={() => handleOpenDetail(workshop)}
-                  className="min-w-[320px] md:min-w-0 bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col cursor-pointer group overflow-hidden"
-                >
-                  <div className="h-40 -mx-8 -mt-8 mb-8 overflow-hidden">
-                    <SmartImage 
-                      title={workshop.title} 
-                      fallbackUrl={workshop.image} 
-                      type="banner"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                    />
-                  </div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className={cn(
-                      "rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest",
-                      workshop.price === 0 || workshop.price === 'Miễn phí' 
-                        ? "bg-emerald-100 text-emerald-700" 
-                        : "bg-indigo-100 text-indigo-700"
-                    )}>
-                      {workshop.price === 0 || workshop.price === 'Miễn phí' ? '🆓 Miễn phí' : `${workshop.price}đ`}
-                    </span>
-                    {workshop.slotsRemaining <= 3 && workshop.slotsRemaining > 0 && (
-                      <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest animate-pulse">
-                        🔥 Chỉ còn {workshop.slotsRemaining} chỗ
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden relative">
-                      <img 
-                        src={`https://i.pravatar.cc/100?u=${workshop.mentorId || workshop.mentor}`} 
-                        alt="" 
-                        className="w-full h-full object-cover"
-                      />
-                      {workshop.linkedInStatus === 'verified' && (
-                        <div className="absolute bottom-0 right-0 bg-[#0077B5] text-white text-[8px] font-bold px-1 rounded-tl-lg" title="LinkedIn Verified">in</div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-slate-900 flex items-center gap-1">
-                        {workshop.mentorName || workshop.mentor}
-                        {workshop.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
-                        {workshop.mentorTitle || workshop.role} @ {workshop.companyName || workshop.company}
-                      </p>
-                    </div>
-                  </div>
-
-                  <h3 className="text-xl font-black text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
-                    {workshop.title}
-                  </h3>
-
-                  <div className="space-y-3 mb-8">
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
-                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
-                        <Video size={14} className="text-indigo-500" />
-                      </div>
-                      <span>{workshop.location} · {workshop.slotsTotal} người</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
-                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
-                        <Calendar size={14} className="text-indigo-500" />
-                      </div>
-                      <span>{workshop.date} · {workshop.time}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {workshop.category && (
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                        {workshop.category}
-                      </span>
-                    )}
-                    <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                      {workshop.level || 'Cơ bản'}
-                    </span>
-                  </div>
-
-                  <button 
-                    className="mt-auto bg-indigo-600 text-white rounded-2xl py-4 w-full font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-3"
-                  >
-                    Xem chi tiết <ArrowRight size={16} strokeWidth={3} />
-                  </button>
-                </motion.div>
+                <WorkshopCard 
+                  key={workshop.id} 
+                  workshop={workshop} 
+                  index={i} 
+                  onClick={handleOpenDetail} 
+                />
               ))}
             </div>
           ) : (
@@ -392,97 +429,12 @@ export default function Shadowing() {
                   image: 'https://picsum.photos/seed/startup-workshop/800/400'
                 }
               ].map((workshop, i) => (
-                <motion.div 
-                  key={workshop.id}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  onClick={() => handleOpenDetail(workshop)}
-                  className="min-w-[320px] md:min-w-0 bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col cursor-pointer group overflow-hidden"
-                >
-                  <div className="h-40 -mx-8 -mt-8 mb-8 overflow-hidden">
-                    <SmartImage 
-                      title={workshop.title} 
-                      fallbackUrl={workshop.image} 
-                      type="banner"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                    />
-                  </div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className={cn(
-                      "rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest",
-                      workshop.price === 0 || workshop.price === 'Miễn phí' 
-                        ? "bg-emerald-100 text-emerald-700" 
-                        : "bg-indigo-100 text-indigo-700"
-                    )}>
-                      {workshop.price === 0 || workshop.price === 'Miễn phí' ? '🆓 Miễn phí' : `${workshop.price}đ`}
-                    </span>
-                    {workshop.slotsRemaining <= 3 && workshop.slotsRemaining > 0 && (
-                      <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest animate-pulse">
-                        🔥 Chỉ còn {workshop.slotsRemaining} chỗ
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden relative">
-                      <img 
-                        src={`https://i.pravatar.cc/100?u=${workshop.mentorName}`} 
-                        alt="" 
-                        className="w-full h-full object-cover"
-                      />
-                      {workshop.linkedInStatus === 'verified' && (
-                        <div className="absolute bottom-0 right-0 bg-[#0077B5] text-white text-[8px] font-bold px-1 rounded-tl-lg" title="LinkedIn Verified">in</div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-slate-900 flex items-center gap-1">
-                        {workshop.mentorName}
-                        {workshop.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
-                        {workshop.mentorTitle} @ {workshop.companyName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <h3 className="text-xl font-black text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
-                    {workshop.title}
-                  </h3>
-
-                  <div className="space-y-3 mb-8">
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
-                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
-                        <Video size={14} className="text-indigo-500" />
-                      </div>
-                      <span>{workshop.location} · {workshop.slotsTotal} người</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold">
-                      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
-                        <Calendar size={14} className="text-indigo-500" />
-                      </div>
-                      <span>{workshop.date} · {workshop.time}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {workshop.category && (
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                        {workshop.category}
-                      </span>
-                    )}
-                    <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                      {workshop.level || 'Cơ bản'}
-                    </span>
-                  </div>
-
-                  <button 
-                    className="mt-auto bg-indigo-600 text-white rounded-2xl py-4 w-full font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-3"
-                  >
-                    Xem chi tiết <ArrowRight size={16} strokeWidth={3} />
-                  </button>
-                </motion.div>
+                <WorkshopCard 
+                  key={workshop.id} 
+                  workshop={workshop} 
+                  index={i} 
+                  onClick={handleOpenDetail} 
+                />
               ))}
             </div>
           )}
@@ -519,12 +471,24 @@ export default function Shadowing() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => handleOpenDetail(event)}
-                className="group bg-white rounded-[48px] overflow-hidden border border-slate-100 hover:border-amber-200 hover:shadow-[0_32px_64px_-12px_rgba(251,191,36,0.12)] transition-all cursor-pointer flex flex-col relative"
+                className={cn(
+                  "group rounded-[48px] overflow-hidden border transition-all cursor-pointer flex flex-col relative",
+                  event.tier === 'elite' 
+                    ? "bg-amber-50/30 border-amber-400 hover:shadow-[0_32px_64px_-12px_rgba(251,191,36,0.2)]" 
+                    : "bg-white border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10"
+                )}
               >
-                {/* Premium Badge */}
-                <div className="absolute top-6 left-6 z-20 px-4 py-2 bg-slate-950/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-2">
-                  <Star size={12} className="text-amber-400 fill-amber-400" />
-                  <span className="text-[9px] font-black text-white uppercase tracking-widest">Elite Member</span>
+                {/* Tier Badge */}
+                <div className={cn(
+                  "absolute top-6 left-6 z-20 px-4 py-2 backdrop-blur-md rounded-2xl border flex items-center gap-2",
+                  event.tier === 'elite' ? "bg-amber-500/90 border-amber-400 text-white" :
+                  event.tier === 'insider' ? "bg-indigo-500/90 border-indigo-400 text-white" :
+                  "bg-slate-800/90 border-slate-600 text-white"
+                )}>
+                  {event.tier === 'elite' && <Star size={12} className="text-white fill-white" />}
+                  <span className="text-[9px] font-black uppercase tracking-widest">
+                    {event.tier === 'elite' ? '🥇 Elite' : event.tier === 'insider' ? '🥈 Insider' : '🥉 Explorer'}
+                  </span>
                 </div>
 
                 <div className="relative h-72 overflow-hidden">
@@ -585,12 +549,30 @@ export default function Shadowing() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Công ty</p>
-                      <p className="text-xs font-black text-primary tracking-tight">{event.companyName || event.company}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Học sinh</p>
+                      <p className="text-xs font-black text-primary tracking-tight">
+                        {event.tier === 'elite' ? `Exclusive: chỉ ${event.slotsTotal || event.maxStudents || 5} HS` : `${event.slotsTotal || event.maxStudents || 10} HS/buổi`}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
+                  {/* Perks */}
+                  {event.perks && event.perks.length > 0 && (
+                    <div className="mb-6 space-y-2">
+                      {event.perks.slice(0, 3).map((perk: string, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                          <span className="text-emerald-500">✅</span> {perk}
+                        </div>
+                      ))}
+                      {event.perks.length > 3 && (
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
+                          +{event.perks.length - 3} quyền lợi khác
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-3">
                         {[1, 2, 3].map(i => (
@@ -599,7 +581,7 @@ export default function Shadowing() {
                           </div>
                         ))}
                       </div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">+12 bạn khác</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đã đăng ký</span>
                     </div>
                     <div className="flex items-center gap-2 text-amber-500">
                       <TrendingUp size={16} strokeWidth={3} />

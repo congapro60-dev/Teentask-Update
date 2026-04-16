@@ -253,7 +253,7 @@ export default function AboutApp() {
             <ul className="space-y-4 mb-6">
               <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
                 <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
-                78% học sinh THPT muốn tích lũy kinh nghiệm trước 18 tuổi nhưng không biết bắt đầu từ đâu
+                Đa số học sinh THPT muốn tích lũy kinh nghiệm trước 18 tuổi nhưng không biết bắt đầu từ đâu
               </li>
               <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
                 <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
@@ -261,7 +261,7 @@ export default function AboutApp() {
               </li>
               <li className="flex items-start gap-3 text-red-800 font-medium text-lg">
                 <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
-                Phụ huynh lo ngại: 65% từ chối cho con làm thêm vì thiếu cơ chế giám sát minh bạch
+                Phụ huynh ưu tiên sự an toàn và minh bạch khi cho con đi làm thêm
               </li>
             </ul>
             <p className="text-sm text-red-600/80 italic font-medium">* Dữ liệu từ khảo sát 200 học sinh và phụ huynh tại Hà Nội và TP.HCM, Q1/2025</p>

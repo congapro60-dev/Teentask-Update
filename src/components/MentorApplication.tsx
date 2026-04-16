@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useFirebase } from './FirebaseProvider';
-import { GraduationCap, Briefcase, Award, CheckCircle } from 'lucide-react';
+import { GraduationCap, Briefcase, Award, CheckCircle, Video } from 'lucide-react';
 
 export default function MentorApplication() {
   const { profile, updateProfile } = useFirebase();
@@ -12,7 +12,10 @@ export default function MentorApplication() {
     company: '',
     yearsOfExperience: 1,
     field: '',
-    bio: ''
+    bio: '',
+    projects: '',
+    achievements: '',
+    videoUrl: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,6 +168,51 @@ export default function MentorApplication() {
                   className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
                   placeholder="Chia sẻ ngắn gọn về hành trình sự nghiệp và lý do bạn muốn trở thành Mentor..."
                 />
+              </div>
+
+              <div className="pt-6 border-t border-gray-100">
+                <h3 className="text-lg font-black text-gray-900 mb-2">Thông tin bổ sung (Tùy chọn)</h3>
+                <p className="text-sm text-gray-500 mb-6">Thêm các thông tin này giúp hồ sơ của bạn nổi bật và thu hút học viên hơn.</p>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Các dự án đã tham gia</label>
+                    <textarea
+                      rows={3}
+                      value={formData.projects}
+                      onChange={(e) => setFormData({...formData, projects: e.target.value})}
+                      className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Liệt kê các dự án tiêu biểu bạn đã thực hiện hoặc dẫn dắt..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Thành tích nổi bật</label>
+                    <textarea
+                      rows={3}
+                      value={formData.achievements}
+                      onChange={(e) => setFormData({...formData, achievements: e.target.value})}
+                      className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Giải thưởng, chứng chỉ, hoặc những cột mốc đáng nhớ trong sự nghiệp..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Video giới thiệu (URL)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Video className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="url"
+                        value={formData.videoUrl}
+                        onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                        className="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        placeholder="Link video YouTube, TikTok, hoặc Google Drive..."
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <button

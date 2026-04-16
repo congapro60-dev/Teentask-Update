@@ -231,6 +231,17 @@ export interface ShadowingEvent {
   requirements?: string[];
   benefits?: string[];
   createdAt: number;
+  tier?: 'explorer' | 'insider' | 'elite';
+  tierLabel?: string;
+  durationHours?: number;
+  maxStudents?: number;
+  perks?: string[];
+  includesLunch?: boolean;
+  includesCertificate?: boolean;
+  includesBadge?: boolean;
+  includesLinkedIn?: boolean;
+  includesGiftBag?: boolean;
+  mentorLevel?: 'senior' | 'manager' | 'clevel';
 }
 
 export interface PracticalTask {

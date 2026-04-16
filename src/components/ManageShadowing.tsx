@@ -49,6 +49,17 @@ const ManageShadowing: React.FC = () => {
     durationDays: 7,
     requiredOutput: '',
     skillsGained: '',
+    tier: 'explorer',
+    tierLabel: 'Explorer',
+    durationHours: 3,
+    maxStudents: 15,
+    perks: ['Certificate PDF', 'Q&A với mentor'],
+    includesLunch: false,
+    includesCertificate: true,
+    includesBadge: false,
+    includesLinkedIn: false,
+    includesGiftBag: false,
+    mentorLevel: 'senior'
   });
 
   // Fetch data
@@ -141,6 +152,17 @@ const ManageShadowing: React.FC = () => {
           type: activeTab === 'slots' ? '1-1' : 'workshop',
           status: 'upcoming',
           level: formData.level,
+          tier: formData.tier,
+          tierLabel: formData.tierLabel,
+          durationHours: formData.durationHours,
+          maxStudents: formData.maxStudents,
+          perks: formData.perks,
+          includesLunch: formData.includesLunch,
+          includesCertificate: formData.includesCertificate,
+          includesBadge: formData.includesBadge,
+          includesLinkedIn: formData.includesLinkedIn,
+          includesGiftBag: formData.includesGiftBag,
+          mentorLevel: formData.mentorLevel,
           createdAt: Date.now()
         });
       }
@@ -170,6 +192,17 @@ const ManageShadowing: React.FC = () => {
       durationDays: 7,
       requiredOutput: '',
       skillsGained: '',
+      tier: 'explorer',
+      tierLabel: 'Explorer',
+      durationHours: 3,
+      maxStudents: 15,
+      perks: ['Certificate PDF', 'Q&A với mentor'],
+      includesLunch: false,
+      includesCertificate: true,
+      includesBadge: false,
+      includesLinkedIn: false,
+      includesGiftBag: false,
+      mentorLevel: 'senior'
     });
   };
 
@@ -322,6 +355,40 @@ const ManageShadowing: React.FC = () => {
               
               {activeTab !== 'tasks' && (
                 <>
+                  <div className="mb-6">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Chọn Gói Kiến Tập</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Explorer */}
+                      <div 
+                        onClick={() => setFormData({...formData, tier: 'explorer', tierLabel: 'Explorer', price: 150000, durationHours: 3, maxStudents: 15, slotsTotal: 15, perks: ['Certificate PDF', 'Q&A với mentor'], includesLunch: false, includesCertificate: true, includesBadge: false, includesLinkedIn: false, includesGiftBag: false})}
+                        className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all", formData.tier === 'explorer' ? "border-gray-400 bg-gray-50" : "border-gray-100 hover:border-gray-200 bg-white")}
+                      >
+                        <div className="text-xl mb-1">🥉</div>
+                        <div className="font-black text-gray-900 text-sm">Explorer</div>
+                        <div className="text-[10px] text-gray-500 font-bold mt-1">150k • 3h • Tối đa 15 HS</div>
+                      </div>
+                      {/* Insider */}
+                      <div 
+                        onClick={() => setFormData({...formData, tier: 'insider', tierLabel: 'Insider', price: 350000, durationHours: 5, maxStudents: 8, slotsTotal: 8, perks: ['Certificate + Badge hồ sơ', 'Thực hành task nhỏ', 'Q&A', 'Bữa trưa'], includesLunch: true, includesCertificate: true, includesBadge: true, includesLinkedIn: false, includesGiftBag: false})}
+                        className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all relative", formData.tier === 'insider' ? "border-indigo-500 bg-indigo-50" : "border-indigo-100 hover:border-indigo-200 bg-white")}
+                      >
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">Phổ biến</div>
+                        <div className="text-xl mb-1">🥈</div>
+                        <div className="font-black text-indigo-900 text-sm">Insider</div>
+                        <div className="text-[10px] text-indigo-600/70 font-bold mt-1">350k • 5h • Tối đa 8 HS</div>
+                      </div>
+                      {/* Elite */}
+                      <div 
+                        onClick={() => setFormData({...formData, tier: 'elite', tierLabel: 'Elite', price: 700000, durationHours: 8, maxStudents: 5, slotsTotal: 5, perks: ['Certificate + Badge', 'LinkedIn recommendation', 'Shadowing cá nhân', 'Task thực tế', 'Bữa trưa', 'Networking session', 'Gift bag'], includesLunch: true, includesCertificate: true, includesBadge: true, includesLinkedIn: true, includesGiftBag: true})}
+                        className={cn("cursor-pointer rounded-2xl p-4 border-2 transition-all", formData.tier === 'elite' ? "border-amber-500 bg-amber-50" : "border-amber-100 hover:border-amber-200 bg-white")}
+                      >
+                        <div className="text-xl mb-1">🥇</div>
+                        <div className="font-black text-amber-900 text-sm">Elite</div>
+                        <div className="text-[10px] text-amber-600/70 font-bold mt-1">700k • 8h • Tối đa 5 HS</div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <Input label="Tên Mentor" value={formData.mentorName} onChange={(v: string) => setFormData({...formData, mentorName: v})} />
                     <Input label="Chức danh Mentor" value={formData.mentorTitle} onChange={(v: string) => setFormData({...formData, mentorTitle: v})} placeholder="VD: Senior Designer" />
