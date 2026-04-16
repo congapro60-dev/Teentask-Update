@@ -24,7 +24,7 @@ export default function ContentTab({ activeTab, filter, searchQuery }: ContentTa
       setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    const unsubscribeAds = onSnapshot(collection(db, 'ads'), (snapshot) => {
+    const unsubscribeAds = onSnapshot(collection(db, 'advertisements'), (snapshot) => {
       setAds(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
@@ -55,7 +55,7 @@ export default function ContentTab({ activeTab, filter, searchQuery }: ContentTa
   const handleApproveAd = async (adId: string, status: 'approved' | 'rejected') => {
     setActionLoading(true);
     try {
-      await updateDoc(doc(db, 'ads', adId), { status });
+      await updateDoc(doc(db, 'advertisements', adId), { status });
       setSelectedAd(null);
     } catch (error) {
       console.error("Error approving ad:", error);

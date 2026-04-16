@@ -113,6 +113,8 @@ export default function Layout({ children }: LayoutProps) {
           { id: 'ad3', title: 'Vé xem phim 1k', businessName: 'cgv.vn', imageUrl: 'https://picsum.photos/seed/movie/200/200' },
         ]);
       }
+    }, (error) => {
+      console.error("Error fetching advertisements:", error);
     });
 
     // Fetch market trends for sidebar (Real-time from surveys)
@@ -148,16 +150,11 @@ export default function Layout({ children }: LayoutProps) {
 
         setMarketTrends({ topSkills, popularSalary });
       } else {
-        setMarketTrends({
-          topSkills: [
-            { name: 'Thiết kế đồ họa', count: 1250 },
-            { name: 'Video Editing', count: 980 },
-            { name: 'Content Writing', count: 850 }
-          ],
-          popularSalary: '25.000đ - 35.000đ/h'
-        });
+        setMarketTrends({ topSkills: [], popularSalary: '' });
       }
-    }, (error) => console.error("Error fetching market trends:", error));
+    }, (error) => {
+      console.error("Error fetching market trends:", error);
+    });
 
     // Fetch events
     const qEvents = query(collection(db, 'events'), where('status', '==', 'active'), limit(3));

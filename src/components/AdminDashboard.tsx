@@ -39,18 +39,18 @@ export default function AdminDashboard() {
   const [surveyPricingData, setSurveyPricingData] = useState<any>(null);
 
   useEffect(() => {
-    const unsubJobs = onSnapshot(collection(db, 'jobs'), (s) => setJobs(s.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubAds = onSnapshot(collection(db, 'advertisements'), (s) => setAds(s.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubBookings = onSnapshot(collection(db, 'shadowing_bookings'), (s) => setShadowingBookings(s.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubUsers = onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({id: d.id, ...d.data()}))));
+    const unsubJobs = onSnapshot(collection(db, 'jobs'), (s) => setJobs(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Jobs Error:", e));
+    const unsubAds = onSnapshot(collection(db, 'advertisements'), (s) => setAds(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Ads Error:", e));
+    const unsubBookings = onSnapshot(collection(db, 'shadowing_bookings'), (s) => setShadowingBookings(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Bookings Error:", e));
+    const unsubUsers = onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Users Error:", e));
     const unsubConfig = onSnapshot(doc(db, 'settings', 'admin'), (doc) => {
       if (doc.exists()) setAutoApprove(doc.data().autoApprove || false);
       setLoading(false);
-    });
+    }, (e) => console.error("Admin Config Error:", e));
 
     const fetchSurveyPricing = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'market_surveys'));
+        const snapshot = await getDocs(collection(db, 'quick_surveys'));
         if (!snapshot.empty) {
           const total = snapshot.size;
           const counts: Record<string, number> = { 'Có, nếu chất lượng tốt': 0, 'Không, tôi chỉ muốn miễn phí': 0 };

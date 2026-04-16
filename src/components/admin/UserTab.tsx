@@ -40,10 +40,15 @@ export default function UserTab({ activeTab, filter, searchQuery }: UserTabProps
       });
       setUsers(userData);
       setLoading(false);
+    }, (error) => {
+      console.error("Error fetching users:", error);
+      setLoading(false);
     });
 
-    const unsubscribeNames = onSnapshot(collection(db, 'name_changes'), (snapshot) => {
+    const unsubscribeNames = onSnapshot(collection(db, 'name_change_requests'), (snapshot) => {
       setNameChangeRequests(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.error("Error fetching name change requests:", error);
     });
 
     return () => {
@@ -75,7 +80,7 @@ export default function UserTab({ activeTab, filter, searchQuery }: UserTabProps
   const handleApproveNameChange = async (requestId: string, userId: string, newName: string, status: 'approved' | 'rejected') => {
     setActionLoading(true);
     try {
-      await updateDoc(doc(db, 'name_changes', requestId), { status });
+      await updateDoc(doc(db, 'name_change_requests', requestId), { status });
       if (status === 'approved') {
         await updateDoc(doc(db, 'users', userId), { displayName: newName });
         await addDoc(collection(db, 'notifications'), {

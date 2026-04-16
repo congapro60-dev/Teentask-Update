@@ -82,10 +82,10 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin') ||
-         isBoss() ||
+        (isBoss() ||
          (request.auth.token.email == "cuong.vuviet@thedeweyschools.edu.vn") ||
-         (request.auth.token.email == "vuvietcuonglmnx@gmail.com"));
+         (request.auth.token.email == "vuvietcuonglmnx@gmail.com") ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin'));
     }
 
     function isBusiness() {
