@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface BusinessEditModalProps {
   isOpen: boolean;
@@ -23,6 +24,8 @@ interface BusinessEditModalProps {
 export default function BusinessEditModal({
   isOpen, onClose, businessEditData, setBusinessEditData, saveBusinessProfile, profile, updateProfile
 }: BusinessEditModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -34,7 +37,7 @@ export default function BusinessEditModal({
             className="bg-white rounded-[40px] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-black text-gray-900">Thông tin doanh nghiệp</h3>
+              <h3 className="text-xl font-black text-gray-900">{t('businessInfo')}</h3>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={20} />
               </button>
@@ -43,17 +46,17 @@ export default function BusinessEditModal({
             <div className="p-6 space-y-6 overflow-y-auto no-scrollbar">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tên doanh nghiệp</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('businessName')}</label>
                   <input
                     type="text"
                     value={businessEditData.businessName}
                     onChange={(e) => setBusinessEditData({ ...businessEditData, businessName: e.target.value })}
-                    placeholder="Ví dụ: Công ty TNHH TeenTask Việt Nam"
+                    placeholder={t('businessNamePlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Logo doanh nghiệp (URL)</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('businessLogoUrl')}</label>
                   <input
                     type="text"
                     value={businessEditData.businessLogo}
@@ -65,46 +68,46 @@ export default function BusinessEditModal({
               </div>
 
               <div>
-                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Địa chỉ trụ sở</label>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('headquartersAddress')}</label>
                 <input
                   type="text"
                   value={businessEditData.businessAddress}
                   onChange={(e) => setBusinessEditData({ ...businessEditData, businessAddress: e.target.value })}
-                  placeholder="Số 1, Đường ABC, Quận XYZ, Hà Nội"
+                  placeholder={t('headquartersAddressPlaceholder')}
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Lĩnh vực</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('industry')}</label>
                   <input
                     type="text"
                     value={businessEditData.industry}
                     onChange={(e) => setBusinessEditData({ ...businessEditData, industry: e.target.value })}
-                    placeholder="Ví dụ: Công nghệ, Giáo dục..."
+                    placeholder={t('industryPlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Quy mô</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('companySize')}</label>
                   <select
                     value={businessEditData.companySize}
                     onChange={(e) => setBusinessEditData({ ...businessEditData, companySize: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                   >
-                    <option value="">Chọn quy mô</option>
-                    <option value="1-10 nhân viên">1-10 nhân viên</option>
-                    <option value="11-50 nhân viên">11-50 nhân viên</option>
-                    <option value="51-200 nhân viên">51-200 nhân viên</option>
-                    <option value="200+ nhân viên">200+ nhân viên</option>
+                    <option value="">{t('selectCompanySize')}</option>
+                    <option value="1-10 nhân viên">1-10 {t('employees')}</option>
+                    <option value="11-50 nhân viên">11-50 {t('employees')}</option>
+                    <option value="51-200 nhân viên">51-200 {t('employees')}</option>
+                    <option value="200+ nhân viên">200+ {t('employees')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Năm thành lập</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('foundedYear')}</label>
                   <input
                     type="number"
                     value={businessEditData.foundedYear}
@@ -113,7 +116,7 @@ export default function BusinessEditModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Website</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('website')}</label>
                   <input
                     type="url"
                     value={businessEditData.website}
@@ -125,11 +128,11 @@ export default function BusinessEditModal({
               </div>
 
               <div>
-                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Giới thiệu doanh nghiệp</label>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{t('businessBio')}</label>
                 <textarea
                   value={profile?.bio || ''}
                   onChange={(e) => updateProfile({ bio: e.target.value })}
-                  placeholder="Mô tả ngắn về doanh nghiệp của bạn..."
+                  placeholder={t('businessBioPlaceholderShort')}
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium min-h-[120px]"
                 />
               </div>
@@ -140,7 +143,7 @@ export default function BusinessEditModal({
                 onClick={saveBusinessProfile}
                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100"
               >
-                LƯU THÔNG TIN
+                {t('saveInfo')}
               </button>
             </div>
           </motion.div>

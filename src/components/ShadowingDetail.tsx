@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import { GoogleGenAI } from '@google/genai';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { ShadowingFeedback } from '../types';
+import DynamicText from './DynamicText';
 
 interface ShadowingDetailProps {
   event: any;
@@ -150,9 +151,11 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
               </div>
               <div className="absolute bottom-8 left-10 right-10">
                 <span className={`text-[10px] font-black uppercase tracking-[0.2em] bg-gradient-to-r ${event.color} px-4 py-1.5 rounded-full text-white mb-4 inline-block shadow-2xl border border-white/10`}>
-                  {event.category}
+                  <DynamicText text={event.category} />
                 </span>
-                <h2 className="text-3xl font-black text-white leading-tight tracking-tighter">{event.title}</h2>
+                <h2 className="text-3xl font-black text-white leading-tight tracking-tighter">
+                  <DynamicText text={event.title} />
+                </h2>
               </div>
             </div>
 
@@ -165,9 +168,11 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                       <img src={`https://i.pravatar.cc/100?u=${event.mentorId || event.mentor}`} alt={event.mentorName || event.mentor} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     <div>
-                      <h4 className="text-white font-black text-lg tracking-tight leading-tight">{event.mentorName || event.mentor}</h4>
+                      <h4 className="text-white font-black text-lg tracking-tight leading-tight">
+                        <DynamicText text={event.mentorName || event.mentor} />
+                      </h4>
                       <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">
-                        {event.mentorTitle || event.role} @ {event.companyName || event.company}
+                        <DynamicText text={(event.mentorTitle || event.role) + ' @ ' + (event.companyName || event.company)} />
                       </p>
                       <div className="flex items-center gap-1.5 mt-2">
                         {[1, 2, 3, 4, 5].map((s) => (
@@ -235,9 +240,9 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                   )}
 
                   <h3 className="text-white font-black text-lg tracking-tight mb-4">Mô tả chương trình</h3>
-                  <p className="text-sm leading-relaxed mb-10 font-bold text-slate-400 whitespace-pre-wrap">
-                    {event.description || `Trải nghiệm một ngày làm việc thực thụ tại ${event.companyName || event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor ${event.mentorName || event.mentor}.`}
-                  </p>
+                  <div className="text-sm leading-relaxed mb-10 font-bold text-slate-400 whitespace-pre-wrap">
+                    <DynamicText text={event.description || `Trải nghiệm một ngày làm việc thực thụ tại ${event.companyName || event.company}. Bạn sẽ được tham gia vào các buổi họp team, quan sát quy trình làm việc chuyên nghiệp và nhận được sự hướng dẫn trực tiếp từ Mentor ${event.mentorName || event.mentor}.`} />
+                  </div>
 
                   {event.roadmap && event.roadmap.length > 0 && (
                     <div className="mb-10">
@@ -300,13 +305,17 @@ export default function ShadowingDetail({ event, isOpen, onClose, onChat }: Shad
                         {event.perks.map((perk: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-4">
                             <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={18} />
-                            <span className="font-bold text-slate-300">{perk}</span>
+                            <span className="font-bold text-slate-300">
+                              <DynamicText text={perk} />
+                            </span>
                           </li>
                         ))}
                         {event.customPerks && event.customPerks.map((perk: string, idx: number) => (
                           <li key={`custom-${idx}`} className="flex items-start gap-4">
                             <CheckCircle2 className="text-amber-500 shrink-0 mt-0.5" size={18} />
-                            <span className="font-bold text-slate-300">{perk}</span>
+                            <span className="font-bold text-slate-300">
+                               <DynamicText text={perk} />
+                            </span>
                           </li>
                         ))}
                       </ul>

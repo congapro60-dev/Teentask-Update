@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Calendar, Phone, MapPin, Mail, GraduationCap } from 'lucide-react';
 import { UserProfile } from '../../../types';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface PersonalInfoModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface PersonalInfoModalProps {
 export default function PersonalInfoModal({
   isOpen, onClose, profile, personalInfoData, setPersonalInfoData, savePersonalInfo
 }: PersonalInfoModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -30,7 +33,7 @@ export default function PersonalInfoModal({
                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
                   <User size={20} />
                 </div>
-                <h3 className="text-xl font-black text-gray-900">Thông tin cá nhân</h3>
+                <h3 className="text-xl font-black text-gray-900">{t('personalInfo')}</h3>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={20} />
@@ -40,23 +43,23 @@ export default function PersonalInfoModal({
             <div className="p-6 space-y-8 overflow-y-auto no-scrollbar">
               {/* Basic Info Section */}
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Thông tin cơ bản</h4>
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('basicInfo')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 ml-1">Họ và tên</label>
+                    <label className="text-xs font-bold text-gray-500 ml-1">{t('fullName')}</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                       <input
                         type="text"
                         value={personalInfoData.fullName}
                         onChange={(e) => setPersonalInfoData({ ...personalInfoData, fullName: e.target.value })}
-                        placeholder="Ví dụ: Nguyễn Văn A"
+                        placeholder={t('accountHolderPlaceholder')}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 ml-1">Ngày sinh</label>
+                    <label className="text-xs font-bold text-gray-500 ml-1">{t('dob')}</label>
                     <div className="relative">
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                       <input
@@ -71,7 +74,7 @@ export default function PersonalInfoModal({
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 ml-1">Giới tính</label>
+                    <label className="text-xs font-bold text-gray-500 ml-1">{t('gender')}</label>
                     <div className="flex gap-2">
                       {['Nam', 'Nữ', 'Khác'].map((g) => (
                         <button
@@ -83,20 +86,20 @@ export default function PersonalInfoModal({
                             : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
                           }`}
                         >
-                          {g}
+                          {g === 'Nam' ? t('male') : g === 'Nữ' ? t('female') : t('other')}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 ml-1">Số điện thoại</label>
+                    <label className="text-xs font-bold text-gray-500 ml-1">{t('phoneNumber')}</label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                       <input
                         type="tel"
                         value={personalInfoData.phone}
                         onChange={(e) => setPersonalInfoData({ ...personalInfoData, phone: e.target.value })}
-                        placeholder="Nhập số điện thoại..."
+                        placeholder={t('enterPhoneNumber')}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                       />
                     </div>
@@ -106,22 +109,22 @@ export default function PersonalInfoModal({
 
               {/* Location & Social Section */}
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Vị trí & Liên hệ</h4>
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('locationContact')}</h4>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 ml-1">Địa chỉ / Vị trí hiện tại</label>
+                  <label className="text-xs font-bold text-gray-500 ml-1">{t('addressLocation')}</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
                       value={personalInfoData.location}
                       onChange={(e) => setPersonalInfoData({ ...personalInfoData, location: e.target.value })}
-                      placeholder="Ví dụ: Hà Nội, Việt Nam"
+                      placeholder={t('locationPlaceholder')}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 ml-1">Email liên hệ</label>
+                  <label className="text-xs font-bold text-gray-500 ml-1">{t('contactEmail')}</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -137,28 +140,28 @@ export default function PersonalInfoModal({
               {/* Education Section (if student) */}
               {profile?.role === 'student' && (
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Học vấn</h4>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('education')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-500 ml-1">Trường học</label>
+                      <label className="text-xs font-bold text-gray-500 ml-1">{t('school')}</label>
                       <div className="relative">
                         <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                           type="text"
                           value={personalInfoData.school}
                           onChange={(e) => setPersonalInfoData({ ...personalInfoData, school: e.target.value })}
-                          placeholder="Tên trường học..."
+                          placeholder={t('schoolPlaceholder')}
                           className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-500 ml-1">Lớp</label>
+                      <label className="text-xs font-bold text-gray-500 ml-1">{t('class')}</label>
                       <input
                         type="text"
                         value={personalInfoData.class}
                         onChange={(e) => setPersonalInfoData({ ...personalInfoData, class: e.target.value })}
-                        placeholder="Ví dụ: 12A1"
+                        placeholder={t('classPlaceholder')}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                       />
                     </div>
@@ -168,13 +171,13 @@ export default function PersonalInfoModal({
 
               {/* Bio Section */}
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Giới thiệu</h4>
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('bio')}</h4>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 ml-1">Mô tả bản thân</label>
+                  <label className="text-xs font-bold text-gray-500 ml-1">{t('selfDescription')}</label>
                   <textarea
                     value={personalInfoData.bio}
                     onChange={(e) => setPersonalInfoData({ ...personalInfoData, bio: e.target.value })}
-                    placeholder="Hãy viết vài dòng về bản thân bạn..."
+                    placeholder={t('bioPlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium min-h-[120px] resize-none"
                   />
                 </div>
@@ -186,7 +189,7 @@ export default function PersonalInfoModal({
                 onClick={savePersonalInfo}
                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-[0.98]"
               >
-                LƯU THÔNG TIN
+                {t('saveInfo')}
               </button>
             </div>
           </motion.div>

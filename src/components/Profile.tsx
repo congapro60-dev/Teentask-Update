@@ -126,9 +126,9 @@ export default function Profile() {
   }, [profile]);
 
   const badges = [
-    { icon: '⭐', label: 'Người mới', color: 'bg-blue-50 text-blue-600' },
-    { icon: '🔥', label: 'Chuyên cần', color: 'bg-orange-50 text-orange-600' },
-    { icon: '🏆', label: 'Xuất sắc', color: 'bg-yellow-50 text-yellow-600' },
+    { icon: '⭐', label: t('levelNewbie'), color: 'bg-blue-50 text-blue-600' },
+    { icon: '🔥', label: t('hardWorking'), color: 'bg-orange-50 text-orange-600' },
+    { icon: '🏆', label: t('excellent'), color: 'bg-yellow-50 text-yellow-600' },
   ];
 
   // Mock parental verification status
@@ -145,10 +145,10 @@ export default function Profile() {
         linkedInStatus: 'pending'
       });
       setShowLinkedInModal(false);
-      alert("Đã gửi! Admin xác minh trong 24 giờ làm việc");
+      alert(t('linkedInSubmitted'));
     } catch (e) {
       console.error(e);
-      alert("Có lỗi xảy ra, vui lòng thử lại.");
+      alert(t('errorOccurred'));
     }
   };
 
@@ -162,7 +162,7 @@ export default function Profile() {
         color: 'text-green-600',
         bgColor: 'bg-green-100',
         badgeColor: 'bg-green-50 text-green-600 border-green-100',
-        label: 'Đã kiểm duyệt',
+        label: t('moderated'),
         statusText: 'Verified'
       };
     }
@@ -174,7 +174,7 @@ export default function Profile() {
           color: 'text-orange-600',
           bgColor: 'bg-orange-100',
           badgeColor: 'bg-orange-50 text-orange-600 border-orange-100',
-          label: 'Chưa kiểm duyệt',
+          label: t('notModerated'),
           statusText: 'Pending'
         };
       case 'rejected':
@@ -183,7 +183,7 @@ export default function Profile() {
           color: 'text-red-600',
           bgColor: 'bg-red-100',
           badgeColor: 'bg-red-50 text-red-600 border-red-100',
-          label: 'Từ chối kiểm duyệt',
+          label: t('rejectedModeration'),
           statusText: 'Rejected'
         };
       default:
@@ -192,7 +192,7 @@ export default function Profile() {
           color: 'text-gray-400',
           bgColor: 'bg-gray-100',
           badgeColor: 'bg-gray-50 text-gray-400 border-gray-100',
-          label: 'Chưa xác minh',
+          label: t('unverified'),
           statusText: 'Unverified'
         };
     }
@@ -397,7 +397,7 @@ export default function Profile() {
       setIsRelationshipModalOpen(false);
       setSelectedFriend(null);
       setRelationshipTitle('');
-      alert('Đã thêm mối quan hệ!');
+      alert(t('relationshipAdded'));
     } catch (error) {
       console.error("Error adding relationship:", error);
     }
@@ -438,10 +438,10 @@ export default function Profile() {
       setIsReviewModalOpen(false);
       setSelectedApp(null);
       setReviewData({ rating: 5, comment: '' });
-      alert('Cảm ơn bạn đã đánh giá!');
+      alert(t('reviewSuccess'));
     } catch (error) {
       console.error("Error submitting review:", error);
-      alert('Có lỗi xảy ra khi gửi đánh giá.');
+      alert(t('reviewError'));
     } finally {
       setSubmittingReview(false);
     }
@@ -466,7 +466,7 @@ export default function Profile() {
   const handleNameChangeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameChangeData.newName || !nameChangeData.reason || !nameChangeData.proofUrl) {
-      alert('Vui lòng điền đầy đủ thông tin và tải lên minh chứng.');
+      alert(t('errorIncompleteInfo'));
       return;
     }
     setSubmittingNameChange(true);
@@ -474,7 +474,7 @@ export default function Profile() {
       await submitNameChangeRequest(nameChangeData.newName, nameChangeData.reason, nameChangeData.proofUrl);
       setIsNameChangeModalOpen(false);
       setNameChangeData({ newName: '', reason: '', proofUrl: '' });
-      alert('Yêu cầu đổi tên đã được gửi và đang chờ phê duyệt.');
+      alert(t('nameChangePending'));
     } catch (error) {
       console.error("Error submitting name change request:", error);
       alert('Có lỗi xảy ra khi gửi yêu cầu.');
@@ -500,7 +500,7 @@ export default function Profile() {
       await updateProfile({ balance: (profile?.balance || 0) + Number(depositAmount) });
       setIsFinancialModalOpen(false);
       setDepositAmount('');
-      alert('Nạp tiền thành công!');
+      alert(t('depositSuccess'));
     } catch (error) {
       console.error("Error depositing:", error);
     }
@@ -511,7 +511,7 @@ export default function Profile() {
     try {
       await updateProfile({ bankAccount: bankInfo });
       setIsFinancialModalOpen(false);
-      alert('Liên kết ngân hàng thành công!');
+      alert(t('bankLinkedSuccess'));
     } catch (error) {
       console.error("Error linking bank:", error);
     }
@@ -520,7 +520,7 @@ export default function Profile() {
   const handleBuyVip = async () => {
     const VIP_PRICE = 100000;
     if ((profile?.balance || 0) < VIP_PRICE) {
-      alert('Số dư không đủ để mua VIP (100,000đ)');
+      alert(t('lowBalanceVip'));
       return;
     }
     try {
@@ -529,7 +529,7 @@ export default function Profile() {
         isVip: true 
       });
       setIsFinancialModalOpen(false);
-      alert('Chúc mừng! Bạn đã trở thành thành viên VIP.');
+      alert(t('buyVipSuccess'));
     } catch (error) {
       console.error("Error buying VIP:", error);
     }
@@ -562,10 +562,10 @@ export default function Profile() {
     try {
       await updateProfile(studentEditData);
       setIsStudentEditModalOpen(false);
-      alert('Cập nhật hồ sơ thành công!');
+      alert(t('updateProfileSuccess'));
     } catch (error) {
       console.error("Error updating student profile:", error);
-      alert('Có lỗi xảy ra khi cập nhật hồ sơ.');
+      alert(t('errorOccurred'));
     }
   };
 
@@ -573,10 +573,10 @@ export default function Profile() {
     try {
       await updateProfile(businessEditData);
       setIsBusinessEditModalOpen(false);
-      alert('Cập nhật hồ sơ doanh nghiệp thành công!');
+      alert(t('updateBusinessSuccess'));
     } catch (error) {
       console.error("Error updating business profile:", error);
-      alert('Có lỗi xảy ra khi cập nhật hồ sơ.');
+      alert(t('errorOccurred'));
     }
   };
 
@@ -584,10 +584,10 @@ export default function Profile() {
     try {
       await updateProfile(personalInfoData);
       setIsPersonalInfoModalOpen(false);
-      alert('Cập nhật thông tin cá nhân thành công!');
+      alert(t('updatePersonalInfoSuccess'));
     } catch (error) {
       console.error("Error updating personal info:", error);
-      alert('Có lỗi xảy ra khi cập nhật thông tin.');
+      alert(t('errorOccurred'));
     }
   };
 
@@ -616,9 +616,9 @@ export default function Profile() {
     // In a real app, this might come from completed tasks/courses
     // For now, we'll use a deterministic but varied level based on the skill name length
     const hash = skill.length % 3;
-    if (hash === 0) return { percent: 33, label: 'Cơ bản' };
-    if (hash === 1) return { percent: 66, label: 'Khá' };
-    return { percent: 100, label: 'Thành thạo' };
+    if (hash === 0) return { percent: 33, label: t('basic') };
+    if (hash === 1) return { percent: 66, label: t('intermediate') };
+    return { percent: 100, label: t('proficient') };
   };
 
   return (
@@ -640,9 +640,9 @@ export default function Profile() {
       <div className="max-w-5xl mx-auto px-6 mt-8">
         <div className="flex p-1 bg-gray-100 rounded-2xl">
           {[
-            { id: 'profile', label: 'Hồ sơ', icon: User },
-            { id: 'activity', label: 'Hoạt động', icon: Clock },
-            { id: 'saved', label: 'Đã lưu', icon: Heart }
+            { id: 'profile', label: t('profile'), icon: User },
+            { id: 'activity', label: t('activity'), icon: Clock },
+            { id: 'saved', label: t('saved'), icon: Heart }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -717,12 +717,12 @@ export default function Profile() {
                   />
                 ) : (
                   <div className="bg-white rounded-[32px] p-8 text-center border border-gray-100">
-                    <p className="text-gray-500">Vui lòng chọn vai trò để xem chi tiết hồ sơ.</p>
+                    <p className="text-gray-500">{t('selectRoleDetail')}</p>
                     <button 
                       onClick={() => setIsRoleModalOpen(true)}
                       className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
                     >
-                      Chọn vai trò
+                      {t('selectRole')}
                     </button>
                   </div>
                 )}

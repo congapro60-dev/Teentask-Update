@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserPlus, Users, Check, X, Heart, User, Clock, Plus } from 'lucide-react';
 import { FriendRequest, Relationship, UserProfile } from '../../types';
+import { useFirebase } from '../FirebaseProvider';
 
 interface SocialSectionProps {
   friendRequests: FriendRequest[];
@@ -20,6 +21,8 @@ export default function SocialSection({
   relationshipRequests, acceptRelationship, rejectRelationship,
   relationships, friends, setSelectedFriend, setIsRelationshipModalOpen
 }: SocialSectionProps) {
+  const { t } = useFirebase();
+
   return (
     <div className="space-y-6">
       {/* Friend Requests */}
@@ -27,7 +30,7 @@ export default function SocialSection({
         <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
             <UserPlus size={18} className="text-indigo-600" />
-            Yêu cầu kết bạn ({friendRequests.length})
+            {t('friendRequests')} ({friendRequests.length})
           </h3>
           <div className="space-y-3">
             {friendRequests.map(req => (
@@ -72,7 +75,7 @@ export default function SocialSection({
         <div className="bg-white rounded-[32px] p-6 shadow-sm border border-amber-100 bg-amber-50/30">
           <h3 className="font-bold text-amber-900 flex items-center gap-2 mb-4">
             <Heart size={18} className="text-amber-500" />
-            Yêu cầu mối quan hệ ({relationshipRequests.length})
+            {t('relationshipRequests')} ({relationshipRequests.length})
           </h3>
           <div className="space-y-3">
             {relationshipRequests.map(rel => (
@@ -90,7 +93,7 @@ export default function SocialSection({
                   <div>
                     <p className="text-sm font-bold text-gray-900">{rel.userName}</p>
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                      Muốn xác nhận là: <span className="text-indigo-600">{rel.title}</span>
+                      {t('wantsToConfirmAs')} <span className="text-indigo-600">{rel.title}</span>
                     </p>
                   </div>
                 </div>
@@ -118,7 +121,7 @@ export default function SocialSection({
       <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
           <Heart size={18} className="text-red-500" />
-          Mối quan hệ ({relationships.filter(r => r.status === 'accepted').length})
+          {t('relationships')} ({relationships.filter(r => r.status === 'accepted').length})
         </h3>
         <div className="grid grid-cols-1 gap-3">
           {relationships.filter(r => r.status === 'accepted').length > 0 ? (
@@ -139,10 +142,10 @@ export default function SocialSection({
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                       rel.type === 'Family' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
                     }`}>
-                      {rel.type === 'Family' ? 'Gia đình' : 'Công việc'}
+                      {rel.type === 'Family' ? t('family') : t('work')}
                     </span>
                     <span className="text-[10px] text-gray-400 font-bold">• {rel.title}</span>
-                    <span className="text-[10px] text-green-600 font-black uppercase tracking-widest ml-auto">Đã xác thực</span>
+                    <span className="text-[10px] text-green-600 font-black uppercase tracking-widest ml-auto">{t('verified')}</span>
                   </div>
                 </div>
               </div>
@@ -153,11 +156,11 @@ export default function SocialSection({
                 <div className="p-3 bg-amber-50 rounded-2xl border border-amber-100">
                   <p className="text-[10px] text-amber-700 font-bold flex items-center gap-2">
                     <Clock size={12} />
-                    Bạn có {relationships.filter(r => r.status === 'pending').length} yêu cầu đang chờ phản hồi
+                    {t('youHavePendingRequests')} ({relationships.filter(r => r.status === 'pending').length})
                   </p>
                 </div>
               )}
-              <p className="text-center text-xs text-gray-400 py-4">Chưa có mối quan hệ nào được xác thực.</p>
+              <p className="text-center text-xs text-gray-400 py-4">{t('noRelationshipsVerified')}</p>
             </div>
           )}
         </div>
@@ -167,7 +170,7 @@ export default function SocialSection({
       <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
           <Users size={18} className="text-indigo-600" />
-          Bạn bè ({friends.length})
+          {t('friends')} ({friends.length})
         </h3>
         <div className="space-y-3">
           {friends.length > 0 ? (
@@ -200,7 +203,7 @@ export default function SocialSection({
               </div>
             ))
           ) : (
-            <p className="text-center text-xs text-gray-400 py-4">Bạn chưa có người bạn nào.</p>
+            <p className="text-center text-xs text-gray-400 py-4">{t('noFriendsYet')}</p>
           )}
         </div>
       </div>

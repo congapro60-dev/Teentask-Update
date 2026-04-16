@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check } from 'lucide-react';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface SkillsModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface SkillsModalProps {
 export default function SkillsModal({
   isOpen, onClose, predefinedSkills, tempSkills, toggleSkill, saveSkills
 }: SkillsModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -25,14 +28,14 @@ export default function SkillsModal({
             className="w-full max-w-md bg-white rounded-t-[40px] p-8 max-h-[90vh] flex flex-col"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black">Kỹ năng của bạn</h2>
+              <h2 className="text-2xl font-black">{t('yourSkills')}</h2>
               <button onClick={onClose} className="p-2 bg-gray-100 rounded-full">
                 <X size={20} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar mb-6">
-              <p className="text-sm text-gray-500 mb-4">Chọn những kỹ năng bạn đang sở hữu để nhận được gợi ý việc làm phù hợp nhất.</p>
+              <p className="text-sm text-gray-500 mb-4">{t('skillsModalDesc')}</p>
               <div className="flex flex-wrap gap-2">
                 {predefinedSkills.map((skill) => {
                   const isSelected = tempSkills.includes(skill);
@@ -58,7 +61,7 @@ export default function SkillsModal({
               onClick={saveSkills}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100"
             >
-              LƯU THAY ĐỔI
+              {t('saveChanges').toUpperCase()}
             </button>
           </motion.div>
         </div>

@@ -12,13 +12,14 @@ import Clock from './Clock';
 import OnboardingTutorial from './OnboardingTutorial';
 import AppRatingWidget from './AppRatingWidget';
 import MarketSurveyModal from './MarketSurveyModal';
+import DynamicText from './DynamicText';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { profile, switchRole, t } = useFirebase();
+  const { profile, switchRole, t, language, setLanguage } = useFirebase();
   const BOSS_EMAIL = "congapro60@gmail.com";
   const ADMIN_EMAILS = [
     BOSS_EMAIL.toLowerCase(),
@@ -34,6 +35,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [ads, setAds] = useState<any[]>([]);
@@ -220,8 +222,8 @@ export default function Layout({ children }: LayoutProps) {
     { id: 'nav-home', icon: Home, label: t('home'), path: '/' },
     { id: 'nav-messages', icon: MessageSquare, label: t('messages'), path: '/messages', badge: unreadMessages > 0 ? unreadMessages : undefined },
     { id: 'nav-notifications', icon: Bell, label: t('notifications'), path: '/notifications', badge: unreadNotifications > 0 ? unreadNotifications : undefined },
-    { id: 'nav-career', icon: BookOpen, label: 'Kiến thức', path: '/career-insights' },
-    { id: 'nav-edu-network', icon: Globe, label: 'Edu Network', path: '/edu-network', isNew: true },
+    { id: 'nav-career', icon: BookOpen, label: t('knowledge'), path: '/career-insights' },
+    { id: 'nav-edu-network', icon: Globe, label: t('eduNetwork'), path: '/edu-network', isNew: true },
     { id: 'nav-legal', icon: Scale, label: t('legalSafety'), path: '/legal' },
     { id: 'nav-about', icon: Info, label: t('aboutProject'), path: '/about' },
   ];
@@ -246,8 +248,8 @@ export default function Layout({ children }: LayoutProps) {
       ...(profile?.isMentor ? [{ id: 'nav-shadowing-manage', icon: GraduationCap, label: t('manageShadowing'), path: '/shadowing-manage' }] : []),
     ],
     student: [
-      { id: 'nav-mentors', icon: GraduationCap, label: 'Tìm Mentor', path: '/mentors', isNew: true },
-      { id: 'nav-saved', icon: Heart, label: t('saved'), path: '/saved' },
+    { id: 'nav-mentors', icon: GraduationCap, label: t('findMentor'), path: '/mentors', isNew: true },
+    { id: 'nav-saved', icon: Heart, label: t('saved'), path: '/saved' },
     ]
   };
 
@@ -266,7 +268,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Trending / Horoscope Widget */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Xu hướng Gen Z</h3>
+          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">{t('genZTrends')}</h3>
           <Rocket size={16} className="text-orange-500" />
         </div>
         <div className="space-y-4">
@@ -277,27 +279,27 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               <div>
                 <p className="text-sm font-black text-gray-900 group-hover:text-orange-600 transition-colors">{skill.name}</p>
-                <p className="text-[10px] text-gray-400 font-bold">{skill.count} quan tâm</p>
+                <p className="text-[10px] text-gray-400 font-bold">{skill.count} {t('interested')}</p>
               </div>
             </div>
           ))}
           
           {marketTrends.popularSalary && (
             <div className="pt-4 border-t border-gray-50">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Lương kỳ vọng</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('expectedSalary')}</p>
               <p className="text-sm font-black text-green-600">{marketTrends.popularSalary}</p>
             </div>
           )}
         </div>
         <button className="w-full mt-6 py-3 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition-all">
-          Xem chi tiết xu hướng
+          {t('viewTrendDetails')}
         </button>
       </div>
 
       {/* Calendar Widget */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">Lịch sự kiện</h3>
+          <h3 className="font-black text-gray-900 uppercase text-[10px] tracking-widest">{t('eventCalendar')}</h3>
           <Calendar size={16} className="text-indigo-600" />
         </div>
         <div className="space-y-4">
@@ -318,16 +320,24 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             );
           }) : (
-            <div className="text-center py-4 text-gray-500 text-sm">Chưa có sự kiện nào</div>
+            <div className="text-center py-4 text-gray-500 text-sm">{t('noEvents')}</div>
           )}
         </div>
       </div>
 
       {/* Footer Links */}
       <div className="px-4 flex flex-wrap gap-x-4 gap-y-2">
-        {['Quyền riêng tư', 'Điều khoản', 'Quảng cáo', 'Lựa chọn quảng cáo', 'Cookies', 'Xem thêm', 'TeenTask © 2026'].map((link, i) => (
-          <span key={i} className="text-[10px] font-bold text-gray-400 hover:underline cursor-pointer">
-            {link}
+        {[
+          { label: t('privacyPolicy'), key: 'privacy' },
+          { label: t('terms'), key: 'terms' },
+          { label: t('advertising'), key: 'ads' },
+          { label: t('adChoices'), key: 'ad-choices' },
+          { label: t('cookies'), key: 'cookies' },
+          { label: t('seeMore'), key: 'more' },
+          { label: t('copyright'), key: 'copyright' }
+        ].map((link, i) => (
+          <span key={link.key} className="text-[10px] font-bold text-gray-400 hover:underline cursor-pointer">
+            {link.label}
           </span>
         ))}
       </div>
@@ -352,7 +362,7 @@ export default function Layout({ children }: LayoutProps) {
             >
               TEENTASK
             </h1>
-            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">Học viện Kỹ năng Thực chiến</span>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">{t('academySubtitle')}</span>
           </div>
         </div>
 
@@ -371,13 +381,55 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Language Switcher Desktop */}
+          <div className="hidden md:flex items-center mr-2 relative">
+            <button 
+              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-2 text-gray-600"
+              title={t('language')}
+            >
+              <Globe size={20} />
+              <span className="text-[10px] font-black uppercase">{language}</span>
+            </button>
+            
+            <AnimatePresence>
+              {showLanguageMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-1 min-w-[120px] z-[70]"
+                >
+                  <button
+                    onClick={() => { setLanguage('vi'); setShowLanguageMenu(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors",
+                      language === 'vi' ? "bg-indigo-50 text-indigo-600" : "hover:bg-gray-50 text-gray-600"
+                    )}
+                  >
+                    Tiếng Việt
+                  </button>
+                  <button
+                    onClick={() => { setLanguage('en'); setShowLanguageMenu(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors",
+                      language === 'en' ? "bg-indigo-50 text-indigo-600" : "hover:bg-gray-50 text-gray-600"
+                    )}
+                  >
+                    English
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {!profile ? (
             <button 
               onClick={() => navigate('/profile')}
               className="px-4 py-2 bg-gradient-to-r from-[#1877F2] to-[#4F46E5] text-white rounded-full text-xs sm:text-sm font-black uppercase tracking-widest hover:shadow-lg hover:shadow-blue-200 transition-all active:scale-95 flex items-center gap-2 border border-white/20"
             >
               <LogOut size={16} className="rotate-180" />
-              <span>Đăng nhập</span>
+              <span>{t('login')}</span>
             </button>
           ) : (
             <>
@@ -391,7 +443,7 @@ export default function Layout({ children }: LayoutProps) {
                       : "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100"
                   )}
                 >
-                  {isBoss ? "Boss" : "Vai trò"}: {userRole}
+                  {isBoss ? "Boss" : t('role')}: {t(userRole)}
                   <Settings size={10} className={cn("transition-transform", isRoleSwitcherOpen && "rotate-90")} />
                 </button>
                 
@@ -403,12 +455,12 @@ export default function Layout({ children }: LayoutProps) {
                       exit={{ opacity: 0, y: 10 }}
                       className="absolute top-full left-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 z-[70] overflow-hidden p-1"
                     >
-                      <div className="px-3 py-2 text-[8px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">Đổi vai trò trải nghiệm</div>
+                      <div className="px-3 py-2 text-[8px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">{t('changeRoleExperience')}</div>
                       {[
-                        { id: 'student', label: 'Học sinh', color: 'text-blue-600' },
-                        { id: 'parent', label: 'Phụ huynh', color: 'text-green-600' },
-                        { id: 'business', label: 'Doanh nghiệp', color: 'text-purple-600' },
-                        { id: 'admin', label: 'Quản trị viên', color: 'text-indigo-600', bossOnly: true },
+                        { id: 'student', label: t('student'), color: 'text-blue-600' },
+                        { id: 'parent', label: t('parent'), color: 'text-green-600' },
+                        { id: 'business', label: t('business'), color: 'text-purple-600' },
+                        { id: 'admin', label: t('admin'), color: 'text-indigo-600', bossOnly: true },
                       ].filter(r => {
                         if (isBoss) return true;
                         if (r.bossOnly) return false;
@@ -452,7 +504,7 @@ export default function Layout({ children }: LayoutProps) {
                 <button 
                   onClick={() => navigate('/search-users')}
                   className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-all relative group"
-                  title="Tìm kiếm người dùng"
+                  title={t('searchUsers')}
                 >
                   <Search size={20} />
                 </button>
@@ -461,7 +513,7 @@ export default function Layout({ children }: LayoutProps) {
               <button 
                 onClick={() => navigate('/wallet')}
                 className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-all relative group"
-                title="Ví của tôi"
+                title={t('myWallet')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
               </button>
@@ -494,13 +546,13 @@ export default function Layout({ children }: LayoutProps) {
         <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-700 text-xs font-bold">
             <AlertTriangle size={14} />
-            <span>Bạn chưa hoàn thiện thông tin doanh nghiệp. Hãy cập nhật để tăng uy tín!</span>
+            <span>{t('businessInfoIncomplete')}</span>
           </div>
           <button 
             onClick={() => navigate('/profile')}
             className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-700 underline"
           >
-            Cập nhật ngay
+            {t('updateNow')}
           </button>
         </div>
       )}
@@ -572,7 +624,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-sm">
-                  {userRole === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : (profile?.displayName || 'Người dùng')}
+                  {userRole === 'business' ? (profile?.businessName || t('unnamedBusiness')) : (profile?.displayName || t('user'))}
                 </span>
                 {profile?.isVip && (
                   <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest">VIP Member</span>
@@ -597,7 +649,7 @@ export default function Layout({ children }: LayoutProps) {
             
             {/* Sponsored Section - Looping Ads */}
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 mt-4 overflow-hidden">
-              <h3 className="font-bold text-gray-500 mb-4 px-2 uppercase text-[10px] tracking-widest">Được tài trợ</h3>
+              <h3 className="font-bold text-gray-500 mb-4 px-2 uppercase text-[10px] tracking-widest">{t('sponsored')}</h3>
               <div className="relative h-24">
                 <AnimatePresence mode="wait">
                   {ads.length > 0 && (
@@ -616,8 +668,12 @@ export default function Layout({ children }: LayoutProps) {
                         />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-black text-gray-900 leading-tight truncate">{ads[currentAdIndex].title}</h4>
-                        <p className="text-[10px] text-gray-400 font-bold mt-1 truncate">{ads[currentAdIndex].businessName}</p>
+                        <h4 className="text-sm font-black text-gray-900 leading-tight truncate">
+                          <DynamicText text={ads[currentAdIndex].title} />
+                        </h4>
+                        <p className="text-[10px] text-gray-400 font-bold mt-1 truncate">
+                          <DynamicText text={ads[currentAdIndex].businessName} />
+                        </p>
                       </div>
                     </motion.div>
                   )}
@@ -671,6 +727,31 @@ export default function Layout({ children }: LayoutProps) {
               </div>
 
               <div className="p-4 space-y-4">
+                {/* Language Switcher Mobile */}
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('language')}</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setLanguage('vi')}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl text-xs font-bold border transition-all",
+                        language === 'vi' ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-200 text-gray-600"
+                      )}
+                    >
+                      Tiếng Việt
+                    </button>
+                    <button 
+                      onClick={() => setLanguage('en')}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl text-xs font-bold border transition-all",
+                        language === 'en' ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-200 text-gray-600"
+                      )}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
+
                 <NavLink to="/profile" onClick={() => setIsMenuOpen(false)} className="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-gray-50 transition-colors relative overflow-hidden">
                   {profile?.email === "congapro60@gmail.com" ? (
                     <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
@@ -707,9 +788,9 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">
-                      {userRole === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : (profile?.displayName || 'Người dùng')}
+                      {userRole === 'business' ? (profile?.businessName || t('unnamedBusiness')) : (profile?.displayName || t('user'))}
                     </h3>
-                    <p className="text-xs text-gray-500 font-medium">Xem trang cá nhân của bạn</p>
+                    <p className="text-xs text-gray-500 font-medium">{t('viewYourProfile')}</p>
                   </div>
                 </NavLink>
 

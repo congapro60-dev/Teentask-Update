@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Trash2 } from 'lucide-react';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface StudentEditModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface StudentEditModalProps {
 export default function StudentEditModal({
   isOpen, onClose, studentEditData, setStudentEditData, saveStudentProfile
 }: StudentEditModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -24,7 +27,7 @@ export default function StudentEditModal({
             className="bg-white rounded-[40px] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-black text-gray-900">Chỉnh sửa Teen CV</h3>
+              <h3 className="text-xl font-black text-gray-900">{t('editCv')}</h3>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={20} />
               </button>
@@ -34,12 +37,12 @@ export default function StudentEditModal({
               {/* Achievements */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Thành tích học tập</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">{t('academicAchievements')}</label>
                   <button 
                     onClick={() => setStudentEditData({ ...studentEditData, achievements: [...studentEditData.achievements, ''] })}
                     className="text-[10px] font-bold text-indigo-600 flex items-center gap-1"
                   >
-                    <Plus size={12} /> Thêm mới
+                    <Plus size={12} /> {t('addNew')}
                   </button>
                 </div>
                 {studentEditData.achievements.map((ach, idx) => (
@@ -52,7 +55,7 @@ export default function StudentEditModal({
                         newAch[idx] = e.target.value;
                         setStudentEditData({ ...studentEditData, achievements: newAch });
                       }}
-                      placeholder="Ví dụ: Giải Nhất HSG Thành phố môn Toán"
+                      placeholder={t('achievementExample')}
                       className="flex-1 px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                     />
                     <button 
@@ -71,18 +74,18 @@ export default function StudentEditModal({
               {/* Portfolio Links */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Portfolio & Dự án</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">{t('portfolioProjects')}</label>
                   <button 
                     onClick={() => setStudentEditData({ ...studentEditData, portfolioLinks: [...studentEditData.portfolioLinks, { title: '', url: '' }] })}
                     className="text-[10px] font-bold text-indigo-600 flex items-center gap-1"
                   >
-                    <Plus size={12} /> Thêm mới
+                    <Plus size={12} /> {t('addNew')}
                   </button>
                 </div>
                 {studentEditData.portfolioLinks.map((link, idx) => (
                   <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Liên kết #{idx + 1}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{t('link')} #{idx + 1}</span>
                       <button 
                         onClick={() => {
                           const newLinks = studentEditData.portfolioLinks.filter((_, i) => i !== idx);
@@ -101,7 +104,7 @@ export default function StudentEditModal({
                         newLinks[idx].title = e.target.value;
                         setStudentEditData({ ...studentEditData, portfolioLinks: newLinks });
                       }}
-                      placeholder="Tên dự án/Portfolio"
+                      placeholder={t('projectTitle')}
                       className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium"
                     />
                     <input
@@ -125,7 +128,7 @@ export default function StudentEditModal({
                 onClick={saveStudentProfile}
                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100"
               >
-                LƯU THÔNG TIN
+                {t('saveInfo')}
               </button>
             </div>
           </motion.div>

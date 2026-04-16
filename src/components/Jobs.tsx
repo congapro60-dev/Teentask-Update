@@ -1,5 +1,6 @@
 import { Search, Filter, MapPin, Clock, DollarSign, Building2, Sparkles, Briefcase, MessageSquare, Heart, Bell, X, Zap, Check, ArrowRight, GraduationCap, UserCheck, Users } from 'lucide-react';
 import SmartImage from './SmartImage';
+import DynamicText from './DynamicText';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -609,7 +610,9 @@ export default function Jobs() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base group-hover:text-[#4F46E5] transition-colors leading-tight">{job.title}</h3>
+                    <h3 className="font-bold text-gray-900 text-base group-hover:text-[#4F46E5] transition-colors leading-tight">
+                      <DynamicText text={job.title} />
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <p 
                         onClick={(e) => {
@@ -618,7 +621,7 @@ export default function Jobs() {
                         }}
                         className="text-[10px] text-gray-400 font-black uppercase tracking-widest cursor-pointer hover:text-[#4F46E5] transition-colors"
                       >
-                        {job.company}
+                        <DynamicText text={job.company} />
                       </p>
                       <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
                         job.jobStatus === 'Active' ? 'bg-green-50 text-green-600 border-green-100' :

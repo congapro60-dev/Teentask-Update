@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { UserProfile } from '../../../types';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface RoleModalProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface RoleModalProps {
 }
 
 export default function RoleModal({ isOpen, onClose, profile, handleRoleChange }: RoleModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -22,7 +25,7 @@ export default function RoleModal({ isOpen, onClose, profile, handleRoleChange }
             className="w-full max-w-md bg-white rounded-t-[40px] p-8"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black">Chọn vai trò</h2>
+              <h2 className="text-2xl font-black">{t('selectRole')}</h2>
               <button onClick={onClose} className="p-2 bg-gray-100 rounded-full">
                 <X size={20} />
               </button>
@@ -30,9 +33,9 @@ export default function RoleModal({ isOpen, onClose, profile, handleRoleChange }
 
             <div className="space-y-3">
               {[
-                { id: 'student', label: 'Học sinh', icon: '👨‍🎓', desc: 'Tìm việc làm & kiến tập' },
-                { id: 'parent', label: 'Phụ huynh', icon: '🛡️', desc: 'Giám sát & hỗ trợ con' },
-                { id: 'business', label: 'Doanh nghiệp', icon: '🏢', desc: 'Tuyển dụng nhân tài trẻ' },
+                { id: 'student', label: t('student'), icon: '👨‍🎓', desc: t('studentDesc') },
+                { id: 'parent', label: t('parent'), icon: '🛡️', desc: t('parentDesc') },
+                { id: 'business', label: t('business'), icon: '🏢', desc: t('businessDesc') },
               ].map((role) => (
                 <button
                   key={role.id}

@@ -12,6 +12,7 @@ import ShadowingDetail from './ShadowingDetail';
 import { MOCK_JOBS, MOCK_SHADOWING } from '../mockData';
 import ParentVerificationModal from './ParentVerificationModal';
 import VipAdsSlider from './VipAdsSlider';
+import DynamicText from './DynamicText';
 
 export default function Home() {
   const { profile, toggleSaveJob, toggleSaveShadowing, toggleSaveCourse, t } = useFirebase();
@@ -545,10 +546,10 @@ export default function Home() {
         items={[
           { id: 'news-info', title: 'Thông tin dự án & Hướng dẫn sử dụng', image: 'https://picsum.photos/seed/project/400/250', date: t('newest'), path: '/about' },
           { id: 'news-survey', title: 'Tham gia khảo sát dự án TeenTask', image: 'https://picsum.photos/seed/survey/400/250', date: t('newest'), path: '/survey' },
-          { id: 1, title: 'TeenTask ra mắt tính năng mới', image: 'https://picsum.photos/seed/news1/400/250', date: t('hoursAgo').replace('{count}', '2'), path: '/news' },
-          { id: 2, title: 'Top 10 công việc mùa hè cho học sinh', image: 'https://picsum.photos/seed/news2/400/250', date: t('hoursAgo').replace('{count}', '5'), path: '/news' },
-          { id: 3, title: 'Kỹ năng cần thiết trong kỷ nguyên AI', image: 'https://picsum.photos/seed/news3/400/250', date: t('daysAgo').replace('{count}', '1'), path: '/news' },
-        ]}
+    { id: 1, title: 'TeenTask ra mắt tính năng mới', image: 'https://picsum.photos/seed/news1/400/250', date: t('hoursAgo').replace('{count}', '2'), path: '/news' },
+    { id: 2, title: 'Top 10 công việc mùa hè cho học sinh', image: 'https://picsum.photos/seed/news2/400/250', date: t('hoursAgo').replace('{count}', '5'), path: '/news' },
+    { id: 3, title: 'Kỹ năng cần thiết trong kỷ nguyên AI', image: 'https://picsum.photos/seed/news3/400/250', date: t('daysAgo').replace('{count}', '1'), path: '/news' },
+  ]}
         renderItem={(item: any) => (
           <div 
             onClick={() => navigate(item.path || '/news')}
@@ -557,7 +558,9 @@ export default function Home() {
             <img src={item.image} alt={item.title} className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
             <div className="p-4">
               <span className="text-[10px] font-bold text-[#1877F2] uppercase tracking-wider">{item.date}</span>
-              <h4 className="font-bold text-gray-900 mt-1 line-clamp-2">{item.title}</h4>
+              <h4 className="font-bold text-gray-900 mt-1 line-clamp-2">
+                <DynamicText text={item.title} />
+              </h4>
             </div>
           </div>
         )}
@@ -601,8 +604,12 @@ export default function Home() {
                 )}
               </div>
               <div className="p-5">
-                <h4 className="font-bold text-gray-900 text-lg line-clamp-1 mb-1">{course.title}</h4>
-                <p className="text-xs text-gray-500 mb-4">{course.provider}</p>
+                <h4 className="font-bold text-gray-900 text-lg line-clamp-1 mb-1">
+                  <DynamicText text={course.title} />
+                </h4>
+                <p className="text-xs text-gray-500 mb-4">
+                  <DynamicText text={course.provider} />
+                </p>
                 
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex flex-col">
@@ -669,8 +676,12 @@ export default function Home() {
                   <Briefcase size={24} />
                 )}
               </div>
-              <h4 className="font-bold text-gray-900 line-clamp-1 mb-1">{job.title}</h4>
-              <p className="text-xs text-gray-500 mb-4">{job.businessName || job.company}</p>
+              <h4 className="font-bold text-gray-900 line-clamp-1 mb-1">
+                <DynamicText text={job.title} />
+              </h4>
+              <p className="text-xs text-gray-500 mb-4">
+                <DynamicText text={job.businessName || job.company} />
+              </p>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-black text-[#1877F2]">{typeof job.salary === 'number' ? `${job.salary.toLocaleString('vi-VN')}đ` : job.salary}</span>
                 <span className="text-[10px] font-bold text-gray-400">{job.location}</span>
@@ -684,8 +695,8 @@ export default function Home() {
       {/* School Jobs Carousel */}
       {schoolJobs.length > 0 && (
         <CarouselSection 
-          title="🏫 Việc làm từ Nhà trường & Giáo viên" 
-          subtitle="An toàn tuyệt đối · Đã được kiểm duyệt bởi đơn vị giáo dục"
+          title={t('schoolJobsTitle')} 
+          subtitle={t('schoolJobsSubtitle')}
           icon={GraduationCap}
           items={schoolJobs}
           renderItem={(job: any) => {
@@ -697,7 +708,7 @@ export default function Home() {
               >
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
                   <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                    AN TOÀN
+                    {t('safe')}
                   </span>
                   <button 
                     onClick={(e) => {
@@ -719,8 +730,12 @@ export default function Home() {
                     <Briefcase size={24} />
                   )}
                 </div>
-                <h4 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-16">{job.title}</h4>
-                <p className="text-xs text-gray-500 mb-4">{job.businessName || job.company}</p>
+                <h4 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-16">
+                  <DynamicText text={job.title} />
+                </h4>
+                <p className="text-xs text-gray-500 mb-4">
+                  <DynamicText text={job.businessName || job.company} />
+                </p>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-black text-green-600">{typeof job.salary === 'number' ? `${job.salary.toLocaleString('vi-VN')}đ` : job.salary}</span>
                   <span className="text-[10px] font-bold text-gray-400">{job.location}</span>
@@ -759,12 +774,16 @@ export default function Home() {
               </button>
               <img src={item.imageUrl || item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 flex flex-col justify-end">
-                <h4 className="text-white font-bold text-lg leading-tight mb-2">{item.title}</h4>
+                <h4 className="text-white font-bold text-lg leading-tight mb-2">
+                  <DynamicText text={item.title} />
+                </h4>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md overflow-hidden">
                     <img src={item.mentorPhoto || `https://i.pravatar.cc/100?u=${item.mentorId || item.mentor}`} alt={item.mentorName || item.mentor} referrerPolicy="no-referrer" />
                   </div>
-                  <p className="text-white/80 text-[10px] font-medium">{item.mentorName || item.mentor} @ {item.companyName || item.company}</p>
+                  <p className="text-white/80 text-[10px] font-medium">
+                    <DynamicText text={item.mentorName || item.mentor} /> @ <DynamicText text={item.companyName || item.company} />
+                  </p>
                 </div>
               </div>
             </div>

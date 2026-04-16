@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Building2, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile } from '../../../types';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface FinancialModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function FinancialModal({
   bankInfo, setBankInfo, handleLinkBank, profile
 }: FinancialModalProps) {
   const navigate = useNavigate();
+  const { t } = useFirebase();
   
   return (
     <AnimatePresence>
@@ -35,7 +37,7 @@ export default function FinancialModal({
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
               <h3 className="text-xl font-bold text-gray-900">
-                {financialAction === 'deposit' ? 'Nạp tiền' : financialAction === 'bank' ? 'Liên kết ngân hàng' : 'Mua VIP'}
+                {financialAction === 'deposit' ? t('deposit') : financialAction === 'bank' ? t('linkBank') : t('buyVip')}
               </h3>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={20} />
@@ -46,12 +48,12 @@ export default function FinancialModal({
               {financialAction === 'deposit' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Số tiền nạp (VNĐ)</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('depositAmountWithUnit')}</label>
                     <input
                       type="number"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      placeholder="Ví dụ: 50000"
+                      placeholder={t('amountPlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] transition-all"
                     />
                   </div>
@@ -59,7 +61,7 @@ export default function FinancialModal({
                     onClick={handleDeposit}
                     className="w-full py-4 bg-[#4F46E5] text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#4338CA] transition-all"
                   >
-                    Xác nhận nạp tiền
+                    {t('confirmDeposit')}
                   </button>
                 </div>
               )}
@@ -67,32 +69,32 @@ export default function FinancialModal({
               {financialAction === 'bank' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Tên ngân hàng</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('bankName')}</label>
                     <input
                       type="text"
                       value={bankInfo.bankName}
                       onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })}
-                      placeholder="Ví dụ: Vietcombank"
+                      placeholder={t('bankNamePlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Số tài khoản</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('accountNumber')}</label>
                     <input
                       type="text"
                       value={bankInfo.accountNumber}
                       onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
-                      placeholder="Nhập số tài khoản"
+                      placeholder={t('accountNumberPlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Chủ tài khoản</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('accountHolder')}</label>
                     <input
                       type="text"
                       value={bankInfo.accountHolder}
                       onChange={(e) => setBankInfo({ ...bankInfo, accountHolder: e.target.value })}
-                      placeholder="NGUYEN VAN A"
+                      placeholder={t('accountHolderPlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] transition-all uppercase"
                     />
                   </div>
@@ -100,7 +102,7 @@ export default function FinancialModal({
                     onClick={handleLinkBank}
                     className="w-full py-4 bg-[#4F46E5] text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#4338CA] transition-all"
                   >
-                    Lưu thông tin
+                    {t('saveInfo')}
                   </button>
                 </div>
               )}
@@ -111,13 +113,13 @@ export default function FinancialModal({
                     <Award size={40} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-2">Gói VIP TeenTask</h4>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">{t('vipPackage')}</h4>
                     <p className="text-sm text-gray-500">
-                      Đặc quyền VIP: Ưu tiên duyệt hồ sơ, huy hiệu vàng nổi bật, và nhiều ưu đãi khác.
+                      {t('vipBenefits')}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-2xl">
-                    <p className="text-sm text-gray-400 mb-1">Giá gói</p>
+                    <p className="text-sm text-gray-400 mb-1">{t('packagePrice')}</p>
                     <p className="text-2xl font-black text-gray-900">100,000đ</p>
                   </div>
                   <button
@@ -132,7 +134,7 @@ export default function FinancialModal({
                       : 'bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-amber-100 hover:from-amber-500 hover:to-amber-700'
                     }`}
                   >
-                    {profile?.isVip ? 'Bạn đã là VIP' : 'Xem gói VIP'}
+                    {profile?.isVip ? t('alreadyVip') : t('viewVipPackages')}
                   </button>
                 </div>
               )}

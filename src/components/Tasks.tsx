@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFirebase, db } from './FirebaseProvider';
 import { doc, updateDoc, increment, arrayUnion, addDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { cn } from '../lib/utils';
+import DynamicText from './DynamicText';
 
 interface Task {
   id: string;
@@ -259,9 +260,11 @@ export default function Tasks() {
                           <Target size={24} />
                         </div>
                         <div>
-                          <h4 className="text-sm font-black text-slate-900">{task.title}</h4>
+                          <h4 className="text-sm font-black text-slate-900">
+                            <DynamicText text={task.title} />
+                          </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {task.companyName || 'Doanh nghiệp'}
+                            <DynamicText text={task.companyName || 'Doanh nghiệp'} />
                           </p>
                         </div>
                       </div>
@@ -271,7 +274,7 @@ export default function Tasks() {
                     </div>
 
                     <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
-                      {task.description}
+                      <DynamicText text={task.description} />
                     </p>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -288,7 +291,7 @@ export default function Tasks() {
                     <div className="flex flex-wrap gap-2">
                       {task.skillsGained?.map((skill: string) => (
                         <span key={skill} className="px-2 py-1 bg-slate-50 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-md">
-                          {skill}
+                          <DynamicText text={skill} />
                         </span>
                       ))}
                     </div>

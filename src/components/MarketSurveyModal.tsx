@@ -11,6 +11,7 @@ export default function MarketSurveyModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [formData, setFormData] = useState<any>({
     // Student fields
@@ -62,8 +63,11 @@ export default function MarketSurveyModal() {
     setIsSubmitting(true);
     try {
       if (profile.uid === 'demo-user') {
-        // Simulate success for demo mode
-        setIsOpen(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsOpen(false);
+          setIsSuccess(false);
+        }, 3000);
         return;
       }
 
@@ -111,9 +115,14 @@ export default function MarketSurveyModal() {
         marketSurveyCompleted: true
       });
 
-      setIsOpen(false);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsSuccess(false);
+      }, 3000);
     } catch (error) {
-      console.error("Error submitting survey:", error);
+      const { handleFirestoreError, OperationType } = await import('./FirebaseProvider');
+      handleFirestoreError(error, OperationType.WRITE, 'market_surveys');
     } finally {
       setIsSubmitting(false);
     }
@@ -648,105 +657,144 @@ export default function MarketSurveyModal() {
     <>
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl relative"
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            className="w-full max-w-lg bg-white rounded-[32px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] relative"
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white relative">
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+            {isSuccess ? (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-12 text-center space-y-6"
               >
-                <X size={20} />
-              </button>
-              <div className="flex items-center gap-3 mb-2">
-                <Sparkles className="text-yellow-300" />
-                <h2 className="text-xl font-black">Khảo sát nhanh (1 phút)</h2>
-              </div>
-              <p className="text-indigo-100 text-sm">
-                {profile.role === 'student' && "Giúp TeenTask hiểu bạn hơn để cải thiện các tính năng Thị trường, Tài chính và So sánh!"}
-                {profile.role === 'parent' && "Chia sẻ mong muốn của bạn để TeenTask đồng hành tốt nhất cùng hành trình của con!"}
-                {profile.role === 'business' && "Giúp chúng tôi tối ưu nguồn lực và kết nối nhân tài phù hợp với doanh nghiệp của bạn!"}
-              </p>
-              
-              {/* Progress Bar */}
-              <div className="mt-6 flex gap-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-1.5 flex-1 rounded-full bg-white/20 overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-white"
-                      initial={{ width: 0 }}
-                      animate={{ width: step >= i ? '100%' : '0%' }}
-                      transition={{ duration: 0.3 }}
-                    />
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1, rotate: 360 }}
+                  transition={{ type: "spring", duration: 0.8 }}
+                  className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto"
+                >
+                  <CheckCircle2 size={48} />
+                </motion.div>
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-black text-gray-900">Tuyệt vời!</h2>
+                  <p className="text-gray-600 font-medium">Cảm ơn bạn đã hoàn thành khảo sát. Ý kiến của bạn sẽ giúp TeenTask trở nên hoàn thiện hơn!</p>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-indigo-600 font-bold animate-pulse">
+                  <Sparkles size={16} />
+                  <span>Đang quay lại trang chủ...</span>
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white relative">
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all"
+                  >
+                    <X size={20} />
+                  </button>
+                  <div className="flex items-center gap-3 mb-3">
+                    <motion.div
+                      animate={{ rotate: [0, 15, -15, 0] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <Sparkles className="text-amber-300" />
+                    </motion.div>
+                    <h2 className="text-2xl font-black tracking-tight">Khảo sát Gen Z (1 phút)</h2>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <p className="text-white/80 text-sm leading-relaxed font-medium">
+                    {profile.role === 'student' && "Giúp TeenTask hiểu bạn hơn để cải thiện các tính năng Thị trường, Tài chính và So sánh!"}
+                    {profile.role === 'parent' && "Chia sẻ mong muốn của bạn để TeenTask đồng hành tốt nhất cùng hành trình của con!"}
+                    {profile.role === 'business' && "Giúp chúng tôi tối ưu nguồn lực và kết nối nhân tài phù hợp với doanh nghiệp của bạn!"}
+                  </p>
+                  
+                  {/* Progress Bar */}
+                  <div className="mt-8 flex gap-2">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="h-2 flex-1 rounded-full bg-white/20 overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                          initial={{ width: 0 }}
+                          animate={{ width: step >= i ? '100%' : '0%' }}
+                          transition={{ duration: 0.5, ease: "circOut" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Body */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              {profile.role === 'student' && renderStudentSurvey()}
-              {profile.role === 'parent' && renderParentSurvey()}
-              {profile.role === 'business' && renderBusinessSurvey()}
-            </div>
+                {/* Body */}
+                <div className="p-8 max-h-[50vh] overflow-y-auto custom-scrollbar bg-white">
+                  {profile.role === 'student' && renderStudentSurvey()}
+                  {profile.role === 'parent' && renderParentSurvey()}
+                  {profile.role === 'business' && renderBusinessSurvey()}
+                </div>
 
-            {/* Footer Actions */}
-            <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-white">
-              {step > 1 ? (
-                <button 
-                  onClick={() => setStep(step - 1)}
-                  className="px-4 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Quay lại
-                </button>
-              ) : <div></div>}
+                {/* Footer Actions */}
+                <div className="p-8 border-t border-gray-100 flex justify-between items-center bg-white">
+                  {step > 1 ? (
+                    <button 
+                      onClick={() => setStep(step - 1)}
+                      className="px-6 py-3 text-gray-400 font-bold hover:text-gray-900 transition-colors uppercase tracking-widest text-[10px]"
+                    >
+                      Quay lại
+                    </button>
+                  ) : <div></div>}
 
-              {step < 4 ? (
-                <button 
-                  onClick={handleNext}
-                  disabled={
-                    (profile.role === 'student' && (
-                      (step === 1 && (!formData.expectedSalary || !formData.payForShadowing || !formData.skillCourseBudget || (formData.payForShadowing === 'Có, nếu chất lượng tốt' && !formData.shadowingPrice))) ||
-                      (step === 2 && (!formData.desiredSkill || !formData.location)) ||
-                      (step === 3 && !formData.knowsLaborLaw)
-                    )) ||
-                    (profile.role === 'parent' && (
-                      (step === 1 && !formData.topConcern) ||
-                      (step === 2 && (!formData.investmentReadiness || !formData.monthlyDevelopmentBudget)) ||
-                      (step === 3 && !formData.monitoringPreference)
-                    )) ||
-                    (profile.role === 'business' && (
-                      (step === 1 && (!formData.hiringNeed || !formData.recruitmentBudget)) ||
-                      (step === 2 && !formData.trainingField) ||
-                      (step === 3 && !formData.mentorCapability)
-                    ))
-                  }
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Tiếp theo <ChevronRight size={18} />
-                </button>
-              ) : (
-                <button 
-                  onClick={handleSubmit}
-                  disabled={
-                    (profile.role === 'student' && !formData.currentPlatform) ||
-                    (profile.role === 'parent' && !formData.infoChannel) ||
-                    (profile.role === 'business' && !formData.partnershipGoal) ||
-                    isSubmitting
-                  }
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isSubmitting ? 'Đang gửi...' : (
-                    <>Hoàn tất <CheckCircle2 size={18} /></>
+                  {step < 4 ? (
+                    <button 
+                      onClick={handleNext}
+                      disabled={
+                        (profile.role === 'student' && (
+                          (step === 1 && (!formData.expectedSalary || !formData.payForShadowing || !formData.skillCourseBudget || (formData.payForShadowing === 'Có, nếu chất lượng tốt' && !formData.shadowingPrice))) ||
+                          (step === 2 && (!formData.desiredSkill || !formData.location)) ||
+                          (step === 3 && !formData.knowsLaborLaw)
+                        )) ||
+                        (profile.role === 'parent' && (
+                          (step === 1 && !formData.topConcern) ||
+                          (step === 2 && (!formData.investmentReadiness || !formData.monthlyDevelopmentBudget)) ||
+                          (step === 3 && !formData.monitoringPreference)
+                        )) ||
+                        (profile.role === 'business' && (
+                          (step === 1 && (!formData.hiringNeed || !formData.recruitmentBudget)) ||
+                          (step === 2 && !formData.trainingField) ||
+                          (step === 3 && !formData.mentorCapability)
+                        ))
+                      }
+                      className="flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                    >
+                      Tiếp theo <ChevronRight size={16} />
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleSubmit}
+                      disabled={
+                        (profile.role === 'student' && !formData.currentPlatform) ||
+                        (profile.role === 'parent' && !formData.infoChannel) ||
+                        (profile.role === 'business' && !formData.partnershipGoal) ||
+                        isSubmitting
+                      }
+                      className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                            <Sparkles size={14} />
+                          </motion.div>
+                          Đang gửi...
+                        </span>
+                      ) : (
+                        <>Hoàn tất <CheckCircle2 size={16} /></>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </motion.div>
         </div>
       )}

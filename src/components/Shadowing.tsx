@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { doc, getDoc, setDoc, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
 import { db, auth, useFirebase } from './FirebaseProvider';
 import ShadowingDetail from './ShadowingDetail';
+import DynamicText from './DynamicText';
 import { cn } from '../lib/utils';
 
 import { MOCK_SHADOWING } from '../mockData';
@@ -69,17 +70,17 @@ const WorkshopCard = ({ workshop, index, onClick }: { workshop: any, index: numb
           </div>
           <div>
             <p className="text-sm font-black text-slate-900 flex items-center gap-1">
-              {workshop?.mentorName || workshop?.mentor}
+              <DynamicText text={workshop?.mentorName || workshop?.mentor} />
               {workshop?.linkedInStatus === 'verified' && <span className="text-[#0077B5] text-[10px]" title="LinkedIn Verified">✓</span>}
             </p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">
-              {workshop?.mentorTitle || workshop?.role} @ {workshop?.companyName || workshop?.company}
+              <DynamicText text={(workshop?.mentorTitle || workshop?.role) + ' @ ' + (workshop?.companyName || workshop?.company)} />
             </p>
           </div>
         </div>
 
         <h3 className="text-xl font-black text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
-          {workshop?.title}
+          <DynamicText text={workshop?.title} />
         </h3>
 
         <div className="space-y-3 mb-8">
@@ -532,15 +533,15 @@ export default function Shadowing() {
                   <div className="absolute bottom-8 left-8 right-8">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="px-3 py-1 bg-amber-400 text-slate-950 text-[9px] font-black uppercase tracking-widest rounded-lg">
-                        {event.category}
+                        <DynamicText text={event.category} />
                       </div>
                       <div className="flex items-center gap-1.5 text-white/80 text-[10px] font-bold">
                         <MapPin size={12} className="text-amber-400" />
-                        {event.location}
+                        <DynamicText text={event.location} />
                       </div>
                     </div>
                     <h3 className="text-2xl font-black text-white leading-tight tracking-tight group-hover:text-amber-400 transition-colors line-clamp-2">
-                      {event.title}
+                      <DynamicText text={event.title} />
                     </h3>
                   </div>
                 </div>

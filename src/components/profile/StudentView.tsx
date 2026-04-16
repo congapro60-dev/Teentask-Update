@@ -64,14 +64,14 @@ export default function StudentView({
                 value={tempBio}
                 onChange={(e) => setTempBio(e.target.value)}
                 className="w-full p-4 bg-gray-50 border-2 border-indigo-100 rounded-2xl text-sm focus:bg-white outline-none transition-all min-h-[120px]"
-                placeholder="Viết gì đó về bản thân bạn..."
+                placeholder={t('bioPlaceholder')}
               />
               <div className="flex gap-2">
                 <button 
                   onClick={() => setIsEditingBio(false)}
                   className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold"
                 >
-                  Hủy
+                  {t('cancel')}
                 </button>
                 <button 
                   onClick={async () => {
@@ -80,13 +80,13 @@ export default function StudentView({
                   }}
                   className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-100"
                 >
-                  Lưu thay đổi
+                  {t('saveChanges')}
                 </button>
               </div>
             </div>
           ) : (
             <p className="text-sm text-gray-600 leading-relaxed">
-              {profile?.bio || 'Chưa có mô tả giới thiệu.'}
+              {profile?.bio || t('noBio')}
             </p>
           )}
         </div>
@@ -97,16 +97,16 @@ export default function StudentView({
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
                 <FileText className="text-amber-400" size={24} />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hồ sơ chuyên nghiệp</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('professionalProfile')}</span>
               </div>
-              <h3 className="text-xl font-black mb-2 tracking-tight">Trình tạo CV TeenTask</h3>
-              <p className="text-white/80 text-xs mb-6 max-w-[200px]">Tạo và quản lý CV chuyên nghiệp để ứng tuyển việc làm & kiến tập.</p>
+              <h3 className="text-xl font-black mb-2 tracking-tight">{t('cvBuilder')}</h3>
+              <p className="text-white/80 text-xs mb-6 max-w-[200px]">{t('cvBuilderDesc')}</p>
               <button 
                 onClick={() => navigate('/cv-builder')}
                 className="bg-white text-[#1877F2] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform active:scale-95 flex items-center gap-2"
               >
                 <Edit2 size={14} />
-                {profile?.cvId ? 'Chỉnh sửa CV' : 'Tạo CV mới'}
+                {profile?.cvId ? t('editCv') : t('createCvNow')}
               </button>
             </div>
             <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform"></div>
@@ -119,8 +119,8 @@ export default function StudentView({
                 <CalendarDays size={24} />
               </div>
               <div>
-                <h4 className="text-sm font-black text-slate-900">Lịch trình kiến tập</h4>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Xem các buổi đã đăng ký</p>
+                <h4 className="text-sm font-black text-slate-900">{t('shadowingSchedule')}</h4>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t('viewRegisteredSessions')}</p>
               </div>
             </div>
             <ChevronRight size={20} className="text-slate-300 group-hover:text-primary transition-all" />
@@ -200,7 +200,7 @@ export default function StudentView({
                       );
                     })
                   ) : (
-                    <p className="text-xs text-gray-400 italic py-2">Chưa có kỹ năng nào được chọn</p>
+                    <p className="text-xs text-gray-400 italic py-2">{t('noSkillsSelected')}</p>
                   )}
                 </div>
 
@@ -223,7 +223,7 @@ export default function StudentView({
             </div>
 
             <div>
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Thành tích học tập</h4>
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t('academicAchievements')}</h4>
               <div className="space-y-2">
                 {(profile?.achievements || []).length > 0 ? (
                   profile?.achievements.map((ach, idx) => (
@@ -233,7 +233,7 @@ export default function StudentView({
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-400 italic">Chưa có thành tích nào</p>
+                  <p className="text-xs text-gray-400 italic">{t('noAchievements')}</p>
                 )}
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function StudentView({
         <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-6">
             <Briefcase size={18} className="text-[#4F46E5]" />
-            Việc làm của tôi
+            {t('myJobs')}
           </h3>
 
           <div className="space-y-4">
@@ -284,16 +284,16 @@ export default function StudentView({
                         app.finalStatus === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
                         'bg-amber-50 text-amber-600 border-amber-100'
                       }`}>
-                        {app.finalStatus === 'completed' ? 'Hoàn thành' :
-                         app.finalStatus === 'accepted' ? 'Đã nhận' :
-                         app.finalStatus === 'rejected' ? 'Từ chối' : 'Đang chờ'}
+                        {app.finalStatus === 'completed' ? t('completed') :
+                         app.finalStatus === 'accepted' ? t('accepted') :
+                         app.finalStatus === 'rejected' ? t('rejected') : t('pending')}
                       </span>
                     </div>
                     
                     {isPendingLong && (
                       <div className="mt-2 flex items-center gap-2 p-2 bg-amber-100/50 rounded-xl text-[10px] font-bold text-amber-700 border border-amber-200">
                         <AlertTriangle size={12} />
-                        <span>Phụ huynh chưa duyệt sau 48h.</span>
+                        <span>{t('parentPending48h')}</span>
                       </div>
                     )}
 
@@ -305,19 +305,19 @@ export default function StudentView({
                         }}
                         className="mt-3 w-full py-2 bg-white text-[#4F46E5] border border-indigo-100 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-colors"
                       >
-                        <Star size={14} /> Đánh giá
+                        <Star size={14} /> {t('review')}
                       </button>
                     )}
                     {app.finalStatus === 'completed' && (app as any).reviewed && (
                       <div className="mt-3 w-full py-2 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2">
-                        <Check size={14} /> Đã đánh giá
+                        <Check size={14} /> {t('reviewed')}
                       </div>
                     )}
                   </div>
                 );
               })
             ) : (
-              <p className="text-center text-xs text-gray-400 py-4">Bạn chưa ứng tuyển công việc nào.</p>
+              <p className="text-center text-xs text-gray-400 py-4">{t('noJoinedJobs')}</p>
             )}
           </div>
         </div>

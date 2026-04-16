@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, MapPin, Clock, DollarSign, Briefcase, CheckCircle2, ShieldCheck, MessageSquare, Heart, Sparkles, Loader2 } from 'lucide-react';
 import { useFirebase } from './FirebaseProvider';
 import { GoogleGenAI } from '@google/genai';
+import DynamicText from './DynamicText';
 
 interface JobDetailProps {
   job: any;
@@ -153,13 +154,15 @@ export default function JobDetail({
                   <img src={job.logo} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black tracking-tighter text-gray-900 leading-tight">{job.title}</h2>
+                  <h2 className="text-2xl font-black tracking-tighter text-gray-900 leading-tight">
+                    <DynamicText text={job.title} />
+                  </h2>
                   <div className="flex flex-wrap items-center gap-3 mt-1">
                     <p 
                       onClick={handleCompanyClick}
                       className="text-sm text-gray-400 font-bold uppercase tracking-wider cursor-pointer hover:text-[#4F46E5] transition-colors"
                     >
-                      {job.company}
+                      <DynamicText text={job.company} />
                     </p>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                       job.jobStatus === 'Active' ? 'bg-green-50 text-green-600 border-green-100' :
@@ -286,7 +289,7 @@ export default function JobDetail({
                     {job.responsibilities?.map((item: string, i: number) => (
                       <li key={i} className="flex items-start gap-3 text-sm text-gray-600 leading-relaxed group">
                         <div className="mt-2 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 group-hover:scale-125 transition-transform" />
-                        {item}
+                        <DynamicText text={item} />
                       </li>
                     ))}
                   </ul>
@@ -302,7 +305,7 @@ export default function JobDetail({
                     {job.qualifications?.map((item: string, i: number) => (
                       <li key={i} className="flex items-start gap-3 text-sm text-gray-600 leading-relaxed group">
                         <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 group-hover:scale-125 transition-transform" />
-                        {item}
+                        <DynamicText text={item} />
                       </li>
                     ))}
                   </ul>
@@ -319,7 +322,7 @@ export default function JobDetail({
                       {job.benefits?.map((item: string, i: number) => (
                         <li key={i} className="flex items-start gap-3 text-sm text-gray-700 leading-relaxed group">
                           <div className="mt-2 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0 group-hover:scale-125 transition-transform" />
-                          {item}
+                          <DynamicText text={item} />
                         </li>
                       ))}
                     </ul>

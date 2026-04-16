@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Users, Heart, Briefcase as BriefcaseIcon } from 'lucide-react';
 import { UserProfile } from '../../../types';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface RelationshipModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export default function RelationshipModal({
   isOpen, onClose, selectedFriend, relationshipType, setRelationshipType,
   relationshipTitle, setRelationshipTitle, handleAddRelationship
 }: RelationshipModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -29,7 +32,7 @@ export default function RelationshipModal({
             className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl"
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-              <h3 className="text-xl font-bold text-gray-900">Thiết lập mối quan hệ</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('setupRelationship')}</h3>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={20} />
               </button>
@@ -48,13 +51,13 @@ export default function RelationshipModal({
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedFriend?.displayName}</h4>
-                  <p className="text-xs text-gray-500">Thêm người này vào danh sách mối quan hệ</p>
+                  <p className="text-xs text-gray-500">{t('addRelationDesc')}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Loại mối quan hệ</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{t('relationshipType')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setRelationshipType('Family')}
@@ -62,7 +65,7 @@ export default function RelationshipModal({
                         relationshipType === 'Family' ? 'border-red-500 bg-red-50 text-red-600' : 'border-gray-100 bg-white text-gray-400'
                       }`}
                     >
-                      <Heart size={16} /> Gia đình
+                      <Heart size={16} /> {t('family')}
                     </button>
                     <button
                       onClick={() => setRelationshipType('Professional')}
@@ -70,18 +73,18 @@ export default function RelationshipModal({
                         relationshipType === 'Professional' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-100 bg-white text-gray-400'
                       }`}
                     >
-                      <BriefcaseIcon size={16} /> Công việc
+                      <BriefcaseIcon size={16} /> {t('work')}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Danh xưng / Chức danh</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{t('relationshipTitleLabel')}</label>
                   <input
                     type="text"
                     value={relationshipTitle}
                     onChange={(e) => setRelationshipTitle(e.target.value)}
-                    placeholder={relationshipType === 'Family' ? 'Ví dụ: Bố, Mẹ, Anh trai...' : 'Ví dụ: Đồng nghiệp, Quản lý...'}
+                    placeholder={relationshipType === 'Family' ? t('familyExample') : t('workExample')}
                     className="w-full px-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600/20 outline-none transition-all text-sm font-medium"
                   />
                 </div>
@@ -92,7 +95,7 @@ export default function RelationshipModal({
                 disabled={!relationshipTitle}
                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 disabled:opacity-50"
               >
-                XÁC NHẬN
+                {t('confirm').toUpperCase()}
               </button>
             </div>
           </motion.div>

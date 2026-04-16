@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from './FirebaseProvider';
+import { db, useFirebase } from './FirebaseProvider';
 import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle, BookOpen, Award, ChevronRight, ChevronDown, Globe, LogIn, Search, Users } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useFirebase();
   const [stats, setStats] = useState({ users: '100+', jobs: '30+', apps: '50+' });
 
   useEffect(() => {
@@ -31,14 +32,14 @@ export default function LandingPage() {
   }, []);
 
   const criteriaList = [
-    "Dành riêng cho 14–18 tuổi",
-    "Xác minh phụ huynh bắt buộc",
-    "Job Shadowing có thu phí",
-    "Xác minh doanh nghiệp",
-    "Tuân thủ luật lao động VN",
-    "Teen CV chuyên biệt",
-    "Hệ thống đánh giá 2 chiều",
-    "Miễn phí cho học sinh"
+    t('dedicated1418'),
+    t('parentVerificationRequired'),
+    t('paidJobShadowing'),
+    t('businessVerification'),
+    t('vnLaborLaw'),
+    t('specializedTeenCv'),
+    t('twoWayRating'),
+    t('freeForStudents')
   ];
 
   const platforms = [
@@ -53,12 +54,12 @@ export default function LandingPage() {
       data: ['❌', '❌', '❌', '✅', '⚠️', '❌', '✅', '❌'] 
     },
     { 
-      name: "Việc làm tốt", 
+      name: t('platformViecLamTot'), 
       isHighlight: false,
       data: ['❌', '❌', '❌', '✅', '⚠️', '❌', '⚠️', '❌'] 
     },
     { 
-      name: "Facebook Groups", 
+      name: t('platformFacebookGroups'), 
       isHighlight: false,
       data: ['❌', '❌', '❌', '❌', '❌', '❌', '❌', '✅'] 
     }
@@ -73,6 +74,30 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+      {/* Language Switcher Floating */}
+      <div className="fixed top-6 right-6 z-[100] flex gap-2">
+        <button 
+          onClick={() => setLanguage('vi')}
+          className={`px-3 py-1.5 rounded-full text-xs font-black transition-all border ${
+            language === 'vi' 
+              ? 'bg-white text-indigo-700 border-white shadow-lg scale-110' 
+              : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+          }`}
+        >
+          VI
+        </button>
+        <button 
+          onClick={() => setLanguage('en')}
+          className={`px-3 py-1.5 rounded-full text-xs font-black transition-all border ${
+            language === 'en' 
+              ? 'bg-white text-indigo-700 border-white shadow-lg scale-110' 
+              : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+          }`}
+        >
+          EN
+        </button>
+      </div>
+
       {/* SECTION 1: HERO */}
       <section className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0F0C29] via-[#302B63] to-[#4F46E5] px-6 py-20 overflow-hidden">
         {/* Decorative background elements */}
@@ -90,24 +115,24 @@ export default function LandingPage() {
         >
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
-              <ShieldCheck size={16} className="text-emerald-400" /> Xác minh phụ huynh
+              <ShieldCheck size={16} className="text-emerald-400" /> {t('parentVerification')}
             </span>
             <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
-              <Briefcase size={16} className="text-blue-400" /> Việc làm thực tế
+              <Briefcase size={16} className="text-blue-400" /> {t('realJobs')}
             </span>
             <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
-              <GraduationCap size={16} className="text-purple-400" /> Job Shadowing
+              <GraduationCap size={16} className="text-purple-400" /> {t('jobShadowing')}
             </span>
           </div>
 
           <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight">
-            TeenTask
+            {t('heroTitle')}
           </h1>
           <p className="text-xl md:text-2xl text-white/80 max-w-2xl mb-4 leading-relaxed">
-            Nơi học sinh Việt Nam tích lũy kinh nghiệm thực chiến, phát triển kỹ năng và kết nối với chuyên gia hàng đầu.
+            {t('heroSubtitle')}
           </p>
           <p className="text-lg text-white/60 italic mb-12">
-            "Không chỉ là tìm việc — TeenTask là hành trình phát triển bản thân có hệ thống"
+            {t('heroQuote')}
           </p>
 
           {/* 1. BADGE "KHÔNG CẦN CÀI APP" — Ý tưởng từ Claude AI */}
@@ -118,13 +143,13 @@ export default function LandingPage() {
             className="flex flex-wrap justify-center gap-2 mb-8"
           >
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-emerald-400" /> Không cần cài đặt
+              <CheckCircle2 size={14} className="text-emerald-400" /> {t('noInstallNeeded')}
             </span>
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
-              <Globe size={14} className="text-blue-300" /> Dùng ngay trên trình duyệt
+              <Globe size={14} className="text-blue-300" /> {t('useOnBrowser')}
             </span>
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-amber-300" /> Bảo mật Google OAuth
+              <ShieldCheck size={14} className="text-amber-300" /> {t('googleOAuthSecurity')}
             </span>
           </motion.div>
 
@@ -138,7 +163,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">1</div>
               <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
-                <Globe size={14} /> Vào web
+                <Globe size={14} /> {t('step1')}
               </div>
             </div>
             
@@ -147,7 +172,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">2</div>
               <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
-                <LogIn size={14} /> Đăng nhập Google
+                <LogIn size={14} /> {t('step2')}
               </div>
             </div>
 
@@ -156,7 +181,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">3</div>
               <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
-                <Search size={14} /> Tìm việc ngay
+                <Search size={14} /> {t('step3')}
               </div>
             </div>
           </motion.div>
@@ -166,13 +191,13 @@ export default function LandingPage() {
               onClick={() => navigate('/profile')}
               className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-lg shadow-xl hover:scale-105 transition-transform"
             >
-              Bắt đầu ngay — Miễn phí
+              {t('startNowFree')}
             </button>
             <button 
               onClick={() => navigate('/quick-survey')}
               className="px-8 py-4 bg-transparent text-white border-2 border-white/30 rounded-2xl font-bold text-lg hover:bg-white/10 transition-colors"
             >
-              Khảo sát nhanh
+              {t('quickSurveyBtn')}
             </button>
           </div>
 
@@ -183,7 +208,7 @@ export default function LandingPage() {
             className="mt-16 flex flex-col items-center text-white/70 cursor-pointer hover:text-white transition-colors"
             onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            <span className="text-sm font-medium mb-2 uppercase tracking-widest text-center">Trượt xuống để xem thêm thông tin</span>
+            <span className="text-sm font-medium mb-2 uppercase tracking-widest text-center">{t('scrollDownInfo')}</span>
             <motion.div
               animate={{ y: [0, 10, 0] }}
               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
@@ -198,28 +223,28 @@ export default function LandingPage() {
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-4">TeenTask là gì?</h2>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Định nghĩa mới về trải nghiệm học sinh</p>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-4">{t('whatIsTeenTask')}</h2>
+            <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{t('newDefinition')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 icon: GraduationCap,
-                title: 'Học viện Thực chiến',
-                desc: 'Không chỉ học lý thuyết, bạn học thông qua việc thực hiện các nhiệm vụ thực tế từ doanh nghiệp.',
+                title: t('practicalAcademy'),
+                desc: t('practicalAcademyDesc'),
                 color: 'bg-blue-50 text-blue-600'
               },
               {
                 icon: Users,
-                title: 'Cộng đồng Kết nối',
-                desc: 'Mạng lưới chuyên gia và phụ huynh đồng hành, đảm bảo môi trường trải nghiệm an toàn nhất.',
+                title: t('connectedCommunity'),
+                desc: t('connectedCommunityDesc'),
                 color: 'bg-indigo-50 text-indigo-600'
               },
               {
                 icon: Award,
-                title: 'Chứng nhận Được công nhận',
-                desc: 'Mọi nỗ lực đều được ghi nhận bằng TrustScore và Certificate, làm đẹp hồ sơ du học và xin việc.',
+                title: t('recognizedCert'),
+                desc: t('recognizedCertDesc'),
                 color: 'bg-pink-50 text-pink-600'
               }
             ].map((item, i) => (
@@ -252,10 +277,10 @@ export default function LandingPage() {
         >
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-              Không chỉ tìm việc — Đây là hành trình phát triển bản thân
+              {t('journeyTitle')}
             </h2>
             <p className="text-xl text-gray-500 max-w-3xl mx-auto">
-              TeenTask kết hợp học viện và sàn việc làm thành một hệ sinh thái khép kín, giúp bạn đi từ con số 0 đến chuyên nghiệp.
+              {t('journeySubtitle')}
             </p>
           </div>
 
@@ -281,16 +306,16 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <BookOpen size={32} className="text-indigo-600" />
                 </div>
-                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Bước 1 — HỌC HỎI (LEARN)</span>
-                <h3 className="text-2xl font-black text-gray-900 mb-4">Trang bị kiến thức</h3>
+                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">{t('step1Learn')}</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">{t('equipKnowledge')}</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
-                  Xem video hướng dẫn, đọc nghiên cứu thực tế, tham gia workshop nhóm cùng chuyên gia để nắm vững tư duy nghề nghiệp.
+                  {t('equipKnowledgeDesc')}
                 </p>
                 <button 
                   onClick={() => navigate('/career-insights')}
                   className="text-indigo-600 font-bold hover:underline flex items-center gap-2"
                 >
-                  → Xem Career Insights
+                  → {t('viewCareerInsights')}
                 </button>
               </motion.div>
 
@@ -311,16 +336,16 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <Briefcase size={32} className="text-purple-600" />
                 </div>
-                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 block">Bước 2 — THỰC HÀNH (PRACTICE)</span>
-                <h3 className="text-2xl font-black text-gray-900 mb-4">Thực hành thực chiến</h3>
+                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 block">{t('step2Practice')}</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">{t('realPractice')}</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
-                  Ứng tuyển job thật, kiến tập cùng chuyên gia, hoàn thành nhiệm vụ có cấu trúc từ doanh nghiệp để tích lũy kinh nghiệm.
+                  {t('realPracticeDesc')}
                 </p>
                 <button 
                   onClick={() => navigate('/jobs')}
                   className="text-purple-600 font-bold hover:underline flex items-center gap-2"
                 >
-                  → Xem việc làm
+                  → {t('viewJobs')}
                 </button>
               </motion.div>
 
@@ -341,16 +366,16 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <Award size={32} className="text-pink-600" />
                 </div>
-                <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-2 block">Bước 3 — CHỨNG MINH (PROVE)</span>
-                <h3 className="text-2xl font-black text-gray-900 mb-4">Chứng minh năng lực</h3>
+                <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-2 block">{t('step3Prove')}</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">{t('proveAbility')}</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
-                  Nhận badge từ mentor, xây dựng Teen CV chuyên biệt, có bằng chứng thực tế để tự tin apply học bổng và việc làm tương lai.
+                  {t('proveAbilityDesc')}
                 </p>
                 <button 
                   onClick={() => navigate('/profile')}
                   className="text-pink-600 font-bold hover:underline flex items-center gap-2"
                 >
-                  → Xem hồ sơ mẫu
+                  → {t('viewSampleProfile')}
                 </button>
               </motion.div>
             </div>
@@ -365,8 +390,7 @@ export default function LandingPage() {
           >
             <div className="relative z-10">
               <p className="text-xl md:text-2xl font-bold leading-relaxed">
-                {/* Cập nhật nội dung 1: Thay "duy nhất" bằng "tiên phong" */}
-                "TeenTask là nền tảng tiên phong tại Việt Nam kết hợp <span className="text-amber-300">Học viện kỹ năng</span> + <span className="text-amber-300">Sàn việc làm</span> + <span className="text-amber-300">Hệ thống Portfolio</span> — dành riêng cho học sinh 14–18 tuổi."
+                {t('pioneerPlatform')}
               </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
@@ -384,8 +408,8 @@ export default function LandingPage() {
           className="max-w-6xl mx-auto"
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Vấn đề của bạn là gì?</h2>
-            <p className="text-xl text-gray-500">TeenTask ra đời để giải quyết những nỗi đau thực tế nhất.</p>
+            <h2 className="text-4xl font-black text-gray-900 mb-4">{t('whatIsYourProblem')}</h2>
+            <p className="text-xl text-gray-500">{t('solvePainPoints')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -394,21 +418,21 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <GraduationCap size={32} />
               </div>
-              <h3 className="text-2xl font-black text-blue-900 mb-4">Học sinh (14-18 tuổi)</h3>
+              <h3 className="text-2xl font-black text-blue-900 mb-4">{t('student1418')}</h3>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 text-blue-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Muốn đi làm thêm nhưng toàn gặp lừa đảo, đa cấp.</span>
+                  <span>{t('studentPain1')}</span>
                 </li>
                 <li className="flex items-start gap-2 text-blue-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Cần kinh nghiệm thực tế để apply học bổng nhưng không ai nhận.</span>
+                  <span>{t('studentPain2')}</span>
                 </li>
               </ul>
               <div className="pt-6 border-t border-blue-200">
                 <p className="font-bold text-blue-900 flex items-center gap-2">
                   <CheckCircle2 size={20} className="text-emerald-500" />
-                  TeenTask cung cấp Job an toàn & Mentor xịn.
+                  {t('teenTaskSolutionStudent')}
                 </p>
               </div>
             </div>
@@ -418,21 +442,21 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck size={32} />
               </div>
-              <h3 className="text-2xl font-black text-emerald-900 mb-4">Phụ huynh</h3>
+              <h3 className="text-2xl font-black text-emerald-900 mb-4">{t('parents')}</h3>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 text-emerald-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Sợ con bị bóc lột sức lao động, ảnh hưởng việc học.</span>
+                  <span>{t('parentPain1')}</span>
                 </li>
                 <li className="flex items-start gap-2 text-emerald-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Không kiểm soát được con đang làm việc với ai, ở đâu.</span>
+                  <span>{t('parentPain2')}</span>
                 </li>
               </ul>
               <div className="pt-6 border-t border-emerald-200">
                 <p className="font-bold text-emerald-900 flex items-center gap-2">
                   <CheckCircle2 size={20} className="text-emerald-500" />
-                  Phụ huynh phê duyệt mọi giao dịch & theo dõi sát sao.
+                  {t('teenTaskSolutionParent')}
                 </p>
               </div>
             </div>
@@ -442,21 +466,21 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                 <Briefcase size={32} />
               </div>
-              <h3 className="text-2xl font-black text-amber-900 mb-4">Doanh nghiệp / Mentor</h3>
+              <h3 className="text-2xl font-black text-amber-900 mb-4">{t('businessMentor')}</h3>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 text-amber-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Cần nhân sự làm task nhỏ (nhập liệu, design cơ bản) nhưng ngân sách thấp.</span>
+                  <span>{t('businessPain1')}</span>
                 </li>
                 <li className="flex items-start gap-2 text-amber-800">
                   <XCircle size={20} className="text-rose-500 shrink-0 mt-0.5" />
-                  <span>Muốn chia sẻ kinh nghiệm nhưng không có kênh tiếp cận học sinh.</span>
+                  <span>{t('businessPain2')}</span>
                 </li>
               </ul>
               <div className="pt-6 border-t border-amber-200">
                 <p className="font-bold text-amber-900 flex items-center gap-2">
                   <CheckCircle2 size={20} className="text-emerald-500" />
-                  Nguồn nhân lực trẻ dồi dào & Nền tảng Mentor chuyên nghiệp.
+                  {t('teenTaskSolutionBusiness')}
                 </p>
               </div>
             </div>
@@ -476,17 +500,17 @@ export default function LandingPage() {
             <div className="text-center py-6">
               {/* Cập nhật nội dung 2: Thay "7M+" bằng "~3M" và thêm nguồn */}
               <div className="text-5xl font-black text-indigo-600 mb-2">~3M</div>
-              <div className="text-gray-500 font-medium text-lg">Học sinh THPT Việt Nam</div>
-              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter font-bold">(Nguồn: Bộ GD&ĐT, 2024–2025)</p>
+              <div className="text-gray-500 font-medium text-lg">{t('vietnamStudents')}</div>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter font-bold">{t('sourceMOET')}</p>
             </div>
             <div className="text-center py-6">
               {/* Cập nhật nội dung 1: Thay "0" bằng "1st" và cập nhật mô tả */}
               <div className="text-5xl font-black text-rose-500 mb-2">1st</div>
-              <div className="text-gray-500 font-medium text-lg">Nền tảng tiên phong tại VN</div>
+              <div className="text-gray-500 font-medium text-lg">{t('pioneerInVN')}</div>
             </div>
             <div className="text-center py-6">
               <div className="text-5xl font-black text-fuchsia-600 mb-2">3</div>
-              <div className="text-gray-500 font-medium text-lg">Bên được phục vụ: Học sinh, PH, DN</div>
+              <div className="text-gray-500 font-medium text-lg">{t('threeParties')}</div>
             </div>
           </div>
         </motion.div>
@@ -501,8 +525,8 @@ export default function LandingPage() {
           className="max-w-5xl mx-auto"
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Tất cả trong một nền tảng</h2>
-            <p className="text-xl text-gray-500">Hệ sinh thái toàn diện giúp học sinh phát triển kỹ năng và kiếm thu nhập an toàn.</p>
+            <h2 className="text-4xl font-black text-gray-900 mb-4">{t('allInOne')}</h2>
+            <p className="text-xl text-gray-500">{t('comprehensiveEcosystem')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -510,59 +534,59 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <Briefcase size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Sàn Việc Làm</h3>
-              <p className="text-gray-600 leading-relaxed">Job phù hợp lứa tuổi, có kiểm duyệt kỹ càng. Đảm bảo môi trường làm việc an toàn và chuyên nghiệp.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('jobMarket')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('jobMarketDesc')}</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
                 <GraduationCap size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Job Shadowing</h3>
-              <p className="text-gray-600 leading-relaxed mb-4">Kiến tập cùng chuyên gia thực thụ. Trải nghiệm một ngày làm việc thực tế để định hướng nghề nghiệp.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('jobShadowing')}</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">{t('shadowingSubtitle')}</p>
               
               {/* Hiển thị 3 gói kiến tập dạng card ngang */}
               <div className="flex flex-row gap-3 overflow-x-auto pt-3 pb-2 hide-scrollbar">
                 {/* Card Explorer */}
                 <div className="min-w-[200px] flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm shrink-0">
-                  <div className="font-bold text-gray-800 mb-1">🥉 Explorer · 150,000đ</div>
-                  <div className="text-gray-500 text-xs mb-2">3 tiếng · 10-15 học sinh</div>
+                  <div className="font-bold text-gray-800 mb-1">🥉 {t('explorerPackage')}</div>
+                  <div className="text-gray-500 text-xs mb-2">{t('threeHours')} · {t('tenFifteenStudents')}</div>
                   <div className="text-emerald-600 text-xs font-medium">✅ Certificate</div>
                 </div>
 
                 {/* Card Insider */}
                 <div className="min-w-[200px] flex-1 bg-indigo-50 border border-indigo-300 rounded-xl p-3 text-sm shrink-0 relative">
-                  <div className="absolute -top-2 right-2 bg-indigo-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Phổ biến</div>
-                  <div className="font-bold text-indigo-900 mb-1">🥈 Insider · 350,000đ</div>
-                  <div className="text-indigo-600/70 text-xs mb-2">Nửa ngày · 5-8 học sinh</div>
-                  <div className="text-emerald-600 text-xs font-medium">✅ Certificate + Badge + Bữa trưa</div>
+                  <div className="absolute -top-2 right-2 bg-indigo-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">{t('popular')}</div>
+                  <div className="font-bold text-indigo-900 mb-1">🥈 {t('insiderPackage')}</div>
+                  <div className="text-indigo-600/70 text-xs mb-2">{t('halfDay')} · {t('fiveEightStudents')}</div>
+                  <div className="text-emerald-600 text-xs font-medium">{t('insiderFeatures')}</div>
                 </div>
 
                 {/* Card Elite */}
                 <div className="min-w-[200px] flex-1 bg-amber-50 border border-amber-400 rounded-xl p-3 text-sm shrink-0 relative">
-                  <div className="absolute -top-2 right-2 bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Exclusive</div>
-                  <div className="font-bold text-amber-900 mb-1">🥇 Elite · 700,000đ</div>
-                  <div className="text-amber-700/70 text-xs mb-2">Cả ngày · Chỉ 3-5 chỗ</div>
-                  <div className="text-emerald-600 text-xs font-medium">✅ Full package + LinkedIn recommendation</div>
+                  <div className="absolute -top-2 right-2 bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full">{t('exclusive')}</div>
+                  <div className="font-bold text-amber-900 mb-1">🥇 {t('elitePackage')}</div>
+                  <div className="text-amber-700/70 text-xs mb-2">{t('fullDay')} · {t('threeFiveSlots')}</div>
+                  <div className="text-emerald-600 text-xs font-medium">{t('eliteFeatures')}</div>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 italic mt-2">Từ 150,000đ · Phụ huynh phê duyệt trước khi đặt vé</p>
+              <p className="text-[10px] text-gray-400 italic mt-2">{t('fromPrice')} · {t('parentApproveBefore')}</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">An Toàn Tuyệt Đối</h3>
-              <p className="text-gray-600 leading-relaxed">Phụ huynh phê duyệt mọi giao dịch và đơn ứng tuyển. Hệ thống đánh giá 2 chiều minh bạch.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('absoluteSafety')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('absoluteSafetyDesc')}</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                 <FileText size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Teen CV</h3>
-              <p className="text-gray-600 leading-relaxed">Hồ sơ chuyên biệt cho học sinh. Ghi nhận kỹ năng mềm, hoạt động ngoại khóa và điểm uy tín.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('teenCv')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('teenCvDesc')}</p>
             </div>
           </div>
         </motion.div>
@@ -577,8 +601,8 @@ export default function LandingPage() {
           className="max-w-6xl mx-auto"
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Vì sao chọn TeenTask?</h2>
-            <p className="text-xl text-gray-500">So sánh với các nền tảng tuyển dụng và mạng xã hội khác.</p>
+            <h2 className="text-4xl font-black text-gray-900 mb-4">{t('whyChooseTeenTask')}</h2>
+            <p className="text-xl text-gray-500">{t('comparePlatforms')}</p>
           </div>
 
           <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
@@ -587,7 +611,7 @@ export default function LandingPage() {
                 {/* Cột Tiêu chí */}
                 <div className="w-64 shrink-0 bg-gray-50 border-r border-gray-200">
                   <div className="h-20 flex items-center px-6 border-b border-gray-200">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Tiêu chí</span>
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">{t('criteria')}</span>
                   </div>
                   {criteriaList.map((criteria, idx) => (
                     <div key={idx} className="h-16 flex items-center px-6 border-b border-gray-100 last:border-0">
@@ -630,19 +654,19 @@ export default function LandingPage() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto text-center"
         >
-          <h2 className="text-3xl font-black text-indigo-900 mb-12">Được tin dùng bởi cộng đồng</h2>
+          <h2 className="text-3xl font-black text-indigo-900 mb-12">{t('trustedByCommunity')}</h2>
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div>
               <div className="text-4xl font-black text-indigo-600 mb-2">{stats.users}</div>
-              <div className="text-indigo-900/70 font-medium">Học sinh đã đăng ký</div>
+              <div className="text-indigo-900/70 font-medium">{t('registeredStudents')}</div>
             </div>
             <div>
               <div className="text-4xl font-black text-indigo-600 mb-2">{stats.jobs}</div>
-              <div className="text-indigo-900/70 font-medium">Job đang tuyển</div>
+              <div className="text-indigo-900/70 font-medium">{t('activeJobs')}</div>
             </div>
             <div>
               <div className="text-4xl font-black text-indigo-600 mb-2">{stats.apps}</div>
-              <div className="text-indigo-900/70 font-medium">Lượt ứng tuyển</div>
+              <div className="text-indigo-900/70 font-medium">{t('totalApplications')}</div>
             </div>
           </div>
         </motion.div>
@@ -656,13 +680,13 @@ export default function LandingPage() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-8">Sẵn sàng bắt đầu hành trình?</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-8">{t('readyToStart')}</h2>
           <button 
             onClick={() => navigate('/profile')}
             className="px-10 py-5 bg-white text-indigo-700 rounded-2xl font-black text-xl shadow-2xl hover:scale-105 transition-transform flex items-center justify-center gap-3 mx-auto"
           >
             <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
-            Đăng nhập với Google — Miễn phí
+            {t('loginWithGoogleFree')}
           </button>
         </motion.div>
       </section>

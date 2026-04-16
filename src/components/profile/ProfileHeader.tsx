@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { User, ShieldCheck, Star, Edit2 } from 'lucide-react';
 import { UserProfile } from '../../types';
+import { useFirebase } from '../FirebaseProvider';
 
 interface ProfileHeaderProps {
   profile: UserProfile | null;
@@ -10,6 +11,8 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ profile, averageRating, setIsNameChangeModalOpen }: ProfileHeaderProps) {
+  const { t } = useFirebase();
+
   return (
     <div className="relative pt-12 pb-8 px-6 bg-white border-b border-gray-100">
       <div className="flex flex-col items-center">
@@ -42,11 +45,11 @@ export default function ProfileHeader({ profile, averageRating, setIsNameChangeM
         
         <div className="text-center space-y-1">
           <h2 className="text-2xl font-black text-gray-900 flex items-center justify-center gap-2">
-            {profile?.role === 'business' ? (profile?.businessName || 'Doanh nghiệp chưa đặt tên') : profile?.displayName}
+            {profile?.role === 'business' ? (profile?.businessName || t('unnamedBusiness')) : profile?.displayName}
             <button 
               onClick={() => setIsNameChangeModalOpen(true)}
               className="p-1.5 bg-gray-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors"
-              title="Đổi tên hiển thị"
+              title={t('changeName')}
             >
               <Edit2 size={14} />
             </button>
@@ -63,10 +66,10 @@ export default function ProfileHeader({ profile, averageRating, setIsNameChangeM
               'bg-purple-50 text-purple-600 border-purple-100'
             }`}>
               {profile?.email === "congapro60@gmail.com" ? 'Boss' : 
-               profile?.role === 'admin' ? 'Quản trị viên' :
-               profile?.role === 'student' ? 'Học sinh' : 
-               profile?.role === 'parent' ? 'Phụ huynh' : 
-               profile?.role === 'business' ? 'Doanh nghiệp' : 'Người dùng'}
+               profile?.role === 'admin' ? t('adminRole') :
+               profile?.role === 'student' ? t('student') : 
+               profile?.role === 'parent' ? t('parent') : 
+               profile?.role === 'business' ? t('business') : t('user')}
             </span>
             {profile?.isVip && (
               <span className="px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-amber-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
@@ -80,26 +83,26 @@ export default function ProfileHeader({ profile, averageRating, setIsNameChangeM
           <div className="flex items-center justify-center gap-6 mt-4">
             <div className="text-center">
               <p className="text-lg font-black text-gray-900">{profile?.friends?.length || 0}</p>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bạn bè</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('friends')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-black text-gray-900">{profile?.following?.length || 0}</p>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Đang theo dõi</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('following')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-black text-gray-900">{profile?.followers?.length || 0}</p>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Người theo dõi</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('followers')}</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-8">
           <div className="bg-gray-50 rounded-3xl p-4 text-center border border-gray-100">
-            <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">Số dư ví</p>
-            <p className="text-lg font-black text-[#1877F2]">{profile?.balance?.toLocaleString('vi-VN') || 0}đ</p>
+            <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('wallet')}</p>
+            <p className="text-lg font-black text-[#1877F2]">{profile?.balance?.toLocaleString(t('language') === 'en' ? 'en-US' : 'vi-VN') || 0}{t('language') === 'vi' ? 'đ' : ''}</p>
           </div>
           <div className="bg-gray-50 rounded-3xl p-4 text-center border border-gray-100">
-            <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">Tín nhiệm</p>
+            <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('trustScore')}</p>
             <div className="flex items-center justify-center gap-1">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
               <p className="text-lg font-black text-gray-900">{averageRating}</p>

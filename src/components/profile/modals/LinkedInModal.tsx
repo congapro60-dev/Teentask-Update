@@ -39,7 +39,7 @@ export default function LinkedInModal({
               <p className="text-sm text-gray-600 font-medium">{t('linkedInModalDesc')}</p>
               
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Link LinkedIn</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">{t('linkedInUrl')}</label>
                 <input
                   type="url"
                   value={linkedInUrl}

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Star } from 'lucide-react';
 import { Application, Job } from '../../../types';
+import { useFirebase } from '../../FirebaseProvider';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ interface ReviewModalProps {
 export default function ReviewModal({
   isOpen, onClose, selectedApp, reviewData, setReviewData, handleSubmitReview, submittingReview
 }: ReviewModalProps) {
+  const { t } = useFirebase();
+
   return (
     <AnimatePresence>
       {isOpen && selectedApp && (
@@ -27,7 +30,7 @@ export default function ReviewModal({
             className="w-full max-w-md bg-white rounded-t-[40px] p-8"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black">Đánh giá</h2>
+              <h2 className="text-2xl font-black">{t('review')}</h2>
               <button onClick={onClose} className="p-2 bg-gray-100 rounded-full">
                 <X size={20} />
               </button>
@@ -37,7 +40,7 @@ export default function ReviewModal({
               <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-[#4F46E5]">
                 <Star size={40} fill="currentColor" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-1">Trải nghiệm của bạn tại</h3>
+              <h3 className="font-bold text-gray-900 mb-1">{t('yourExperienceAt')}</h3>
               <p className="text-[#4F46E5] font-black text-lg">{selectedApp.job?.businessName}</p>
             </div>
 
@@ -56,13 +59,13 @@ export default function ReviewModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Nhận xét của bạn</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">{t('yourComment')}</label>
                 <textarea
                   required
                   value={reviewData.comment}
                   onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
                   className="w-full p-4 bg-gray-50 rounded-2xl font-medium outline-none focus:ring-2 focus:ring-[#4F46E5] min-h-[120px]"
-                  placeholder="Chia sẻ trải nghiệm của bạn..."
+                  placeholder={t('shareExperiencePlaceholder')}
                 />
               </div>
 
@@ -71,7 +74,7 @@ export default function ReviewModal({
                 disabled={submittingReview}
                 className="w-full py-4 bg-[#4F46E5] text-white rounded-2xl font-black shadow-lg shadow-indigo-200 disabled:opacity-50"
               >
-                {submittingReview ? 'ĐANG GỬI...' : 'GỬI ĐÁNH GIÁ'}
+                {submittingReview ? t('submitting').toUpperCase() : t('submitReview')}
               </button>
             </form>
           </motion.div>

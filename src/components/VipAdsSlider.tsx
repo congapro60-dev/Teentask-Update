@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, ChevronRight, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import DynamicText from './DynamicText';
 
 interface VipAd {
   id: string;
@@ -87,12 +88,12 @@ export default function VipAdsSlider() {
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 tracking-tight leading-tight">
               <span className="mr-3">{ad.icon}</span>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
-                {ad.title}
+                <DynamicText text={ad.title} />
               </span>
             </h2>
 
             <p className="text-white/80 text-sm sm:text-base mb-8 max-w-xl font-medium leading-relaxed">
-              {ad.description}
+              <DynamicText text={ad.description} />
             </p>
 
             <button
