@@ -49,6 +49,83 @@ export default function ParentDashboard() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
+    if (profile?.uid === 'demo-user') {
+      setPendingApplications([
+        {
+          id: 'demo-app-1',
+          jobId: 'demo-job-1',
+          businessId: 'demo-biz-1',
+          studentId: 'demo-student-1',
+          studentName: 'Nguyễn Văn A',
+          studentEmail: 'student@demo.com',
+          studentPhone: '0123456789',
+          studentSchool: 'THPT Chuyên',
+          studentClass: '11A1',
+          parentEmail: 'demo@teentask.vn',
+          guardianName: 'Người dùng Demo',
+          guardianRelation: 'Bố/Mẹ',
+          guardianPhone: '0987654321',
+          guardianAddress: 'Hà Nội',
+          coverLetter: 'Em rất muốn làm công việc này.',
+          status: 'pending',
+          parentStatus: 'pending',
+          finalStatus: 'pending',
+          createdAt: Date.now() - 86400000,
+          jobTitle: 'Thiết kế Poster Sự kiện',
+          jobDeadline: Date.now() + 86400000 * 2,
+        }
+      ]);
+      setParentJobs([
+        {
+          id: 'demo-parent-job-1',
+          businessId: 'demo-user',
+          businessName: 'Người dùng Demo',
+          businessLogo: 'https://ui-avatars.com/api/?name=Demo',
+          businessOrgType: 'parent',
+          title: 'Gia sư Toán lớp 9',
+          description: 'Cần tìm gia sư kèm Toán cho em trai.',
+          salary: '100.000đ/h',
+          salaryValue: 100000,
+          slotsTotal: 1,
+          slotsFilled: 0,
+          deadline: Date.now() + 86400000 * 5,
+          location: 'Hà Nội',
+          type: 'offline',
+          category: 'Education',
+          status: 'active',
+          isApproved: true,
+          tags: ['Toán', 'Gia sư'],
+          createdAt: Date.now() - 86400000 * 2,
+          isParentTask: true
+        }
+      ]);
+      setAllJobs([
+        {
+          id: 'demo-job-2',
+          businessId: 'demo-biz-1',
+          businessName: 'Tech Startup VN',
+          businessLogo: 'https://ui-avatars.com/api/?name=Tech',
+          businessOrgType: 'company',
+          title: 'Quản lý Fanpage Part-time',
+          description: 'Đăng bài và trả lời tin nhắn Fanpage.',
+          salary: '2.000.000đ/tháng',
+          salaryValue: 2000000,
+          slotsTotal: 2,
+          slotsFilled: 1,
+          deadline: Date.now() + 86400000 * 10,
+          location: 'Online',
+          type: 'online',
+          category: 'Marketing',
+          status: 'active',
+          isApproved: true,
+          tags: ['Content', 'Social Media'],
+          createdAt: Date.now() - 86400000 * 3,
+        }
+      ]);
+      setLoading(false);
+      return;
+    }
+
     if (!profile?.email || !auth.currentUser) return;
 
     // 0. Fetch children
@@ -146,6 +223,11 @@ export default function ParentDashboard() {
   }, [profile?.email]);
 
   const handleAction = async (appId: string, status: 'approved' | 'rejected') => {
+    if (profile?.uid === 'demo-user') {
+      setPendingApplications(prev => prev.filter(app => app.id !== appId));
+      alert(`Đây là chế độ Demo. Đơn ứng tuyển đã được ${status === 'approved' ? 'phê duyệt' : 'từ chối'} (mô phỏng).`);
+      return;
+    }
     try {
       const appRef = doc(db, 'applications', appId);
       await updateDoc(appRef, { parentStatus: status });
@@ -156,6 +238,12 @@ export default function ParentDashboard() {
 
   const handleSaveJob = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đã đăng công việc thành công (mô phỏng).');
+      setIsCreateModalOpen(false);
+      resetForm();
+      return;
+    }
     if (!auth.currentUser || !profile) return;
 
     const jobData = {
@@ -586,8 +674,11 @@ export default function ParentDashboard() {
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)} 
         onApply={() => {
-          // Logic for parent registering for child
-          alert('Tính năng đăng ký cho con đang được phát triển!');
+          if (profile?.uid === 'demo-user') {
+            alert('Đây là chế độ Demo. Đã gửi gợi ý công việc cho con (mô phỏng).');
+          } else {
+            alert('Tính năng đăng ký cho con đang được phát triển!');
+          }
           setIsDetailOpen(false);
         }}
         onChat={(job) => {

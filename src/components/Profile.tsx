@@ -201,6 +201,55 @@ export default function Profile() {
   const verificationUI = renderVerificationStatus();
 
   useEffect(() => {
+    if (profile?.uid === 'demo-user' && profile?.role === 'student') {
+      setApplications([
+        {
+          id: 'demo-app-1',
+          jobId: 'demo-job-1',
+          businessId: 'demo-biz-1',
+          studentId: 'demo-user',
+          studentName: 'Người dùng Demo',
+          studentEmail: 'demo@teentask.vn',
+          studentPhone: '0123456789',
+          studentSchool: 'THPT Chuyên',
+          studentClass: '11A1',
+          parentEmail: 'parent@demo.com',
+          guardianName: 'Phụ huynh Demo',
+          guardianRelation: 'Bố/Mẹ',
+          guardianPhone: '0987654321',
+          guardianAddress: 'Hà Nội',
+          coverLetter: 'Em rất muốn làm công việc này.',
+          status: 'pending',
+          parentStatus: 'pending',
+          finalStatus: 'pending',
+          createdAt: Date.now() - 86400000,
+          job: {
+            id: 'demo-job-1',
+            businessId: 'demo-biz-1',
+            businessName: 'Tech Startup VN',
+            businessLogo: 'https://ui-avatars.com/api/?name=Tech',
+            businessOrgType: 'company',
+            title: 'Thiết kế Poster Sự kiện',
+            description: 'Thiết kế 3 poster cho sự kiện ra mắt sản phẩm mới.',
+            salary: '500.000đ',
+            salaryValue: 500000,
+            slotsTotal: 2,
+            slotsFilled: 1,
+            deadline: Date.now() + 86400000 * 5,
+            location: 'Online',
+            type: 'online',
+            category: 'Design',
+            status: 'active',
+            isApproved: true,
+            tags: ['Photoshop', 'Illustrator'],
+            createdAt: Date.now() - 86400000 * 2,
+          }
+        }
+      ]);
+      setLoading(false);
+      return;
+    }
+
     if (!auth.currentUser || profile?.role !== 'student') {
       setLoading(false);
       return;

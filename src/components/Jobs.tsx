@@ -219,6 +219,11 @@ export default function Jobs() {
   };
 
   const handleApplicationSuccess = async (guardianData: any) => {
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đơn ứng tuyển của bạn đã được gửi (mô phỏng).');
+      setIsModalOpen(false);
+      return;
+    }
     if (!auth.currentUser || !selectedJob) return;
 
     try {

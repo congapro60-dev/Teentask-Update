@@ -64,6 +64,70 @@ const ManageShadowing: React.FC = () => {
 
   // Fetch data
   useEffect(() => {
+    if (profile?.uid === 'demo-user') {
+      setSlots([
+        {
+          id: 'demo-slot-1',
+          mentorId: 'demo-user',
+          companyId: 'demo-user',
+          companyName: 'Người dùng Demo',
+          companyLogo: 'https://ui-avatars.com/api/?name=Demo',
+          title: '1 ngày làm Software Engineer',
+          description: 'Trải nghiệm 1 ngày làm việc thực tế tại công ty công nghệ.',
+          mentorName: 'Nguyễn Văn B',
+          mentorTitle: 'Senior Developer',
+          date: Date.now() + 86400000 * 5,
+          time: '09:00',
+          price: 150000,
+          slotsTotal: 5,
+          slotsRemaining: 3,
+          location: 'Văn phòng công ty',
+          category: 'Công nghệ',
+          level: 'Cơ bản',
+          type: '1-1',
+          status: 'upcoming',
+          createdAt: Date.now() - 86400000,
+          tier: 'explorer',
+          tierLabel: 'Explorer',
+          durationHours: 3,
+          maxStudents: 5,
+          perks: ['Certificate PDF', 'Q&A với mentor'],
+          includesLunch: false,
+          includesCertificate: true,
+          includesBadge: false,
+          includesLinkedIn: false,
+          includesGiftBag: false,
+          mentorLevel: 'senior'
+        }
+      ]);
+      setWorkshops([]);
+      setTasks([]);
+      setApplications([
+        {
+          id: 'demo-app-2',
+          jobId: 'demo-slot-1',
+          businessId: 'demo-user',
+          studentId: 'demo-student-2',
+          studentName: 'Trần Thị C',
+          studentEmail: 'tranthic@demo.com',
+          studentPhone: '0987654321',
+          studentSchool: 'THPT Chuyên',
+          studentClass: '12A1',
+          parentEmail: 'parent@demo.com',
+          guardianName: 'Trần Văn D',
+          guardianRelation: 'Bố',
+          guardianPhone: '0123456789',
+          coverLetter: 'Em rất muốn tìm hiểu về ngành IT.',
+          status: 'pending',
+          parentStatus: 'approved',
+          finalStatus: 'pending',
+          createdAt: Date.now() - 86400000,
+        }
+      ]);
+      setLoading(false);
+      return;
+    }
+
     if (!profile?.uid) return;
 
     setLoading(true);
@@ -116,6 +180,12 @@ const ManageShadowing: React.FC = () => {
   // Handlers
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đã tạo mới (mô phỏng).');
+      setShowCreateModal(false);
+      resetForm();
+      return;
+    }
     if (!profile?.uid) return;
     setActionLoading(true);
     try {
@@ -208,6 +278,10 @@ const ManageShadowing: React.FC = () => {
 
   const handleUpdateStatus = async (id: string, collectionName: string, newStatus: string) => {
     if (!window.confirm(`Xác nhận đổi trạng thái sang: ${newStatus}?`)) return;
+    if (profile?.uid === 'demo-user') {
+      alert(`Đây là chế độ Demo. Đã đổi trạng thái sang ${newStatus} (mô phỏng).`);
+      return;
+    }
     try {
       await updateDoc(doc(db, collectionName, id), { status: newStatus });
     } catch (error) {
@@ -217,6 +291,10 @@ const ManageShadowing: React.FC = () => {
 
   const handleDelete = async (id: string, collectionName: string) => {
     if (!window.confirm("Bạn có chắc muốn xóa mục này?")) return;
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đã xóa mục này (mô phỏng).');
+      return;
+    }
     try {
       await deleteDoc(doc(db, collectionName, id));
     } catch (error) {

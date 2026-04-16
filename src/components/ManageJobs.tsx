@@ -36,6 +36,34 @@ export default function ManageJobs() {
   });
 
   useEffect(() => {
+    if (profile?.uid === 'demo-user') {
+      setJobs([
+        {
+          id: 'demo-job-1',
+          businessId: 'demo-user',
+          businessName: 'Người dùng Demo',
+          businessLogo: 'https://ui-avatars.com/api/?name=Demo',
+          businessOrgType: 'company',
+          title: 'Thiết kế Poster Sự kiện',
+          description: 'Thiết kế 3 poster cho sự kiện ra mắt sản phẩm mới.',
+          salary: '500.000đ',
+          salaryValue: 500000,
+          slotsTotal: 2,
+          slotsFilled: 1,
+          deadline: Date.now() + 86400000 * 5,
+          location: 'Online',
+          type: 'online',
+          category: 'Design',
+          status: 'active',
+          isApproved: true,
+          tags: ['Photoshop', 'Illustrator'],
+          createdAt: Date.now() - 86400000 * 2,
+        }
+      ]);
+      setLoading(false);
+      return;
+    }
+
     if (!auth.currentUser) return;
 
     const q = query(
@@ -57,6 +85,13 @@ export default function ManageJobs() {
 
   const handleSaveJob = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đã lưu công việc (mô phỏng).');
+      setIsCreateModalOpen(false);
+      setEditingJob(null);
+      resetForm();
+      return;
+    }
     if (!auth.currentUser || !profile) return;
 
     const jobData = {
@@ -97,6 +132,10 @@ export default function ManageJobs() {
   };
 
   const handleToggleStatus = async (jobId: string, currentStatus: string) => {
+    if (profile?.uid === 'demo-user') {
+      alert(`Đây là chế độ Demo. Đã đổi trạng thái (mô phỏng).`);
+      return;
+    }
     try {
       const newStatus = currentStatus === 'active' ? 'closed' : 'active';
       await updateDoc(doc(db, 'jobs', jobId), { status: newStatus });
@@ -107,6 +146,10 @@ export default function ManageJobs() {
 
   const handleDelete = async (jobId: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) return;
+    if (profile?.uid === 'demo-user') {
+      alert('Đây là chế độ Demo. Đã xóa công việc (mô phỏng).');
+      return;
+    }
     try {
       await deleteDoc(doc(db, 'jobs', jobId));
     } catch (error) {
@@ -151,6 +194,33 @@ export default function ManageJobs() {
   };
 
   const viewApplications = async (jobId: string) => {
+    if (profile?.uid === 'demo-user') {
+      setViewingApplicationsFor(jobId);
+      setApplications([
+        {
+          id: 'demo-app-1',
+          jobId: jobId,
+          businessId: 'demo-user',
+          studentId: 'demo-student-1',
+          studentName: 'Nguyễn Văn A',
+          studentEmail: 'student@demo.com',
+          studentPhone: '0123456789',
+          studentSchool: 'THPT Chuyên',
+          studentClass: '11A1',
+          parentEmail: 'demo@teentask.vn',
+          guardianName: 'Người dùng Demo',
+          guardianRelation: 'Bố/Mẹ',
+          guardianPhone: '0987654321',
+          guardianAddress: 'Hà Nội',
+          coverLetter: 'Em rất muốn làm công việc này.',
+          status: 'pending',
+          parentStatus: 'approved',
+          finalStatus: 'pending',
+          createdAt: Date.now() - 86400000,
+        }
+      ]);
+      return;
+    }
     if (!auth.currentUser) return;
     setViewingApplicationsFor(jobId);
     const q = query(
@@ -163,6 +233,11 @@ export default function ManageJobs() {
   };
 
   const updateApplicationStatus = async (appId: string, status: 'accepted' | 'rejected' | 'completed') => {
+    if (profile?.uid === 'demo-user') {
+      setApplications(prev => prev.map(app => app.id === appId ? { ...app, finalStatus: status } : app));
+      alert(`Đây là chế độ Demo. Đơn ứng tuyển đã được ${status === 'accepted' ? 'chấp nhận' : status === 'rejected' ? 'từ chối' : 'hoàn thành'} (mô phỏng).`);
+      return;
+    }
     try {
       await updateDoc(doc(db, 'applications', appId), { finalStatus: status });
       setApplications(prev => prev.map(app => app.id === appId ? { ...app, finalStatus: status } : app));

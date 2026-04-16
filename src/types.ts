@@ -166,7 +166,8 @@ export interface Job {
   businessOrgType?: string;
   title: string;
   description: string;
-  salary: number;
+  salary: string;
+  salaryValue?: number;
   slotsTotal: number;
   slotsFilled: number;
   deadline: number;
@@ -180,6 +181,7 @@ export interface Job {
   benefits?: string[];
   isInternal?: boolean;
   schoolName?: string;
+  isParentTask?: boolean;
   createdAt: number;
 }
 
@@ -216,6 +218,7 @@ export interface ShadowingEvent {
   mentorPhoto?: string;
   companyId: string;
   companyName: string;
+  companyLogo?: string;
   title: string;
   description: string;
   date: number;
@@ -289,6 +292,8 @@ export interface Application {
   guardianRelation?: string;
   isManualGuardian?: boolean;
   portfolioUrl?: string;
+  coverLetter?: string;
+  status?: string;
   parentStatus: 'pending' | 'approved' | 'rejected';
   finalStatus: 'pending' | 'accepted' | 'rejected' | 'completed';
   approvalChannel?: 'parent' | 'teacher';
