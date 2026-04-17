@@ -1,9 +1,9 @@
 {
   "projectId": "gen-lang-client-0389221656",
-  "appId": "1:557659998670:web:fd749a3f1a258a1038839f",
+  "appId": "1:557659998670:web:5a4e56ee8a2cfe0938839f",
   "apiKey": "AIzaSyCBahxjE1i0G9d5DmbuI4LTsHpD5vHRdBc",
   "authDomain": "gen-lang-client-0389221656.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-8294eccb-fe8b-449a-b04e-ab8ce9df0565",
+  "firestoreDatabaseId": "teentask-premium",
   "storageBucket": "gen-lang-client-0389221656.firebasestorage.app",
   "messagingSenderId": "557659998670",
   "measurementId": ""

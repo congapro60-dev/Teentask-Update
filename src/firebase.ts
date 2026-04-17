@@ -45,6 +45,11 @@ export const auth = getAuth(app);
 // Test connection to Firestore
 async function testConnection() {
   if (!finalConfig.projectId) return;
+  // If we are already in demo mode, skip testing connection to save quota and avoid logs.
+  if (typeof window !== 'undefined' && localStorage.getItem('isDemoMode') === 'true') {
+    return;
+  }
+  
   try {
     // Attempt to fetch a non-existent doc from server to test connectivity
     await getDocFromServer(doc(db, '_connection_test_', 'ping'));
@@ -52,11 +57,21 @@ async function testConnection() {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     if (errorMsg.includes('the client is offline')) {
-      console.error(`Firestore configuration error: The client is offline. 
+      console.warn(`Firestore configuration warning: The client is offline. 
 Current Database ID: ${finalConfig.firestoreDatabaseId || '(default)'}
 Please check if this database exists in your Firebase Console and if rules allow access.`);
+    } else if (errorMsg.toLowerCase().includes('quota') || errorMsg.includes('resource-exhausted')) {
+      console.warn("Firestore Quota Exceeded! The project has used up its free daily read units. Enabling Demo Mode gracefully...");
+      if (typeof window !== 'undefined') {
+        // Automatically activate demo mode when quota limits hit so the app doesn't just crash on load.
+        if (localStorage.getItem('isDemoMode') !== 'true') {
+           localStorage.setItem('isDemoMode', 'true');
+           window.dispatchEvent(new CustomEvent('demo_mode_activated'));
+           window.location.reload();
+        }
+      }
     } else {
-      console.error("Firestore connection test failed:", error);
+      console.warn("Firestore connection check info:", errorMsg);
     }
   }
 }

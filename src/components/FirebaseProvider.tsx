@@ -36,8 +36,22 @@ interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  
+  if (errorMsg.toLowerCase().includes('quota') || errorMsg.includes('resource-exhausted')) {
+    console.warn("Firestore Quota Exceeded! The project has used up its free daily read units. Enabling Demo Mode gracefully...");
+    if (typeof window !== 'undefined') {
+      if (localStorage.getItem('isDemoMode') !== 'true') {
+         localStorage.setItem('isDemoMode', 'true');
+         window.dispatchEvent(new CustomEvent('demo_mode_activated'));
+         window.location.reload();
+      }
+    }
+    return; // Return early without throwing so we don't alert the global error handler
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,

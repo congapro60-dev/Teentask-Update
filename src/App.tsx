@@ -4,6 +4,44 @@ import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldA
 import { motion, AnimatePresence } from 'motion/react';
 import { signInAnonymously, signOut } from 'firebase/auth';
 import { auth } from './firebase';
+import Layout from './components/Layout';
+import Home from './components/Home';
+import LandingPage from './components/LandingPage';
+import Jobs from './components/Jobs';
+import Shadowing from './components/Shadowing';
+import MentorSearch from './components/MentorSearch';
+import Profile from './components/Profile';
+import RoleSelection from './components/RoleSelection';
+import BusinessDashboard from './components/BusinessDashboard';
+import ManageJobs from './components/ManageJobs';
+import ManageShadowing from './components/ManageShadowing';
+import MentorApplication from './components/MentorApplication';
+import ParentDashboard from './components/ParentDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import BossManagement from './components/BossManagement';
+import AboutApp from './components/AboutApp';
+import SurveyForm from './components/SurveyForm';
+import SurveyAdmin from './components/SurveyAdmin';
+import VerificationFlow from './components/VerificationFlow';
+import ChatList from './components/ChatList';
+import ChatRoom from './components/ChatRoom';
+import Notifications from './components/Notifications';
+import CompanyProfile from './components/CompanyProfile';
+import StudentProfile from './components/StudentProfile';
+import SearchUsers from './components/SearchUsers';
+import TrustScore from './components/TrustScore';
+import Tasks from './components/Tasks';
+import Companies from './components/Companies';
+import Saved from './components/Saved';
+import Vip from './components/Vip';
+import Wallet from './components/Wallet';
+import CVBuilder from './components/CVBuilder';
+import QuickSurvey from './components/QuickSurvey';
+import CalendarView from './components/CalendarView';
+import CareerInsights from './components/CareerInsights';
+import LegalGuide from './components/LegalGuide';
+import EduNetwork from './components/EduNetwork';
+import { FirebaseProvider, useFirebase } from './components/FirebaseProvider';
 
 // Error Boundary Component
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
@@ -49,44 +87,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     return this.props.children;
   }
 }
-import Layout from './components/Layout';
-import Home from './components/Home';
-import LandingPage from './components/LandingPage';
-import Jobs from './components/Jobs';
-import Shadowing from './components/Shadowing';
-import MentorSearch from './components/MentorSearch';
-import Profile from './components/Profile';
-import RoleSelection from './components/RoleSelection';
-import BusinessDashboard from './components/BusinessDashboard';
-import ManageJobs from './components/ManageJobs';
-import ManageShadowing from './components/ManageShadowing';
-import MentorApplication from './components/MentorApplication';
-import ParentDashboard from './components/ParentDashboard';
-import AdminDashboard from './components/AdminDashboard';
-import BossManagement from './components/BossManagement';
-import AboutApp from './components/AboutApp';
-import SurveyForm from './components/SurveyForm';
-import SurveyAdmin from './components/SurveyAdmin';
-import VerificationFlow from './components/VerificationFlow';
-import ChatList from './components/ChatList';
-import ChatRoom from './components/ChatRoom';
-import Notifications from './components/Notifications';
-import CompanyProfile from './components/CompanyProfile';
-import StudentProfile from './components/StudentProfile';
-import SearchUsers from './components/SearchUsers';
-import TrustScore from './components/TrustScore';
-import Tasks from './components/Tasks';
-import Companies from './components/Companies';
-import Saved from './components/Saved';
-import Vip from './components/Vip';
-import Wallet from './components/Wallet';
-import CVBuilder from './components/CVBuilder';
-import QuickSurvey from './components/QuickSurvey';
-import CalendarView from './components/CalendarView';
-import CareerInsights from './components/CareerInsights';
-import LegalGuide from './components/LegalGuide';
-import EduNetwork from './components/EduNetwork';
-import { FirebaseProvider, useFirebase } from './components/FirebaseProvider';
 
 function AppContent() {
   const navigate = useNavigate();
