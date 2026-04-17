@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
-import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldAlert, LogOut, Users } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldAlert, LogOut, Users, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { signInAnonymously, signOut } from 'firebase/auth';
 import { auth } from './firebase';
@@ -125,6 +125,16 @@ function AppContent() {
     }
   };
 
+  const handleDemo = () => {
+    if (!selectedRole) {
+      setLoginError("Vui lòng chọn một vai trò để trải nghiệm bản Demo!");
+      return;
+    }
+    localStorage.setItem('isDemoMode', 'true');
+    localStorage.setItem('demoRole', selectedRole);
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -210,10 +220,18 @@ function AppContent() {
 
                       <button
                         onClick={handleLogin}
-                        className="w-full max-w-md py-5 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-4 text-lg"
+                        className="w-full max-w-md py-5 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-4 text-lg mb-3"
                       >
                         <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
                         {t('loginWithGoogle')}
+                      </button>
+
+                      <button
+                        onClick={handleDemo}
+                        className="w-full max-w-md py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Rocket size={18} />
+                        Trải nghiệm bản Demo
                       </button>
                     </div>
                   } />

@@ -141,6 +141,49 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
 
+    // Handle Manual Demo Mode
+    const isDemoMode = localStorage.getItem('isDemoMode') === 'true';
+    const demoRoleLocal = localStorage.getItem('demoRole') || 'student';
+    
+    if (isDemoMode) {
+      // Mock user and profile for demo
+      const mockUser = {
+        uid: 'demo-user',
+        email: 'demo@teentask.com',
+        displayName: 'Trải nghiệm viên (Demo)',
+        photoURL: 'https://i.pravatar.cc/150?u=demo',
+        isAnonymous: true,
+      } as any;
+      
+      const mockProfile: UserProfile = {
+        uid: 'demo-user',
+        email: 'demo@teentask.com',
+        displayName: 'Trải nghiệm viên (Demo)',
+        photoURL: 'https://i.pravatar.cc/150?u=demo',
+        role: demoRoleLocal as any,
+        trustScore: 450,
+        skills: ['Giao tiếp', 'Giải quyết vấn đề'],
+        balance: 1000000,
+        createdAt: Date.now(),
+        isVip: true,
+        isVerified: true,
+        verificationStatus: 'verified',
+        paymentCode: 'DEMO123',
+        bio: 'Tôi đang trải nghiệm hệ thống TeenTask với vai trò thử nghiệm!'
+      };
+
+      if (demoRoleLocal === 'business') {
+        mockProfile.businessName = 'TeenTask Demo Corp';
+        mockProfile.businessLogo = 'https://picsum.photos/seed/demo-corp/100/100';
+        mockProfile.orgType = 'business';
+      }
+
+      setUser(mockUser);
+      setProfile(mockProfile);
+      setLoading(false);
+      return; // Skip normal auth flow
+    }
+
     // Handle redirect result for fallback login
     const handleRedirectResult = async () => {
       try {
@@ -251,6 +294,10 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (selectedRole?: 'student' | 'parent' | 'business' | 'admin') => {
+    // Clear demo flags if any
+    localStorage.removeItem('isDemoMode');
+    localStorage.removeItem('demoRole');
+    
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -324,6 +371,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    localStorage.removeItem('isDemoMode');
+    localStorage.removeItem('demoRole');
     await signOut(auth);
   };
 

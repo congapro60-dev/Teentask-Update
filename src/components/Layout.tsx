@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen, AlertTriangle, Globe } from 'lucide-react';
+import { Home, Briefcase, GraduationCap, MessageSquare, User, Heart, ShieldCheck, Bell, Search, Menu, X, LogOut, Settings, HelpCircle, Star, Info, PieChart, Calendar, Check, Rocket, Scale, BookOpen, AlertTriangle, Globe, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -184,8 +184,16 @@ export default function Layout({ children }: LayoutProps) {
     return () => clearInterval(interval);
   }, [ads]);
 
+  const isDemo = profile?.uid === 'demo-user';
+
   const handleLogout = async () => {
     try {
+      if (isDemo) {
+        localStorage.removeItem('isDemoMode');
+        localStorage.removeItem('demoRole');
+        window.location.reload();
+        return;
+      }
       await signOut(auth);
       navigate('/');
     } catch (error) {
@@ -343,8 +351,26 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col">
+      {isDemo && (
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest flex items-center justify-between sticky top-0 z-[70] shadow-sm">
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="animate-pulse" />
+            <span>Chế độ trải nghiệm (Demo Mode) - Dữ liệu mô phỏng</span>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="px-3 py-0.5 bg-white/20 hover:bg-white/30 rounded-full border border-white/30 transition-all flex items-center gap-1"
+          >
+            <LogOut size={10} />
+            Thoát & Đăng nhập thật
+          </button>
+        </div>
+      )}
       {/* HEADER CHÍNH - Phong cách Facebook */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-[60] px-2 sm:px-4 h-14 flex items-center justify-between shadow-sm">
+      <header className={cn(
+        "bg-white border-b border-gray-200 sticky z-[60] px-2 sm:px-4 h-14 flex items-center justify-between shadow-sm",
+        isDemo ? "top-8" : "top-0"
+      )}>
         <div className="flex items-center gap-2">
           <div 
             onClick={() => navigate('/')}
@@ -555,7 +581,10 @@ export default function Layout({ children }: LayoutProps) {
       )}
 
       {/* THANH ĐIỀU HƯỚNG TABS - Desktop & Mobile */}
-      <nav className="bg-white border-b border-gray-200 sticky top-14 z-50 flex justify-center px-2 sm:px-4">
+      <nav className={cn(
+        "bg-white border-b border-gray-200 sticky z-50 flex justify-center px-2 sm:px-4",
+        isDemo ? "top-[88px]" : "top-14"
+      )}>
         <div className="flex w-full max-w-3xl justify-between">
           {mainNavItems.map((item) => (
             <NavLink
@@ -603,7 +632,10 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex justify-center py-4 px-0 sm:px-4">
         <div className="w-full max-w-[1360px] flex gap-0 lg:gap-6 justify-center">
           {/* SIDEBAR TRÁI - Chỉ hiện trên Desktop */}
-          <aside className="hidden lg:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-2">
+          <aside className={cn(
+            "hidden lg:block w-[260px] xl:w-[280px] shrink-0 sticky h-fit space-y-2",
+            isDemo ? "top-[160px]" : "top-32"
+          )}>
             <NavLink to="/profile" className="flex items-center gap-3 p-2 hover:bg-gray-200 rounded-xl transition-colors relative group">
               <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 relative">
                 {userRole === 'business' && profile?.businessLogo ? (
@@ -690,7 +722,10 @@ export default function Layout({ children }: LayoutProps) {
           </main>
 
           {/* SIDEBAR PHẢI - Chỉ hiện trên Desktop lớn */}
-          <aside className="hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky top-32 h-fit space-y-6">
+          <aside className={cn(
+            "hidden xl:block w-[260px] xl:w-[280px] shrink-0 sticky h-fit space-y-6",
+            isDemo ? "top-[160px]" : "top-32"
+          )}>
             <RightSidebarWidgets />
           </aside>
         </div>

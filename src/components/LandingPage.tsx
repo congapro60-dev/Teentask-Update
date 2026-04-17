@@ -12,24 +12,38 @@ export default function LandingPage() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      // Add a timeout to prevent long loading if Firestore is unavailable
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 3000)
+      );
+
       try {
-        // We try to fetch real counts, but if security rules block it for unauthenticated users,
-        // it will fall back to the default values.
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const jobsSnap = await getDocs(collection(db, 'jobs'));
-        const appsSnap = await getDocs(collection(db, 'applications'));
-        
-        setStats({
-          users: `${usersSnap.size}+`,
-          jobs: `${jobsSnap.size}+`,
-          apps: `${appsSnap.size}+`
-        });
+        const statsPromise = (async () => {
+          const usersSnap = await getDocs(collection(db, 'users'));
+          const jobsSnap = await getDocs(collection(db, 'jobs'));
+          const appsSnap = await getDocs(collection(db, 'applications'));
+          return {
+            users: `${usersSnap.size}+`,
+            jobs: `${jobsSnap.size}+`,
+            apps: `${appsSnap.size}+`
+          };
+        })();
+
+        const result = await Promise.race([statsPromise, timeoutPromise]) as any;
+        setStats(result);
       } catch (error) {
-        console.log('Using fallback stats for landing page');
+        console.log('Using fallback stats for landing page (timeout or connectivity issue)');
+        // Fallback to initial state if it fails or timeouts
       }
     };
     fetchStats();
   }, []);
+
+  const handleDemoAccess = (role: 'student' | 'parent' | 'business') => {
+    localStorage.setItem('demoRole', role);
+    localStorage.setItem('isDemoMode', 'true');
+    window.location.reload();
+  };
 
   const criteriaList = [
     t('dedicated1418'),
@@ -668,6 +682,81 @@ export default function LandingPage() {
               <div className="text-4xl font-black text-indigo-600 mb-2">{stats.apps}</div>
               <div className="text-indigo-900/70 font-medium">{t('totalApplications')}</div>
             </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* SECTION 5.5: DEMO ACCESS */}
+      <section className="py-24 bg-white px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-5xl mx-auto"
+        >
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">{t('experienceDemoTitle')}</h2>
+            <p className="text-xl text-gray-500">{t('experienceDemoSubtitle')}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-[40px] bg-blue-50 border-2 border-blue-100 flex flex-col items-center text-center group"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm text-blue-600">
+                <GraduationCap size={32} />
+              </div>
+              <h3 className="text-xl font-black text-blue-900 mb-4">{t('demoAsStudent')}</h3>
+              <p className="text-blue-700/70 mb-8 text-sm">{t('demoAsStudentDesc')}</p>
+              <button 
+                onClick={() => handleDemoAccess('student')}
+                className="mt-auto px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
+              >
+                {t('tryDemoNow')}
+              </button>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-[40px] bg-emerald-50 border-2 border-emerald-100 flex flex-col items-center text-center group"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm text-emerald-600">
+                <ShieldCheck size={32} />
+              </div>
+              <h3 className="text-xl font-black text-emerald-900 mb-4">{t('demoAsParent')}</h3>
+              <p className="text-emerald-700/70 mb-8 text-sm">{t('demoAsParentDesc')}</p>
+              <button 
+                onClick={() => handleDemoAccess('parent')}
+                className="mt-auto px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+              >
+                {t('tryDemoNow')}
+              </button>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-[40px] bg-amber-50 border-2 border-amber-100 flex flex-col items-center text-center group"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm text-amber-600">
+                <Briefcase size={32} />
+              </div>
+              <h3 className="text-xl font-black text-amber-900 mb-4">{t('demoAsBusiness')}</h3>
+              <p className="text-amber-700/70 mb-8 text-sm">{t('demoAsBusinessDesc')}</p>
+              <button 
+                onClick={() => handleDemoAccess('business')}
+                className="mt-auto px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors"
+              >
+                {t('tryDemoNow')}
+              </button>
+            </motion.div>
+          </div>
+          
+          <div className="mt-12 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-4 justify-center">
+            <AlertCircle className="text-indigo-600" />
+            <p className="text-indigo-900 font-medium text-sm">
+              {t('demoModeNotice')}
+            </p>
           </div>
         </motion.div>
       </section>
