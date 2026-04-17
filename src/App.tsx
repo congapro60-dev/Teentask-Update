@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useState, Component, ErrorInfo, ReactNode } from 'react';
+import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { GraduationCap, ShieldCheck, Building2, ChevronRight, ArrowLeft, ShieldAlert, LogOut, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { signInAnonymously, signOut } from 'firebase/auth';
@@ -109,6 +109,16 @@ function AppContent() {
   const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
 
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showDemoPrompt, setShowDemoPrompt] = useState(false);
+
+  useEffect(() => {
+    const handleShowDemoSelection = () => {
+      setShowDemoPrompt(true);
+    };
+
+    window.addEventListener('show_demo_selection', handleShowDemoSelection);
+    return () => window.removeEventListener('show_demo_selection', handleShowDemoSelection);
+  }, []);
 
   const handleLogin = async () => {
     setLoginError(null);
@@ -164,6 +174,55 @@ function AppContent() {
   if (!user) {
     return (
       <div className="bg-[#F8FAFC] min-h-screen">
+        {showDemoPrompt && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative"
+            >
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 rounded-full shadow-md z-10 rotate-3">
+                {t('demoMode')}
+              </div>
+              <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 mb-6 mx-auto">
+                <ShieldAlert size={32} />
+              </div>
+              <h2 className="text-2xl font-black text-center mb-3 text-gray-900 leading-tight">Hệ thống đang bảo trì!</h2>
+              <p className="text-gray-500 text-center mb-8 font-medium">
+                Kết nối tới dữ liệu không thành công (có thể do hết giới hạn truy cập hoặc đang cập nhật bảo mật). 
+                Bạn có thể trải nghiệm giao diện bằng dữ liệu mẫu. Chọn một vai trò để tiếp tục:
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                {[
+                  { id: 'student', label: t('student'), icon: GraduationCap },
+                  { id: 'parent', label: t('parent'), icon: ShieldCheck },
+                  { id: 'business', label: t('business'), icon: Building2 },
+                ].map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => {
+                      localStorage.setItem('demoRole', role.id);
+                      localStorage.setItem('isDemoMode', 'true');
+                      window.location.reload();
+                    }}
+                    className="p-4 rounded-2xl border-2 border-gray-100 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center gap-2 group"
+                  >
+                    <role.icon size={24} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
+                    <span className="font-bold text-gray-900 text-sm">{role.label}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <button 
+                onClick={() => setShowDemoPrompt(false)}
+                className="w-full py-3 text-gray-400 font-bold hover:text-gray-600 transition-colors"
+              >
+                Trở lại
+              </button>
+            </motion.div>
+          </div>
+        )}
         <div className={appWrapperClass}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

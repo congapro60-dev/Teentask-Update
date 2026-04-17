@@ -61,14 +61,9 @@ async function testConnection() {
 Current Database ID: ${finalConfig.firestoreDatabaseId || '(default)'}
 Please check if this database exists in your Firebase Console and if rules allow access.`);
     } else if (errorMsg.toLowerCase().includes('quota') || errorMsg.includes('resource-exhausted')) {
-      console.warn("Firestore Quota Exceeded! The project has used up its free daily read units. Enabling Demo Mode gracefully...");
+      console.warn("Firestore Quota Exceeded! The project has used up its free daily read units.");
       if (typeof window !== 'undefined') {
-        // Automatically activate demo mode when quota limits hit so the app doesn't just crash on load.
-        if (localStorage.getItem('isDemoMode') !== 'true') {
-           localStorage.setItem('isDemoMode', 'true');
-           window.dispatchEvent(new CustomEvent('demo_mode_activated'));
-           window.location.reload();
-        }
+        window.dispatchEvent(new CustomEvent('show_demo_selection'));
       }
     } else {
       console.warn("Firestore connection check info:", errorMsg);
