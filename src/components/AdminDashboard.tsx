@@ -37,16 +37,25 @@ export default function AdminDashboard() {
 
   // Survey Data for Financial Simulator
   const [surveyPricingData, setSurveyPricingData] = useState<any>(null);
+  const [landingPageStats, setLandingPageStats] = useState<any>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
 
   useEffect(() => {
-    const unsubJobs = onSnapshot(collection(db, 'jobs'), (s) => setJobs(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Jobs Error:", e));
-    const unsubAds = onSnapshot(collection(db, 'advertisements'), (s) => setAds(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Ads Error:", e));
-    const unsubBookings = onSnapshot(collection(db, 'shadowing_bookings'), (s) => setShadowingBookings(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Bookings Error:", e));
-    const unsubUsers = onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Admin Users Error:", e));
+    const handleQuotaError = (e: any) => {
+      console.error("Firestore Error:", e);
+      if (e.code === 'permission-denied' && e.message.includes('quota')) {
+        setQuotaExceeded(true);
+      }
+    };
+
+    const unsubJobs = onSnapshot(collection(db, 'jobs'), (s) => setJobs(s.docs.map(d => ({id: d.id, ...d.data()}))), handleQuotaError);
+    const unsubAds = onSnapshot(collection(db, 'advertisements'), (s) => setAds(s.docs.map(d => ({id: d.id, ...d.data()}))), handleQuotaError);
+    const unsubBookings = onSnapshot(collection(db, 'shadowing_bookings'), (s) => setShadowingBookings(s.docs.map(d => ({id: d.id, ...d.data()}))), handleQuotaError);
+    const unsubUsers = onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({id: d.id, ...d.data()}))), handleQuotaError);
     const unsubConfig = onSnapshot(doc(db, 'settings', 'admin'), (doc) => {
       if (doc.exists()) setAutoApprove(doc.data().autoApprove || false);
       setLoading(false);
-    }, (e) => console.error("Admin Config Error:", e));
+    }, handleQuotaError);
 
     const fetchSurveyPricing = async () => {
       try {
@@ -57,13 +66,29 @@ export default function AdminDashboard() {
           const studentBudgets: Record<string, number> = {};
           const parentBudgets: Record<string, number> = {};
           const businessBudgets: Record<string, number> = {};
+          
+          // Landing Page Detailed Stats
+          const roles: Record<string, number> = {};
+          const studentNeeds: Record<string, number> = {};
+          const parentConcerns: Record<string, number> = {};
+          const businessNeeds: Record<string, number> = {};
 
           snapshot.forEach(doc => {
             const data = doc.data();
+            
+            // Shared pricing stats
             if (data.payForShadowing) counts[data.payForShadowing] = (counts[data.payForShadowing] || 0) + 1;
             if (data.skillCourseBudget) studentBudgets[data.skillCourseBudget] = (studentBudgets[data.skillCourseBudget] || 0) + 1;
             if (data.monthlyDevelopmentBudget) parentBudgets[data.monthlyDevelopmentBudget] = (parentBudgets[data.monthlyDevelopmentBudget] || 0) + 1;
             if (data.recruitmentBudget) businessBudgets[data.recruitmentBudget] = (businessBudgets[data.recruitmentBudget] || 0) + 1;
+
+            // Role distribution
+            if (data.role) roles[data.role] = (roles[data.role] || 0) + 1;
+
+            // Specific insights
+            if (data.role === 'student' && data.desiredSkill) studentNeeds[data.desiredSkill] = (studentNeeds[data.desiredSkill] || 0) + 1;
+            if (data.role === 'parent' && data.topConcern) parentConcerns[data.topConcern] = (parentConcerns[data.topConcern] || 0) + 1;
+            if (data.role === 'business' && data.trainingField) businessNeeds[data.trainingField] = (businessNeeds[data.trainingField] || 0) + 1;
           });
 
           const formatBudget = (budgets: Record<string, number>) => {
@@ -84,8 +109,19 @@ export default function AdminDashboard() {
             parentMonthlyBudget: formatBudget(parentBudgets),
             businessRecruitmentBudget: formatBudget(businessBudgets)
           });
+
+          setLandingPageStats({
+            totalResponses: total,
+            roles: Object.entries(roles).map(([name, value]) => ({ name, value })),
+            studentNeeds: Object.entries(studentNeeds).sort((a, b) => b[1] - a[1]).slice(0, 5),
+            parentConcerns: Object.entries(parentConcerns).sort((a, b) => b[1] - a[1]).slice(0, 5),
+            businessNeeds: Object.entries(businessNeeds).sort((a, b) => b[1] - a[1]).slice(0, 5)
+          });
         }
-      } catch (error) { console.error("Error fetching survey pricing:", error); }
+      } catch (error: any) { 
+        console.error("Error fetching survey pricing:", error); 
+        if (error.message?.includes('quota')) setQuotaExceeded(true);
+      }
     };
     fetchSurveyPricing();
 
@@ -233,6 +269,18 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {quotaExceeded && (
+          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4 text-amber-900 shadow-sm animate-pulse">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+              <AlertCircle size={20} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="font-black text-sm uppercase tracking-tight">Hết hạn mức truy vấn (Quota Exceeded)</p>
+              <p className="text-xs opacity-80">Gói Firestore miễn phí đã đạt giới hạn trong ngày. Một số dữ liệu có thể không hiển thị đầy đủ. Hạn mức sẽ tự động reset sau 24h.</p>
+            </div>
+          </div>
+        )}
+
         {activeTab !== 'financial' && activeTab !== 'market' && (
           <div className="flex flex-col lg:flex-row gap-4 mb-8 items-start lg:items-center justify-between">
             <div className="relative w-full lg:max-w-md shrink-0">
@@ -261,7 +309,7 @@ export default function AdminDashboard() {
         {(activeTab === 'jobs' || activeTab === 'ads' || activeTab === 'applications') && <ContentTab activeTab={activeTab} filter={filter} searchQuery={searchQuery} />}
         {activeTab === 'messages' && <SupportTab filter={filter} searchQuery={searchQuery} />}
         {activeTab === 'financial' && <FinancialTab financialTabMode={financialTabMode} setFinancialTabMode={setFinancialTabMode} simData={simData} setSimData={setSimData} financials={financials} realFinancials={realFinancials} surveyPricingData={surveyPricingData} handleExportBCTC={handleExportBCTC} handleExportSlides={handleExportSlides} handleExportPitchSummary={handleExportPitchSummary} formatVND={formatVND} />}
-        {activeTab === 'market' && <MarketTab isAILoading={isAILoading} fetchMarketDataFromAI={fetchMarketDataFromAI} marketStats={marketStats} chartData={aiChartData || []} heatmapData={aiHeatmapData || []} aiLastUpdated={aiLastUpdated} />}
+        {activeTab === 'market' && <MarketTab isAILoading={isAILoading} fetchMarketDataFromAI={fetchMarketDataFromAI} marketStats={marketStats} chartData={aiChartData || []} heatmapData={aiHeatmapData || []} aiLastUpdated={aiLastUpdated} landingPageStats={landingPageStats} />}
       </div>
     </div>
   );

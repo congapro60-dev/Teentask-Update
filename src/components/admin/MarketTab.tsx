@@ -1,6 +1,7 @@
 import React from 'react';
-import { BarChart2, Loader2, Sparkles, Users, Briefcase, ShieldCheck, Star } from 'lucide-react';
+import { BarChart2, Loader2, Sparkles, Users, Briefcase, ShieldCheck, Star, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { cn } from '../../lib/utils';
 
 interface MarketTabProps {
   isAILoading: boolean;
@@ -9,6 +10,7 @@ interface MarketTabProps {
   chartData: any[];
   heatmapData: any[];
   aiLastUpdated: Date | null;
+  landingPageStats?: any;
 }
 
 export default function MarketTab({
@@ -17,10 +19,11 @@ export default function MarketTab({
   marketStats,
   chartData,
   heatmapData,
-  aiLastUpdated
+  aiLastUpdated,
+  landingPageStats
 }: MarketTabProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -50,6 +53,87 @@ export default function MarketTab({
           )}
         </button>
       </div>
+
+      {landingPageStats && (
+        <section className="bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl shadow-indigo-50/50 mb-10 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-20 -mt-20" />
+          
+          <div className="flex items-center gap-4 mb-8 relative">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Real-time Landing Page Insights</h3>
+              <p className="text-sm text-gray-500 font-medium">Phân tích từ {landingPageStats.totalResponses} khảo sát khách vãng lai</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+            {/* Roles Distribution */}
+            <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+              <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Cơ cấu đối tượng vãng lai</h4>
+              <div className="space-y-4">
+                {landingPageStats.roles.map((role: any) => (
+                  <div key={role.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        role.name === 'student' ? 'bg-blue-500' : role.name === 'parent' ? 'bg-purple-500' : 'bg-amber-500'
+                      )} />
+                      <span className="text-sm font-bold text-gray-700 capitalize">
+                        {role.name === 'student' ? 'Học sinh' : role.name === 'parent' ? 'Phụ huynh' : 'Doanh nghiệp'}
+                      </span>
+                    </div>
+                    <span className="text-sm font-black text-gray-900">
+                      {Math.round((role.value / landingPageStats.totalResponses) * 100)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 h-2 w-full bg-gray-100 rounded-full overflow-hidden flex">
+                {landingPageStats.roles.map((role: any) => (
+                  <div 
+                    key={role.name}
+                    className={cn(
+                      "h-full",
+                      role.name === 'student' ? 'bg-blue-500' : role.name === 'parent' ? 'bg-purple-500' : 'bg-amber-500'
+                    )}
+                    style={{ width: `${(role.value / landingPageStats.totalResponses) * 100}%` }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Top Student Interests */}
+            <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+              <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 underline decoration-blue-200 decoration-2 underline-offset-4">Top khao khát (Học sinh)</h4>
+              <div className="space-y-4">
+                {landingPageStats.studentNeeds.map(([name, value]: any, idx: number) => (
+                  <div key={name} className="flex items-center gap-3">
+                    <span className="text-xs font-black text-blue-400 w-4 italic">0{idx + 1}</span>
+                    <span className="text-sm font-bold text-gray-700 flex-1">{name}</span>
+                    <span className="text-xs font-black text-gray-400">{value} lượt</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Business Needs */}
+            <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
+              <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 underline decoration-amber-200 decoration-2 underline-offset-4">Nhu cầu Doanh nghiệp</h4>
+              <div className="space-y-4">
+                {landingPageStats.businessNeeds.map(([name, value]: any, idx: number) => (
+                  <div key={name} className="flex items-center gap-3">
+                    <span className="text-xs font-black text-amber-400 w-4 italic">0{idx + 1}</span>
+                    <span className="text-sm font-bold text-gray-700 flex-1">{name}</span>
+                    <span className="text-xs font-black text-gray-400">{value} lượt</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm">
