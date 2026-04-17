@@ -227,8 +227,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           }
           setLoading(false);
         }, (error) => {
+          setLoading(false); // Move this up so it doesn't get blocked by the throw inside handleFirestoreError
           handleFirestoreError(error, OperationType.GET, path);
-          setLoading(false);
         });
       } else {
         setProfile(null);
