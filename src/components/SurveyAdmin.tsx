@@ -17,18 +17,26 @@ import html2canvas from 'html2canvas';
 interface SurveyResponse {
   id: string;
   surveyName: string;
-  ageGroup: string;
-  userRole: string;
-  platform: string;
-  easeOfUse: number;
-  designStyle: number;
-  technicalIssues: string;
-  usefulFeature: string;
-  isLookingFor: string;
-  recommendScore: number;
-  improvement: string;
+  ageGroup?: string;
+  userRole?: string;
+  role?: string; // For quick surveys
+  platform?: string;
+  easeOfUse?: number;
+  designStyle?: number;
+  technicalIssues?: string;
+  usefulFeature?: string;
+  isLookingFor?: string;
+  recommendScore?: number;
+  improvement?: string;
   email?: string;
   submittedAt: any;
+  createdAt?: number; // For quick surveys
+  source?: string;
+  // Quick survey specific fields
+  expectedSalary?: string;
+  desiredSkill?: string;
+  topConcern?: string;
+  hiringNeed?: string;
 }
 
 interface AIAnalysis {
@@ -74,15 +82,78 @@ export default function SurveyAdmin() {
   const fetchResponses = async () => {
     setLoading(true);
     try {
+      // Fetch detailed survey responses
       const q = query(collection(db, 'survey_responses'), orderBy('submittedAt', 'desc'));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SurveyResponse));
-      setResponses(data);
+      const detailedData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SurveyResponse));
+      
+      // Fetch quick surveys from landing page
+      const qQuick = query(collection(db, 'quick_surveys'), orderBy('createdAt', 'desc'));
+      const snapshotQuick = await getDocs(qQuick);
+      const quickData = snapshotQuick.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          surveyName: 'Khảo sát nhanh Landing Page',
+          userRole: data.role,
+          role: data.role,
+          submittedAt: { toDate: () => new Date(data.createdAt || Date.now()) },
+          createdAt: data.createdAt,
+          usefulFeature: data.desiredSkill || data.hiringNeed || data.topConcern || 'N/A',
+          improvement: 'N/A',
+          ...data
+        } as SurveyResponse;
+      });
+
+      setResponses([...detailedData, ...quickData]);
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'survey_responses');
     } finally {
       setLoading(false);
     }
+  };
+
+  const exportToCSV = () => {
+    if (responses.length === 0) return;
+    
+    const currentSurveyData = selectedSurvey 
+      ? responses.filter(r => r.surveyName === selectedSurvey)
+      : responses;
+
+    // Define headers
+    const headers = [
+      'ID', 'Tên khảo sát', 'Vai trò', 'Độ tuổi', 'Thời gian', 
+      'Điểm hài lòng', 'Điểm NPS', 'Tính năng hữu ích', 'Góp ý/Nhu cầu'
+    ];
+
+    // Map data to rows
+    const rows = currentSurveyData.map(r => [
+      r.id,
+      r.surveyName,
+      r.userRole || r.role || 'N/A',
+      r.ageGroup || 'N/A',
+      r.submittedAt?.toDate().toLocaleString('vi-VN') || 'N/A',
+      r.easeOfUse || 'N/A',
+      r.recommendScore || 'N/A',
+      `"${(r.usefulFeature || '').replace(/"/g, '""')}"`,
+      `"${(r.improvement || r.topConcern || r.desiredSkill || '').replace(/"/g, '""')}"`
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      "\ufeff" + headers.join(','), // Added BOM for Excel UTF-8 support
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `TeenTask_Survey_Data_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const analyzeWithAI = async () => {
@@ -111,22 +182,25 @@ export default function SurveyAdmin() {
         Hãy phân tích các kết quả khảo sát cho dự án "Teen Task".
         
         Dữ liệu khảo sát (${analysisData.length} phản hồi):
+        Lưu ý: Dữ liệu bao gồm cả "Khảo sát chi tiết" (có điểm NPS, thiết kế) và "Khảo sát nhanh từ Landing Page" (tập trung vào nhu cầu, kỹ năng, vai trò).
+        
+        Dữ liệu thô:
         ${JSON.stringify(analysisData)}
 
         Hãy trả về kết quả dưới dạng JSON với cấu trúc sau:
         {
-          "summary": "Tóm tắt điều hành ngắn gọn",
-          "quantitative": "Phân tích sâu về các con số và xu hướng",
-          "qualitative": "Phấu hiểu về tâm lý và nhu cầu người dùng",
-          "recommendations": "Các đề xuất chiến lược cụ thể",
-          "mediaHighlights": ["Điểm nhấn 1", "Điểm nhấn 2", "Điểm nhấn 3"],
-          "mediaQuote": "Câu trích dẫn đắt giá nhất"
+          "summary": "Tóm tắt điều hành ngắn gọn, nhấn mạnh vào xu hướng mới nhất",
+          "quantitative": "Phân tích sâu về các con số (tỷ lệ vai trò, mức độ hài lòng, nhu cầu phổ biến)",
+          "qualitative": "Thấu hiểu về tâm lý, nỗi đau (pain points) và kỳ vọng của từng nhóm đối tượng",
+          "recommendations": "Các đề xuất chiến lược cụ thể để tăng tỷ lệ chuyển đổi và cải thiện sản phẩm",
+          "mediaHighlights": ["Thông điệp truyền thông 1", "Thông điệp truyền thông 2", "Thông điệp truyền thông 3"],
+          "mediaQuote": "Một câu nói tổng kết ấn tượng cho chiến dịch Marketing"
         }
 
         Yêu cầu:
-        - Nội dung chuyên nghiệp, khách quan, sẵn sàng cho báo cáo truyền thông.
-        - Sử dụng Markdown trong các trường text để định dạng đẹp.
-        - Trả về DUY NHẤT đối tượng JSON, không có văn bản thừa.
+        - Nội dung chuyên nghiệp, ngôn ngữ sắc sảo, sẵn sàng cho báo cáo Pitch Deck.
+        - Sử dụng Markdown để trình bày các ý chính, bullet points.
+        - Trả về DUY NHẤT đối tượng JSON.
       `;
 
       const response = await ai.models.generateContent({
@@ -231,8 +305,12 @@ export default function SurveyAdmin() {
   // Stats Calculation for Charts
   const getRoleData = () => {
     const roles: any = {};
-    responses.forEach(r => {
-      const role = r.userRole?.split('/')[0] || 'Khác';
+    const dataToUse = selectedSurvey 
+      ? responses.filter(r => r.surveyName === selectedSurvey)
+      : responses;
+
+    dataToUse.forEach(r => {
+      const role = r.userRole?.split('/')[0] || r.role || 'Khác';
       roles[role] = (roles[role] || 0) + 1;
     });
     return Object.entries(roles).map(([name, value]) => ({ name, value }));
@@ -240,22 +318,44 @@ export default function SurveyAdmin() {
 
   const getAgeData = () => {
     const ages: any = {};
-    responses.forEach(r => {
-      const age = r.ageGroup?.split('/')[0] || 'Khác';
+    const dataToUse = selectedSurvey 
+      ? responses.filter(r => r.surveyName === selectedSurvey)
+      : responses;
+
+    dataToUse.forEach(r => {
+      const age = r.ageGroup?.split('/')[0] || 'N/A';
       ages[age] = (ages[age] || 0) + 1;
     });
     return Object.entries(ages).map(([name, value]) => ({ name, value }));
   };
 
   const getSatisfactionData = () => {
+    const dataToUse = selectedSurvey 
+      ? responses.filter(r => r.surveyName === selectedSurvey)
+      : responses;
+    
+    // Filter cases where values exist (quick surveys might not have these)
+    const validEase = dataToUse.filter(r => r.easeOfUse !== undefined);
+    const validDesign = dataToUse.filter(r => r.designStyle !== undefined);
+    const validNPS = dataToUse.filter(r => r.recommendScore !== undefined);
+
     return [
-      { name: 'Dễ sử dụng', value: (responses.reduce((acc, r) => acc + (r.easeOfUse || 0), 0) / responses.length).toFixed(1) },
-      { name: 'Thiết kế', value: (responses.reduce((acc, r) => acc + (r.designStyle || 0), 0) / responses.length).toFixed(1) },
-      { name: 'NPS (x10)', value: (responses.reduce((acc, r) => acc + (r.recommendScore || 0), 0) / responses.length).toFixed(1) },
+      { name: 'Dễ sử dụng', value: validEase.length ? (validEase.reduce((acc, r) => acc + (r.easeOfUse || 0), 0) / validEase.length).toFixed(1) : 0 },
+      { name: 'Thiết kế', value: validDesign.length ? (validDesign.reduce((acc, r) => acc + (r.designStyle || 0), 0) / validDesign.length).toFixed(1) : 0 },
+      { name: 'NPS', value: validNPS.length ? (validNPS.reduce((acc, r) => acc + (r.recommendScore || 0), 0) / validNPS.length).toFixed(1) : 0 },
     ];
   };
 
   const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+  const getAveragableData = (field: keyof SurveyResponse) => {
+    const dataToUse = selectedSurvey 
+      ? responses.filter(r => r.surveyName === selectedSurvey)
+      : responses;
+    const validData = dataToUse.filter(r => r[field] !== undefined && typeof r[field] === 'number');
+    if (validData.length === 0) return 'N/A';
+    return (validData.reduce((acc, r) => acc + (Number(r[field]) || 0), 0) / validData.length).toFixed(1);
+  };
 
   if (loading) {
     return (
@@ -274,9 +374,18 @@ export default function SurveyAdmin() {
             <PieChart size={32} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">KẾT QUẢ KHẢO SÁT</h1>
-            <p className="text-gray-500 text-sm">Theo dõi và phân tích ý kiến người dùng</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">PHÂN TÍCH KHẢO SÁT</h1>
+            <p className="text-gray-500 text-sm">Tổng hợp {responses.length} phản hồi từ Landing Page & App</p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToCSV}
+            className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-all shadow-sm"
+          >
+            <Download size={20} />
+            Xuất file CSV (Excel)
+          </button>
         </div>
       </div>
 
@@ -569,16 +678,21 @@ export default function SurveyAdmin() {
                   <div className="space-y-8">
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                      <StatCard label="Tổng phản hồi" value={responses.length} icon={Users} color="blue" />
+                      <StatCard 
+                        label="Tổng phản hồi" 
+                        value={selectedSurvey ? responses.filter(r => r.surveyName === selectedSurvey).length : responses.length} 
+                        icon={Users} 
+                        color="blue" 
+                      />
                       <StatCard 
                         label="Điểm NPS TB" 
-                        value={(responses.reduce((acc, r) => acc + (r.recommendScore || 0), 0) / responses.length).toFixed(1)} 
+                        value={getAveragableData('recommendScore')} 
                         icon={PieChart} 
                         color="green" 
                       />
                       <StatCard 
                         label="Dễ sử dụng (TB)" 
-                        value={(responses.reduce((acc, r) => acc + (r.easeOfUse || 0), 0) / responses.length).toFixed(1)} 
+                        value={getAveragableData('easeOfUse')} 
                         icon={BarChart3} 
                         color="purple" 
                       />
