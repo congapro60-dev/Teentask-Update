@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db, useFirebase } from './FirebaseProvider';
 import { ShieldCheck, Briefcase, GraduationCap, FileText, CheckCircle2, XCircle, AlertCircle, BookOpen, Award, ChevronRight, ChevronDown, Globe, LogIn, Search, Users } from 'lucide-react';
@@ -86,10 +86,50 @@ export default function LandingPage() {
     return <span className="text-gray-500">{value}</span>;
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const heroImageVariants = {
+    animate: {
+      y: [0, -10, 0],
+      rotate: [0, 1, 0],
+      transition: {
+        duration: 5,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white font-sans overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900">
       {/* Language Switcher Floating */}
-      <div className="fixed top-6 right-6 z-[100] flex gap-2">
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.8 }}
+        className="fixed top-6 right-6 z-[100] flex gap-2"
+      >
         <button 
           onClick={() => setLanguage('vi')}
           className={`px-3 py-1.5 rounded-full text-xs font-black transition-all border ${
@@ -110,110 +150,128 @@ export default function LandingPage() {
         >
           EN
         </button>
-      </div>
+      </motion.div>
 
       {/* SECTION 1: HERO */}
       <section className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0F0C29] via-[#302B63] to-[#4F46E5] px-6 py-20 overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/20 blur-[100px]"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/20 blur-[100px]"></div>
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.2, 0.3, 0.2],
+              x: [0, 20, 0],
+              y: [0, -30, 0]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/20 blur-[100px]"
+          ></motion.div>
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.2, 0.4, 0.2],
+              x: [0, -40, 0],
+              y: [0, 20, 0]
+            }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/20 blur-[100px]"
+          ></motion.div>
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          variants={containerVariants}
           className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto"
         >
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-3 mb-8">
+            <motion.span whileHover={{ scale: 1.05 }} className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2 cursor-default">
               <ShieldCheck size={16} className="text-emerald-400" /> {t('parentVerification')}
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
+            </motion.span>
+            <motion.span whileHover={{ scale: 1.05 }} className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2 cursor-default">
               <Briefcase size={16} className="text-blue-400" /> {t('realJobs')}
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2">
+            </motion.span>
+            <motion.span whileHover={{ scale: 1.05 }} className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm border border-white/20 flex items-center gap-2 cursor-default">
               <GraduationCap size={16} className="text-purple-400" /> {t('jobShadowing')}
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
 
-          <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight">
+          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight leading-[0.9]">
             {t('heroTitle')}
-          </h1>
-          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mb-4 leading-relaxed">
+          </motion.h1>
+          <motion.p variants={itemVariants} className="text-xl md:text-2xl text-white/80 max-w-2xl mb-4 leading-relaxed font-medium">
             {t('heroSubtitle')}
-          </p>
-          <p className="text-lg text-white/60 italic mb-12">
+          </motion.p>
+          <motion.p variants={itemVariants} className="text-lg text-white/60 italic mb-12 font-serif opacity-80">
             {t('heroQuote')}
-          </p>
+          </motion.p>
 
           {/* 1. BADGE "KHÔNG CẦN CÀI APP" — Ý tưởng từ Claude AI */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            variants={itemVariants}
             className="flex flex-wrap justify-center gap-2 mb-8"
           >
-            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
               <CheckCircle2 size={14} className="text-emerald-400" /> {t('noInstallNeeded')}
             </span>
-            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
               <Globe size={14} className="text-blue-300" /> {t('useOnBrowser')}
             </span>
-            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5">
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30 flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
               <ShieldCheck size={14} className="text-amber-300" /> {t('googleOAuthSecurity')}
             </span>
           </motion.div>
 
           {/* 2. STEPPER "3 BƯỚC ĐƠN GIẢN" — Ý tưởng từ Claude AI */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
+            variants={itemVariants}
             className="flex items-center justify-center gap-4 mb-12 flex-wrap"
           >
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">1</div>
-              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+            <div className="flex flex-col items-center group cursor-default">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">1</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
                 <Globe size={14} /> {t('step1')}
               </div>
             </div>
             
-            <ChevronRight size={20} className="text-white/40 mt-[-20px] hidden sm:block" />
+            <ChevronRight size={20} className="text-white/40 mt-[-20px] hidden sm:block animate-pulse" />
             
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">2</div>
-              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+            <div className="flex flex-col items-center group cursor-default">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">2</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
                 <LogIn size={14} /> {t('step2')}
               </div>
             </div>
 
             <ChevronRight size={20} className="text-white/40 mt-[-20px] hidden sm:block" />
 
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg">3</div>
-              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2">
+            <div className="flex flex-col items-center group cursor-default">
+              <div className="w-8 h-8 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">3</div>
+              <div className="flex items-center gap-1 text-white text-sm font-medium mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
                 <Search size={14} /> {t('step3')}
               </div>
             </div>
           </motion.div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <button 
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <motion.button 
+              whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/profile')}
-              className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-lg shadow-xl hover:scale-105 transition-transform"
+              className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-lg shadow-xl"
             >
               {t('startNowFree')}
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/quick-survey')}
-              className="px-8 py-4 bg-transparent text-white border-2 border-white/30 rounded-2xl font-bold text-lg hover:bg-white/10 transition-colors"
+              className="px-8 py-4 bg-transparent text-white border-2 border-white/30 rounded-2xl font-bold text-lg transition-colors"
             >
               {t('quickSurveyBtn')}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -264,11 +322,17 @@ export default function LandingPage() {
             ].map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-[40px] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all group"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ 
+                  delay: i * 0.1,
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+                className="p-8 rounded-[40px] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50 transition-all group cursor-default"
               >
                 <div className={`w-16 h-16 ${item.color} rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                   <item.icon size={32} />
@@ -428,7 +492,12 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Học sinh */}
-            <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-blue-50 rounded-3xl p-8 border border-blue-100 hover:shadow-lg transition-shadow"
+            >
               <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <GraduationCap size={32} />
               </div>
@@ -449,10 +518,15 @@ export default function LandingPage() {
                   {t('teenTaskSolutionStudent')}
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Phụ huynh */}
-            <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100 hover:shadow-lg transition-shadow"
+            >
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck size={32} />
               </div>
@@ -473,10 +547,15 @@ export default function LandingPage() {
                   {t('teenTaskSolutionParent')}
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Doanh nghiệp */}
-            <div className="bg-amber-50 rounded-3xl p-8 border border-amber-100">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-amber-50 rounded-3xl p-8 border border-amber-100 hover:shadow-lg transition-shadow"
+            >
               <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                 <Briefcase size={32} />
               </div>
@@ -497,7 +576,7 @@ export default function LandingPage() {
                   {t('teenTaskSolutionBusiness')}
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </section>
@@ -510,23 +589,29 @@ export default function LandingPage() {
           viewport={{ once: true }}
           className="max-w-5xl mx-auto"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-            <div className="text-center py-6">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-100"
+          >
+            <motion.div variants={itemVariants} className="text-center py-6">
               {/* Cập nhật nội dung 2: Thay "7M+" bằng "~3M" và thêm nguồn */}
               <div className="text-5xl font-black text-indigo-600 mb-2">~3M</div>
               <div className="text-gray-500 font-medium text-lg">{t('vietnamStudents')}</div>
               <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter font-bold">{t('sourceMOET')}</p>
-            </div>
-            <div className="text-center py-6">
+            </motion.div>
+            <motion.div variants={itemVariants} className="text-center py-6">
               {/* Cập nhật nội dung 1: Thay "0" bằng "1st" và cập nhật mô tả */}
               <div className="text-5xl font-black text-rose-500 mb-2">1st</div>
               <div className="text-gray-500 font-medium text-lg">{t('pioneerInVN')}</div>
-            </div>
-            <div className="text-center py-6">
+            </motion.div>
+            <motion.div variants={itemVariants} className="text-center py-6">
               <div className="text-5xl font-black text-fuchsia-600 mb-2">3</div>
               <div className="text-gray-500 font-medium text-lg">{t('threeParties')}</div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -699,8 +784,15 @@ export default function LandingPage() {
             <p className="text-xl text-gray-500">{t('experienceDemoSubtitle')}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
             <motion.div 
+              variants={itemVariants}
               whileHover={{ y: -10 }}
               className="p-8 rounded-[40px] bg-blue-50 border-2 border-blue-100 flex flex-col items-center text-center group"
             >
@@ -709,15 +801,17 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-black text-blue-900 mb-4">{t('demoAsStudent')}</h3>
               <p className="text-blue-700/70 mb-8 text-sm">{t('demoAsStudentDesc')}</p>
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleDemoAccess('student')}
                 className="mt-auto px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
               >
                 {t('tryDemoNow')}
-              </button>
+              </motion.button>
             </motion.div>
 
             <motion.div 
+              variants={itemVariants}
               whileHover={{ y: -10 }}
               className="p-8 rounded-[40px] bg-emerald-50 border-2 border-emerald-100 flex flex-col items-center text-center group"
             >
@@ -726,15 +820,17 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-black text-emerald-900 mb-4">{t('demoAsParent')}</h3>
               <p className="text-emerald-700/70 mb-8 text-sm">{t('demoAsParentDesc')}</p>
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleDemoAccess('parent')}
                 className="mt-auto px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
               >
                 {t('tryDemoNow')}
-              </button>
+              </motion.button>
             </motion.div>
 
             <motion.div 
+              variants={itemVariants}
               whileHover={{ y: -10 }}
               className="p-8 rounded-[40px] bg-amber-50 border-2 border-amber-100 flex flex-col items-center text-center group"
             >
@@ -743,14 +839,15 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-black text-amber-900 mb-4">{t('demoAsBusiness')}</h3>
               <p className="text-amber-700/70 mb-8 text-sm">{t('demoAsBusinessDesc')}</p>
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleDemoAccess('business')}
                 className="mt-auto px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors"
               >
                 {t('tryDemoNow')}
-              </button>
+              </motion.button>
             </motion.div>
-          </div>
+          </motion.div>
           
           <div className="mt-12 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-4 justify-center">
             <AlertCircle className="text-indigo-600" />
@@ -764,19 +861,23 @@ export default function LandingPage() {
       {/* SECTION 6: CTA CUỐI */}
       <section className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 text-center">
         <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-8">{t('readyToStart')}</h2>
-          <button 
+          <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-black text-white mb-8">{t('readyToStart')}</motion.h2>
+          <motion.button 
+            variants={itemVariants}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/profile')}
-            className="px-10 py-5 bg-white text-indigo-700 rounded-2xl font-black text-xl shadow-2xl hover:scale-105 transition-transform flex items-center justify-center gap-3 mx-auto"
+            className="px-10 py-5 bg-white text-indigo-700 rounded-2xl font-black text-xl shadow-2xl transition-transform flex items-center justify-center gap-3 mx-auto"
           >
             <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
             {t('loginWithGoogleFree')}
-          </button>
+          </motion.button>
         </motion.div>
       </section>
     </div>

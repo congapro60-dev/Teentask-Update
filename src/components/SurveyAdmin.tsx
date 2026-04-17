@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { db, handleFirestoreError, OperationType, useFirebase } from './FirebaseProvider';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { ShieldCheck, BarChart3, PieChart, MessageSquare, Loader2, Sparkles, ChevronRight, ArrowLeft, Users, Calendar, Download, Copy, CheckCircle2, FileText, LayoutDashboard, Target, Lightbulb, Megaphone, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PieChart, Download, Trash2, Calendar, User, FileText, BarChart3, Users, ChevronRight, Layout, Presentation, X, Copy, Database, RefreshCw, AlertTriangle, Settings, ArrowLeft, CheckCircle2, LayoutDashboard, Target, Lightbulb, Megaphone, ChevronLeft, Loader2, Sparkles, MessageSquare } from 'lucide-react';
+import { collection, query, where, getDocs, orderBy, deleteDoc, doc, addDoc, writeBatch } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, useFirebase } from './FirebaseProvider';
 import { GoogleGenAI, Type } from "@google/genai";
 import { getGeminiApiKey } from "../lib/gemini";
 import Markdown from 'react-markdown';
@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getFirestore, collection as getCol, getDocs as getDocsOld } from 'firebase/firestore';
 
 interface SurveyResponse {
   id: string;
@@ -59,6 +61,20 @@ export default function SurveyAdmin() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [showPresentation, setShowPresentation] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showMigration, setShowMigration] = useState(false);
+  const [migrationStatus, setMigrationStatus] = useState<{
+    step: 'idle' | 'testing' | 'migrating' | 'success' | 'error';
+    message: string;
+    progress: number;
+  }>({ step: 'idle', message: '', progress: 0 });
+
+  const [oldConfig, setOldConfig] = useState({
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    appId: '',
+    firestoreDatabaseId: '(default)'
+  });
 
   useEffect(() => {
     fetchResponses();
@@ -154,6 +170,68 @@ export default function SurveyAdmin() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleMigration = async () => {
+    if (!oldConfig.projectId || !oldConfig.apiKey) {
+      alert("Vui lòng nhập đầy đủ Project ID và API Key của Firebase cũ.");
+      return;
+    }
+
+    setMigrationStatus({ step: 'testing', message: 'Đang kết nối tới Firebase cũ...', progress: 0 });
+    
+    let oldApp;
+    try {
+      // Initialize a temporary app for migration
+      const appName = `migration_app_${Date.now()}`;
+      oldApp = initializeApp(oldConfig, appName);
+      const oldDb = getFirestore(oldApp, oldConfig.firestoreDatabaseId === '(default)' ? undefined : oldConfig.firestoreDatabaseId);
+
+      setMigrationStatus({ step: 'migrating', message: 'Đang đọc dữ liệu từ Firebase cũ...', progress: 20 });
+
+      const collectionsToMigrate = ['quick_surveys', 'survey_responses'];
+      let totalMigrated = 0;
+
+      for (const colName of collectionsToMigrate) {
+        setMigrationStatus(prev => ({ ...prev, message: `Đang chép dữ liệu từ collection: ${colName}...`, progress: prev.progress + 10 }));
+        
+        const oldColRef = getCol(oldDb, colName);
+        const snapshot = await getDocsOld(oldColRef);
+        
+        if (snapshot.empty) continue;
+
+        const batch = writeBatch(db);
+        snapshot.docs.forEach((oldDoc) => {
+          const newDocRef = doc(collection(db, colName));
+          batch.set(newDocRef, {
+            ...oldDoc.data(),
+            migratedAt: Date.now(),
+            originalId: oldDoc.id
+          });
+          totalMigrated++;
+        });
+        
+        await batch.commit();
+      }
+
+      setMigrationStatus({ 
+        step: 'success', 
+        message: `Hoàn tất! Đã di trú thành công ${totalMigrated} bản ghi khảo sát.`, 
+        progress: 100 
+      });
+      fetchResponses(); // Refresh current list
+    } catch (error: any) {
+      console.error("Migration error:", error);
+      setMigrationStatus({ 
+        step: 'error', 
+        message: `Lỗi: ${error.message || 'Không thể kết nối hoặc copy dữ liệu.'}`, 
+        progress: 0 
+      });
+    } finally {
+      if (oldApp) {
+        try { await deleteApp(oldApp); } catch (e) {}
+      }
+    }
   };
 
   const analyzeWithAI = async () => {
@@ -380,6 +458,14 @@ export default function SurveyAdmin() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setShowMigration(!showMigration)}
+            className="flex items-center gap-2 px-4 py-3 bg-amber-50 text-amber-600 rounded-2xl font-bold hover:bg-amber-100 transition-all border border-amber-100"
+            title="Di trú dữ liệu từ Firebase cũ"
+          >
+            <RefreshCw size={20} className={migrationStatus.step === 'migrating' ? 'animate-spin' : ''} />
+            <span className="hidden md:inline">Di trú dữ liệu cũ</span>
+          </button>
+          <button
             onClick={exportToCSV}
             className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-all shadow-sm"
           >
@@ -388,6 +474,88 @@ export default function SurveyAdmin() {
           </button>
         </div>
       </div>
+
+      {/* Migration Wizard UI */}
+      {showMigration && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-50 border border-amber-200 rounded-[2rem] p-6 mb-8 shadow-inner"
+        >
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white">
+                <Database size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-amber-900">Công cụ di trú dữ liệu (Migration Wizard)</h3>
+                <p className="text-sm text-amber-700 font-medium italic">Sử dụng để chép dữ liệu khảo sát từ Project cũ sang Database mới ({db.app.options.projectId})</p>
+              </div>
+            </div>
+            <button onClick={() => setShowMigration(false)} className="p-2 hover:bg-white/50 rounded-lg text-amber-900">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-black text-amber-800 uppercase mb-2 block">Project ID (Cũ)</label>
+                <input 
+                  type="text" 
+                  value={oldConfig.projectId}
+                  onChange={(e) => setOldConfig({...oldConfig, projectId: e.target.value})}
+                  placeholder="Ví dụ: gen-lang-client-..."
+                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm font-bold"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-black text-amber-800 uppercase mb-2 block">API Key (Cũ)</label>
+                <input 
+                  type="password" 
+                  value={oldConfig.apiKey}
+                  onChange={(e) => setOldConfig({...oldConfig, apiKey: e.target.value})}
+                  placeholder="AIzaSy..."
+                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm font-bold"
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-black text-amber-800 uppercase mb-2 block">Database ID (Cũ - Mặc định là (default))</label>
+                <input 
+                  type="text" 
+                  value={oldConfig.firestoreDatabaseId}
+                  onChange={(e) => setOldConfig({...oldConfig, firestoreDatabaseId: e.target.value})}
+                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm font-bold"
+                />
+              </div>
+              <div className="flex items-center gap-3 h-[4.5rem]">
+                <button 
+                  onClick={handleMigration}
+                  disabled={migrationStatus.step === 'migrating' || migrationStatus.step === 'testing'}
+                  className="flex-1 h-full bg-amber-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-amber-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {migrationStatus.step === 'migrating' ? <RefreshCw className="animate-spin" size={20} /> : <RefreshCw size={20} />}
+                  Bắt đầu chép dữ liệu
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {migrationStatus.message && (
+            <div className={cn(
+              "p-4 rounded-xl flex items-center gap-3 font-bold text-sm",
+              migrationStatus.step === 'success' ? 'bg-green-100 text-green-700' : 
+              migrationStatus.step === 'error' ? 'bg-red-100 text-red-700' : 'bg-white text-amber-900 border border-amber-200'
+            )}>
+              {migrationStatus.step === 'testing' || migrationStatus.step === 'migrating' ? <RefreshCw size={16} className="animate-spin" /> : 
+               migrationStatus.step === 'success' ? <RefreshCw size={16} /> : <AlertTriangle size={16} />}
+              {migrationStatus.message}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {!selectedSurvey ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
