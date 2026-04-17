@@ -38,14 +38,6 @@ interface FirestoreErrorInfo {
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errorMsg = error instanceof Error ? error.message : String(error);
   
-  if (errorMsg.toLowerCase().includes('quota') || errorMsg.includes('resource-exhausted') || errorMsg.includes('Missing or insufficient permissions')) {
-    console.warn("Firestore Quota Exceeded or Permission Denied! Prompting for Demo Mode...");
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('show_demo_selection'));
-    }
-    return; // Return early without throwing so we don't alert the global error handler
-  }
-
   const errInfo: FirestoreErrorInfo = {
     error: errorMsg,
     authInfo: {
@@ -149,8 +141,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
 
-    const isDemoMode = localStorage.getItem('isDemoMode') === 'true';
-
     // Handle redirect result for fallback login
     const handleRedirectResult = async () => {
       try {
@@ -216,32 +206,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    if (!isDemoMode) {
-      handleRedirectResult();
-    }
-
-    if (isDemoMode) {
-      const demoRole = localStorage.getItem('demoRole') || 'student';
-      setUser({ uid: 'demo-user', isAnonymous: true, email: 'demo@teentask.vn' } as User);
-      setProfile({
-        uid: 'demo-user',
-        email: 'demo@teentask.vn',
-        displayName: 'Người dùng Demo',
-        photoURL: 'https://ui-avatars.com/api/?name=Demo&background=4F46E5&color=fff',
-        role: demoRole as any,
-        trustScore: 85,
-        skills: ['Design', 'Video', 'Marketing'],
-        balance: 0,
-        isVip: false,
-        isVerified: true,
-        verificationStatus: 'verified',
-        savedJobs: [],
-        savedShadowing: [],
-        createdAt: Date.now(),
-      });
-      setLoading(false);
-      return;
-    }
+    handleRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -272,16 +237,14 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      if (!isDemoMode) {
-        unsubscribe();
-      }
+      unsubscribe();
       if (unsubProfile) unsubProfile();
     };
   }, []);
 
   const checkDemo = () => {
-    if (user?.isAnonymous || localStorage.getItem('isDemoMode') === 'true') {
-      alert("👀 Chế độ xem thử: Tính năng này cần đăng nhập tài khoản chính thức!");
+    if (user?.isAnonymous) {
+      alert("👀 Tính năng này cần đăng nhập tài khoản chính thức!");
       return true;
     }
     return false;

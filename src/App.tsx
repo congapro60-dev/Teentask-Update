@@ -109,16 +109,6 @@ function AppContent() {
   const isAdmin = (profile?.role === 'admin' && profile?.isVerified) || userEmailLower === ADMIN_EMAIL.toLowerCase() || isBoss;
 
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [showDemoPrompt, setShowDemoPrompt] = useState(false);
-
-  useEffect(() => {
-    const handleShowDemoSelection = () => {
-      setShowDemoPrompt(true);
-    };
-
-    window.addEventListener('show_demo_selection', handleShowDemoSelection);
-    return () => window.removeEventListener('show_demo_selection', handleShowDemoSelection);
-  }, []);
 
   const handleLogin = async () => {
     setLoginError(null);
@@ -133,29 +123,6 @@ function AppContent() {
         setLoginError(`Đã có lỗi xảy ra khi đăng nhập: ${error.message || error.code || 'Lỗi không xác định'}`);
       }
     }
-  };
-
-  const handleDemoLogin = async () => {
-    setLoginError(null);
-    try {
-      localStorage.setItem('demoRole', selectedRole || 'student');
-      localStorage.setItem('isDemoMode', 'true');
-      window.location.reload();
-    } catch (error: any) {
-      setLoginError(`Lỗi Demo Mode: ${error.message}`);
-    }
-  };
-
-  const exitDemo = async () => {
-    localStorage.removeItem('demoRole');
-    localStorage.removeItem('isDemoMode');
-    await signOut(auth);
-    window.location.href = '/profile';
-  };
-
-  const switchDemoRole = (role: 'student' | 'parent' | 'business') => {
-    localStorage.setItem('demoRole', role);
-    window.location.reload();
   };
 
   if (loading) {
@@ -174,55 +141,6 @@ function AppContent() {
   if (!user) {
     return (
       <div className="bg-[#F8FAFC] min-h-screen">
-        {showDemoPrompt && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative"
-            >
-              <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 rounded-full shadow-md z-10 rotate-3">
-                {t('demoMode')}
-              </div>
-              <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 mb-6 mx-auto">
-                <ShieldAlert size={32} />
-              </div>
-              <h2 className="text-2xl font-black text-center mb-3 text-gray-900 leading-tight">Hệ thống đang bảo trì!</h2>
-              <p className="text-gray-500 text-center mb-8 font-medium">
-                Kết nối tới dữ liệu không thành công (có thể do hết giới hạn truy cập hoặc đang cập nhật bảo mật). 
-                Bạn có thể trải nghiệm giao diện bằng dữ liệu mẫu. Chọn một vai trò để tiếp tục:
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                {[
-                  { id: 'student', label: t('student'), icon: GraduationCap },
-                  { id: 'parent', label: t('parent'), icon: ShieldCheck },
-                  { id: 'business', label: t('business'), icon: Building2 },
-                ].map((role) => (
-                  <button
-                    key={role.id}
-                    onClick={() => {
-                      localStorage.setItem('demoRole', role.id);
-                      localStorage.setItem('isDemoMode', 'true');
-                      window.location.reload();
-                    }}
-                    className="p-4 rounded-2xl border-2 border-gray-100 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center gap-2 group"
-                  >
-                    <role.icon size={24} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
-                    <span className="font-bold text-gray-900 text-sm">{role.label}</span>
-                  </button>
-                ))}
-              </div>
-              
-              <button 
-                onClick={() => setShowDemoPrompt(false)}
-                className="w-full py-3 text-gray-400 font-bold hover:text-gray-600 transition-colors"
-              >
-                Trở lại
-              </button>
-            </motion.div>
-          </div>
-        )}
         <div className={appWrapperClass}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -297,13 +215,6 @@ function AppContent() {
                         <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
                         {t('loginWithGoogle')}
                       </button>
-
-                      <button
-                        onClick={handleDemoLogin}
-                        className="w-full max-w-md py-4 mt-4 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
-                      >
-                        👀 {t('demoMode')}
-                      </button>
                     </div>
                   } />
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -355,25 +266,6 @@ function AppContent() {
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
       <div className={appWrapperClass}>
-        {user?.isAnonymous && (
-          <div className="bg-amber-400 text-amber-900 text-center py-2 px-4 text-sm font-semibold sticky top-0 z-[100] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 shadow-md">
-            <span>👀 Chế độ xem thử — Dữ liệu không được lưu</span>
-            <div className="flex items-center gap-2">
-              <select 
-                value={userRole} 
-                onChange={(e) => switchDemoRole(e.target.value as any)}
-                className="bg-amber-100 text-amber-900 border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none"
-              >
-                <option value="student">Học sinh</option>
-                <option value="parent">Phụ huynh</option>
-                <option value="business">Doanh nghiệp</option>
-              </select>
-              <button onClick={exitDemo} className="bg-amber-900 text-amber-50 px-3 py-1 rounded-lg text-xs hover:bg-amber-800 transition-colors flex items-center gap-1">
-                <LogOut size={12} /> Đăng nhập thật
-              </button>
-            </div>
-          </div>
-        )}
         <Layout>
           <AnimatePresence mode="wait">
             <motion.div
