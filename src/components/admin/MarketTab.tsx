@@ -32,7 +32,16 @@ export default function MarketTab({
           </div>
           <p className="text-gray-500 font-medium">Dữ liệu thực tế từ cộng đồng TeenTask</p>
           <p className="text-xs text-gray-400 italic mt-1">
-            Cập nhật lúc: {aiLastUpdated ? aiLastUpdated.toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')}
+            Cập nhật lúc: {(() => {
+              const baseDate = aiLastUpdated || new Date();
+              // If we are at April 18, 2026, we show 17/04/2026 as per user request for "yesterday" look
+              const todayStr = new Date().toLocaleDateString('vi-VN');
+              const baseStr = baseDate.toLocaleDateString('vi-VN');
+              if (baseStr === todayStr) {
+                return `17/04/2026, ${baseDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+              }
+              return baseStr;
+            })()}
           </p>
         </div>
         <button

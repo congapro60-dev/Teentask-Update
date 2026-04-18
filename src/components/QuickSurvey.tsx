@@ -945,10 +945,10 @@ export default function QuickSurvey() {
       {/* Close button */}
       <button 
         onClick={() => navigate('/')}
-        className="fixed top-6 right-6 p-3 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all z-50 bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm"
+        className="fixed top-6 right-6 p-4 text-white hover:bg-white/20 rounded-full transition-all z-50 bg-gray-900/40 backdrop-blur-md border border-white/20 shadow-xl"
         aria-label="Đóng khảo sát"
       >
-        <X size={24} />
+        <X size={28} strokeWidth={3} />
       </button>
 
       <div className="w-full">

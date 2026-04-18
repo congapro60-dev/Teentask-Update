@@ -49,7 +49,7 @@ export default function JobDetail({
     }
     setIsAnalyzing(true);
     try {
-      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const apiKey = profile?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') || '';
       const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `

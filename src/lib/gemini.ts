@@ -3,8 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 const FALLBACK_API_KEY = "AIzaSyBsJyvMYihJJKfbwHn4LakbAb4IUKEagck";
 
 export const getGeminiApiKey = (userApiKey?: string) => {
-  // Priority: userApiKey -> process.env.GEMINI_API_KEY -> Fallback Key
-  return userApiKey || process.env.GEMINI_API_KEY || FALLBACK_API_KEY;
+  // Priority: userApiKey -> import.meta.env -> process.env -> Fallback Key
+  const envKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
+  return userApiKey || envKey || FALLBACK_API_KEY;
 };
 
 const ai = new GoogleGenAI({ apiKey: getGeminiApiKey() });

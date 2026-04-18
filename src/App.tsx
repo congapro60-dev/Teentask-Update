@@ -74,7 +74,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
             >
               Tải lại trang
             </button>
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <pre className="mt-6 p-4 bg-gray-50 rounded-lg text-left text-xs text-red-500 overflow-auto max-h-40">
                 {this.state.error?.toString()}
               </pre>

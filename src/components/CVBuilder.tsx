@@ -70,7 +70,7 @@ export default function CVBuilder() {
 
     setGenerating(true);
     try {
-      const apiKey = profile?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      const apiKey = profile?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') || '';
 
       if (!apiKey) {
         throw new Error('Không tìm thấy API Key.');
