@@ -3,7 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>TeenTask: Gen Z Career Academy</title>
+    <!-- Environment Shim for Browser Compatibility -->
+    <script>
+      window.global = window;
+      window.process = { 
+        env: { 
+          NODE_ENV: 'production' 
+        }, 
+        nextTick: (cb) => setTimeout(cb, 0),
+        browser: true
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
