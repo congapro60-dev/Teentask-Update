@@ -69,6 +69,30 @@ export default function MarketTab({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+            {/* Key Presentation Metrics */}
+            <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-indigo-100 flex flex-col items-center justify-center text-center">
+                <div className="text-sm font-black opacity-80 uppercase tracking-tighter mb-1">Ease-of-use</div>
+                <div className="text-4xl font-black">{landingPageStats.avgEaseOfUse}</div>
+                <div className="text-[10px] font-bold mt-1 opacity-70">Thang điểm 5.0</div>
+              </div>
+              <div className="bg-purple-600 rounded-3xl p-6 text-white shadow-lg shadow-purple-100 flex flex-col items-center justify-center text-center">
+                <div className="text-sm font-black opacity-80 uppercase tracking-tighter mb-1">NPS (Recommend)</div>
+                <div className="text-4xl font-black">{landingPageStats.npsScore}</div>
+                <div className="text-[10px] font-bold mt-1 opacity-70">Thang điểm 10</div>
+              </div>
+              <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-lg shadow-emerald-100 flex flex-col items-center justify-center text-center">
+                <div className="text-sm font-black opacity-80 uppercase tracking-tighter mb-1">Service Match</div>
+                <div className="text-4xl font-black">{landingPageStats.meetsNeedRate}%</div>
+                <div className="text-[10px] font-bold mt-1 opacity-70">Đáp ứng nhu cầu</div>
+              </div>
+              <div className="bg-amber-500 rounded-3xl p-6 text-white shadow-lg shadow-amber-100 flex flex-col items-center justify-center text-center">
+                <div className="text-sm font-black opacity-80 uppercase tracking-tighter mb-1">Parent Choice</div>
+                <div className="text-4xl font-black">{landingPageStats.parentPayingRate}%</div>
+                <div className="text-[10px] font-bold mt-1 opacity-70">Sẵn sàng chi trả</div>
+              </div>
+            </div>
+
             {/* Roles Distribution */}
             <div className="bg-white/60 rounded-3xl p-6 border border-white/80 shadow-sm">
               <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Cơ cấu đối tượng vãng lai</h4>

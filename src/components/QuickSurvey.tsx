@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFirebase } from './FirebaseProvider';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User, Users, Building2, ChevronRight, CheckCircle2, ArrowLeft, PieChart, TrendingUp, Scale, ClipboardList, ShieldCheck, Sparkles, BookOpen, Briefcase, GraduationCap, Award } from 'lucide-react';
+import { User, Users, Building2, ChevronRight, CheckCircle2, ArrowLeft, PieChart, TrendingUp, Scale, ClipboardList, ShieldCheck, Sparkles, BookOpen, Briefcase, GraduationCap, Award, Star, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 type Role = 'student' | 'parent' | 'business' | null;
@@ -17,6 +17,10 @@ export default function QuickSurvey() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<any>({
+    // Experience rating fields
+    easeOfUse: 5,
+    nps: 10,
+    meetsNeed: true,
     // Student fields
     expectedSalary: '',
     payForShadowing: '',
@@ -45,7 +49,7 @@ export default function QuickSurvey() {
     setStep(2);
   };
 
-  const handleOptionSelect = (field: string, value: string) => {
+  const handleOptionSelect = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
@@ -95,10 +99,13 @@ export default function QuickSurvey() {
       await addDoc(collection(db, 'quick_surveys'), {
         role,
         ...roleSpecificData,
+        easeOfUse: formData.easeOfUse,
+        nps: formData.nps,
+        meetsNeed: formData.meetsNeed,
         createdAt: Date.now(),
         source: 'landing_page_detailed'
       });
-      setStep(6); // Success
+      setStep(7); // Success
     } catch (error) {
       console.error("Error submitting survey:", error);
       alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
@@ -801,6 +808,109 @@ export default function QuickSurvey() {
     </AnimatePresence>
   );
 
+  const renderRatingStep = () => (
+    <motion.div
+      key="rating-step"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="max-w-md mx-auto w-full space-y-8"
+    >
+      <div className="text-center">
+        <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Star size={32} />
+        </div>
+        <h3 className="text-2xl font-black text-gray-900">Một bước cuối cùng!</h3>
+        <p className="text-gray-500">Giúp chúng tôi hoàn thiện trải nghiệm TeenTask</p>
+      </div>
+
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <p className="font-bold text-gray-800 text-sm uppercase tracking-wider">Mức độ dễ sử dụng của giao diện?</p>
+          <div className="flex justify-between gap-2">
+            {[1, 2, 3, 4, 5].map(num => (
+              <button
+                key={num}
+                onClick={() => handleOptionSelect('easeOfUse', num)}
+                className={cn(
+                  "flex-1 py-3 rounded-xl font-black transition-all border-2",
+                  formData.easeOfUse === num ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-400 border-gray-100 hover:border-indigo-200"
+                )}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
+            <span>Rất khó</span>
+            <span>Rất dễ</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-bold text-gray-800 text-sm uppercase tracking-wider">Bạn có sẵn sàng giới thiệu TeenTask?</p>
+          <div className="grid grid-cols-5 md:grid-cols-10 gap-1">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+              <button
+                key={num}
+                onClick={() => handleOptionSelect('nps', num)}
+                className={cn(
+                  "h-10 rounded-lg font-bold text-xs transition-all border-2",
+                  formData.nps === num ? "bg-purple-600 text-white border-purple-600" : "bg-white text-gray-400 border-gray-50 hover:border-purple-200"
+                )}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
+            <span>Không bao giờ</span>
+            <span>Chắc chắn</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-bold text-gray-800 text-sm uppercase tracking-wider">Dịch vụ này có đáp ứng nhu cầu của bạn?</p>
+          <div className="flex gap-4">
+            <button
+              onClick={() => handleOptionSelect('meetsNeed', true)}
+              className={cn(
+                "flex-1 py-4 rounded-2xl font-black transition-all border-2",
+                formData.meetsNeed === true ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-400 border-gray-100"
+              )}
+            >
+              CÓ
+            </button>
+            <button
+              onClick={() => handleOptionSelect('meetsNeed', false)}
+              className={cn(
+                "flex-1 py-4 rounded-2xl font-black transition-all border-2",
+                formData.meetsNeed === false ? "bg-rose-500 text-white border-rose-500" : "bg-white text-gray-400 border-gray-100"
+              )}
+            >
+              CHƯA HẲN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button
+        disabled={isSubmitting}
+        onClick={handleSubmit}
+        className="w-full py-5 bg-gray-900 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:scale-[1.02] transition-all flex justify-center items-center gap-3"
+      >
+        {isSubmitting ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ĐANG GỬI...
+          </>
+        ) : (
+          <>Hoàn tất khảo sát <ChevronRight size={20} /></>
+        )}
+      </button>
+    </motion.div>
+  );
+
   const renderSuccess = () => (
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
@@ -831,14 +941,24 @@ export default function QuickSurvey() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12 relative">
+      {/* Close button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="fixed top-6 right-6 p-3 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all z-50 bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm"
+        aria-label="Đóng khảo sát"
+      >
+        <X size={24} />
+      </button>
+
       <div className="w-full">
         <AnimatePresence mode="wait">
           {step === 1 && renderRoleSelection()}
           {role === 'student' && step > 1 && step < 6 && renderStudentSurvey()}
           {role === 'parent' && step > 1 && step < 6 && renderParentSurvey()}
           {role === 'business' && step > 1 && step < 6 && renderBusinessSurvey()}
-          {step === 6 && renderSuccess()}
+          {step === 6 && renderRatingStep()}
+          {step === 7 && renderSuccess()}
         </AnimatePresence>
       </div>
     </div>
