@@ -70,9 +70,9 @@ interface FirebaseContextType {
   sendFriendRequest: (toId: string) => Promise<void>;
   acceptFriendRequest: (requestId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
-  addRelationship: (relatedUserId: string, relatedUserName: string, relatedUserPhoto: string | undefined, type: 'Family' | 'Professional', title: string) => Promise<void>;
-  acceptRelationship: (relId: string) => Promise<void>;
-  rejectRelationship: (relId: string) => Promise<void>;
+  addRelationship: (relatedUserId: string, relatedUserName: string, relatedUserPhoto: string | undefined, type: 'Family' | 'Professional' | 'Education', title: string) => Promise<void>;
+  acceptRelationship: (relId: string, requesterId?: string) => Promise<void>;
+  rejectRelationship: (relId: string, requesterId?: string) => Promise<void>;
   submitRating: (toId: string, score: number, comment?: string, jobId?: string) => Promise<void>;
   createChat: (otherUserId: string, otherUserDetails: any, relatedTo?: { type: string, id: string, title: string }) => Promise<string>;
   sendNotification: (userId: string, title: string, message: string, type: string, link?: string) => Promise<void>;
@@ -222,7 +222,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
               photoURL: user.photoURL || '',
               trustScore: 0,
               skills: [],
-              role: pendingRole || 'student',
+              ...(pendingRole && { role: pendingRole }),
               createdAt: Date.now(),
               balance: 0,
               isVip: isAuthorizedAdmin,
@@ -332,7 +332,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           photoURL: user.photoURL || '',
           trustScore: 0,
           skills: [],
-          role: selectedRole || 'student',
+          ...(selectedRole && { role: selectedRole }),
           createdAt: Date.now(),
           balance: 0,
           isVip: isAuthorizedAdmin,
@@ -445,7 +445,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addRelationship = async (relatedUserId: string, relatedUserName: string, relatedUserPhoto: string | undefined, type: 'Family' | 'Professional', title: string) => {
+  const addRelationship = async (relatedUserId: string, relatedUserName: string, relatedUserPhoto: string | undefined, type: 'Family' | 'Professional' | 'Education', title: string) => {
     if (checkDemo()) return;
     if (!user || !profile) return;
     const path = 'relationships';
@@ -464,26 +464,53 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         status: 'pending',
         createdAt: Date.now()
       }));
+      
+      // Notify the recipient
+      await sendNotification(
+        relatedUserId,
+        'Yêu cầu kết nối mới',
+        `${profile.displayName} muốn kết nối với vai trò ${title}.`,
+        'system',
+        '/profile'
+      );
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
-  const acceptRelationship = async (relId: string) => {
+  const acceptRelationship = async (relId: string, requesterId?: string) => {
     if (checkDemo()) return;
     const path = `relationships/${relId}`;
     try {
       await setDoc(doc(db, 'relationships', relId), { status: 'accepted' }, { merge: true });
+      if (requesterId && profile) {
+        await sendNotification(
+          requesterId,
+          'Kết nối được chấp nhận',
+          `${profile.displayName} đã chấp nhận yêu cầu kết nối của bạn.`,
+          'system',
+          `/company/${profile.uid}`
+        );
+      }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
-  const rejectRelationship = async (relId: string) => {
+  const rejectRelationship = async (relId: string, requesterId?: string) => {
     if (checkDemo()) return;
     const path = `relationships/${relId}`;
     try {
       await setDoc(doc(db, 'relationships', relId), { status: 'rejected' }, { merge: true });
+      if (requesterId && profile) {
+        await sendNotification(
+          requesterId,
+          'Kết nối bị từ chối',
+          `${profile.displayName} đã từ chối yêu cầu kết nối của bạn.`,
+          'system',
+          '/profile'
+        );
+      }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }

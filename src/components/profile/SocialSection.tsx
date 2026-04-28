@@ -99,13 +99,13 @@ export default function SocialSection({
                 </div>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => rejectRelationship(rel.id)}
+                    onClick={() => rejectRelationship(rel.id, rel.userId)}
                     className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
                   >
                     <X size={18} />
                   </button>
                   <button 
-                    onClick={() => acceptRelationship(rel.id)}
+                    onClick={() => acceptRelationship(rel.id, rel.userId)}
                     className="p-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm"
                   >
                     <Check size={18} />

@@ -704,6 +704,7 @@ export default function Profile() {
                     ratings={ratings}
                     setIsReviewModalOpen={setIsReviewModalOpen}
                     setSelectedApp={setSelectedApp}
+                    relationships={relationships}
                     loading={loading}
                   />
                 ) : profile?.role === 'business' ? (
@@ -714,6 +715,9 @@ export default function Profile() {
                     setShowLinkedInModal={setShowLinkedInModal}
                     setIsBusinessEditModalOpen={setIsBusinessEditModalOpen}
                     ratings={ratings}
+                    relationshipRequests={relationshipRequests}
+                    acceptRelationship={acceptRelationship}
+                    rejectRelationship={rejectRelationship}
                   />
                 ) : (
                   <div className="bg-white rounded-[32px] p-8 text-center border border-gray-100">

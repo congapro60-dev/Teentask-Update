@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Building2, Edit2, ExternalLink, Clock } from 'lucide-react';
-import { UserProfile, Rating } from '../../types';
+import { Building2, Edit2, ExternalLink, Clock, Users, CheckCircle, XCircle } from 'lucide-react';
+import { UserProfile, Rating, Relationship } from '../../types';
 import { useFirebase } from '../FirebaseProvider';
 
 interface BusinessViewProps {
@@ -10,15 +10,22 @@ interface BusinessViewProps {
   verificationUI: any;
   setShowLinkedInModal: (show: boolean) => void;
   ratings: Rating[];
+  relationshipRequests: Relationship[];
+  acceptRelationship: (relId: string) => Promise<void>;
+  rejectRelationship: (relId: string) => Promise<void>;
 }
 
 export default function BusinessView({
   profile, updateProfile,
-  setIsBusinessEditModalOpen, verificationUI, setShowLinkedInModal, ratings
+  setIsBusinessEditModalOpen, verificationUI, setShowLinkedInModal, ratings,
+  relationshipRequests, acceptRelationship, rejectRelationship
 }: BusinessViewProps) {
   const { t } = useFirebase();
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState('');
+  
+  const studentRequests = relationshipRequests.filter(req => req.type === 'Education' && req.status === 'pending');
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
@@ -119,6 +126,51 @@ export default function BusinessView({
               </div>
             </div>
           </div>
+
+          {/* Edu Network: Yêu cầu liên kết học sinh */}
+          {(profile?.orgType === 'school' || profile?.orgType === 'teacher') && (
+            <div className="pt-4 border-t border-gray-100">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Users size={16} /> Edu Network (Yêu cầu)
+              </h4>
+              
+              {studentRequests.length === 0 ? (
+                <p className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  Chưa có yêu cầu liên kết mới từ học sinh.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {studentRequests.map(req => (
+                    <div key={req.id} className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img src={req.userPhoto || `https://ui-avatars.com/api/?name=${req.userName}`} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-100" />
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{req.userName}</p>
+                          <p className="text-[10px] text-gray-500">Xin xác nhận làm {req.title}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => acceptRelationship(req.id, req.userId)}
+                          className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+                          title="Chấp nhận"
+                        >
+                          <CheckCircle size={18} />
+                        </button>
+                        <button 
+                          onClick={() => rejectRelationship(req.id, req.userId)}
+                          className="p-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors"
+                          title="Từ chối"
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* LinkedIn Verification */}
           <div className="pt-4 border-t border-gray-100">

@@ -70,7 +70,7 @@ const MOCK_JOBS = [
 export default function CompanyProfile() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
-  const { profile: currentUserProfile, toggleFollowUser, createChat } = useFirebase();
+  const { profile: currentUserProfile, toggleFollowUser, createChat, addRelationship } = useFirebase();
   const [activeTab, setActiveTab] = useState<'jobs' | 'reviews' | 'about'>('jobs');
   const [loading, setLoading] = useState(true);
   const [companyInfo, setCompanyInfo] = useState<UserProfile | null>(null);
@@ -322,6 +322,27 @@ export default function CompanyProfile() {
                 TP. Hồ Chí Minh
               </div>
             </div>
+
+            {currentUserProfile?.role === 'student' && (companyInfo?.orgType === 'school' || companyInfo?.orgType === 'teacher') && (
+              <div className="mt-6 flex flex-col gap-2">
+                <button 
+                  onClick={async () => {
+                    const title = companyInfo?.orgType === 'school' ? 'Học sinh' : 'Học trò';
+                    try {
+                      await addRelationship(businessId!, companyInfo.displayName || 'Đối tác', companyInfo.photoURL, 'Education', title);
+                      alert('Đã gửi yêu cầu kết nối Edu Network thành công. Đang chờ duyệt.');
+                    } catch (e) {
+                      alert('Có lỗi xảy ra hoặc bạn đã gửi yêu cầu rồi.');
+                    }
+                  }}
+                  className="w-full py-4 bg-indigo-50 text-indigo-700 font-bold rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  <GraduationCap size={20} />
+                  {companyInfo?.orgType === 'school' ? 'Đăng ký làm Học sinh trường này' : 'Nhận tư vấn từ Giáo viên'}
+                </button>
+                <p className="text-[10px] text-gray-500 text-center font-medium">Bằng việc kết nối, nhà trường/giáo viên có thể đề xuất cơ hội trực tiếp cho bạn.</p>
+              </div>
+            )}
 
             {isCurrentUserBoss && companyInfo?.email !== BOSS_EMAIL && (
               <div className="mt-6">

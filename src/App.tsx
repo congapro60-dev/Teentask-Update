@@ -113,7 +113,12 @@ function AppContent() {
   const handleLogin = async () => {
     setLoginError(null);
     try {
-      await login(selectedRole || undefined);
+      if (selectedRole === 'personal' || selectedRole === 'organization') {
+        localStorage.setItem('selectedPillar', selectedRole);
+        await login(undefined);
+      } else {
+        await login((selectedRole as any) || undefined);
+      }
     } catch (error: any) {
       if (error.message === "không thể cấp quyền đăng nhập ở vai trò này") {
         setLoginError(error.message);
@@ -127,11 +132,13 @@ function AppContent() {
 
   const handleDemo = () => {
     if (!selectedRole) {
-      setLoginError("Vui lòng chọn một vai trò để trải nghiệm bản Demo!");
+      setLoginError("Vui lòng chọn một nhánh để trải nghiệm bản Demo!");
       return;
     }
     localStorage.setItem('isDemoMode', 'true');
-    localStorage.setItem('demoRole', selectedRole);
+    // Map pillars back to internal roles for demo mode
+    const demoRole = selectedRole === 'personal' ? 'parent' : selectedRole === 'organization' ? 'business' : 'student';
+    localStorage.setItem('demoRole', demoRole);
     window.location.reload();
   };
 
@@ -170,17 +177,16 @@ function AppContent() {
                       <Route path="/edu-network" element={<EduNetwork />} />
                       <Route path="/profile" element={
                     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
-                      <div className="w-full max-w-md mb-10 text-center md:text-left">
-                        <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">{t('welcomeBack')}</h2>
-                        <p className="text-gray-500 font-medium">{t('selectRole')}</p>
+                      <div className="w-full max-w-md mb-8 text-center md:text-left">
+                        <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Chào mừng!</h2>
+                        <p className="text-gray-500 font-medium tracking-tight">Vui lòng chọn nhánh phù hợp với bạn trước khi đăng nhập.</p>
                       </div>
 
-                      <div className="w-full max-w-md grid grid-cols-2 gap-4 mb-6">
+                      <div className="w-full max-w-md flex flex-col gap-4 mb-8">
                         {[
-                          { id: 'student', label: t('student'), icon: GraduationCap, desc: t('studentDesc') },
-                          { id: 'parent', label: t('parent'), icon: ShieldCheck, desc: t('parentDesc') },
-                          { id: 'business', label: t('business'), icon: Building2, desc: t('businessDesc') },
-                          { id: 'admin', label: t('adminRole'), icon: ShieldAlert, desc: t('adminDesc') },
+                          { id: 'student', label: 'Học sinh / TeenTasker (14-18 tuổi)', icon: GraduationCap, desc: 'Tìm kiếm cơ hội, làm CV, kiếm tiền và tích lũy kỹ năng.' },
+                          { id: 'personal', label: 'Cá nhân / Phụ huynh / Giáo viên', icon: Users, desc: 'Theo dõi con em, hướng nghiệp, hoặc tìm kiếm nhân sự cá nhân.' },
+                          { id: 'organization', label: 'Tổ chức / Nhà trường / Doanh nghiệp', icon: Building2, desc: 'Tuyển dụng, tạo Job Shadowing, quản lý mạng lưới học sinh.' },
                         ].map((role) => (
                           <button
                             key={role.id}
@@ -188,23 +194,40 @@ function AppContent() {
                               setSelectedRole(role.id as any);
                               setLoginError(null);
                             }}
-                            className={`w-full p-4 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-3 ${
+                            className={`w-full p-5 rounded-[24px] border-2 transition-all flex items-start gap-4 text-left ${
                               selectedRole === role.id 
-                              ? 'border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-100' 
-                              : 'border-white bg-white hover:border-gray-200 shadow-sm'
+                              ? 'border-indigo-600 bg-indigo-50/50 shadow-xl shadow-indigo-100 scale-[1.02]' 
+                              : 'border-white bg-white hover:border-gray-200 shadow-sm hover:scale-[1.01]'
                             }`}
                           >
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                            <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
                               selectedRole === role.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'
                             }`}>
-                              <role.icon size={24} />
+                              <role.icon size={28} />
                             </div>
                             <div>
-                              <h4 className="font-bold text-gray-900 text-sm">{role.label}</h4>
-                              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-1">{role.desc}</p>
+                              <h4 className="font-bold text-gray-900 text-base">{role.label}</h4>
+                              <p className="text-xs text-gray-500 mt-1 font-medium">{role.desc}</p>
                             </div>
                           </button>
                         ))}
+                      </div>
+
+                      <div className="w-full max-w-md flex justify-center mb-6 mt-[-10px]">
+                        <button
+                          onClick={() => {
+                            setSelectedRole('admin');
+                            setLoginError(null);
+                          }}
+                          className={`flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-colors ${
+                            selectedRole === 'admin' 
+                            ? 'bg-indigo-100 text-indigo-700 font-bold border border-indigo-200' 
+                            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 border border-transparent'
+                          }`}
+                        >
+                          <ShieldAlert size={16} />
+                          {selectedRole === 'admin' ? 'Đang chọn quyền Quản trị viên' : 'Đăng nhập với quyền Quản trị viên'}
+                        </button>
                       </div>
 
                       {loginError && (
@@ -252,12 +275,16 @@ function AppContent() {
       <div className="bg-[#0F0C29] min-h-screen">
         <div className={appWrapperClass}>
           <RoleSelection 
-            onSelect={async (role) => {
-              await updateProfile({ 
+            onSelect={async (role, orgType) => {
+              const updates: any = { 
                 role,
                 verificationStatus: 'unverified',
                 isVerified: false
-              });
+              };
+              if (orgType) {
+                updates.orgType = orgType;
+              }
+              await updateProfile(updates);
             }} 
           />
         </div>

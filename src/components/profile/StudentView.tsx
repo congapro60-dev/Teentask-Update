@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, Edit2, FileText, Award, SlidersHorizontal, Plus, X, ExternalLink, ChevronRight, Briefcase, AlertTriangle, Star, Check, CalendarDays } from 'lucide-react';
+import { User, Edit2, FileText, Award, SlidersHorizontal, Plus, X, ExternalLink, ChevronRight, Briefcase, AlertTriangle, Star, Check, CalendarDays, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { UserProfile, Application, Job } from '../../types';
+import { UserProfile, Application, Job, Relationship } from '../../types';
 import { useFirebase } from '../FirebaseProvider';
 
 interface StudentViewProps {
@@ -21,18 +21,22 @@ interface StudentViewProps {
   setIsReviewModalOpen: (open: boolean) => void;
   badges: { icon: string; label: string; color: string }[];
   ratings: any[];
+  relationships: Relationship[];
 }
 
 export default function StudentView({
   profile, updateProfile,
   setIsStudentEditModalOpen, handleOpenSkillsModal, getSkillLevel, removeSkill,
   quickSkillInput, setQuickSkillInput, addQuickSkill, applications,
-  setSelectedApp, setIsReviewModalOpen, badges, ratings, loading
+  setSelectedApp, setIsReviewModalOpen, badges, ratings, loading, relationships
 }: StudentViewProps) {
   const navigate = useNavigate();
   const { t } = useFirebase();
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState('');
+
+  // Find accepted Education relationships representing Schools or Teachers that verified this student
+  const verifiedEduRels = relationships?.filter(r => r.type === 'Education' && r.status === 'accepted') || [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -240,6 +244,21 @@ export default function StudentView({
 
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Huy hiệu</h4>
+              
+              {verifiedEduRels.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {verifiedEduRels.map(rel => (
+                    <div key={rel.id} className="flex items-center gap-2 p-2 bg-green-50 rounded-xl border border-green-100">
+                      <ShieldCheck size={18} className="text-green-600" />
+                      <div>
+                        <p className="text-xs font-bold text-green-700">Được xác thực bởi</p>
+                        <p className="text-[10px] text-green-600 font-medium">{rel.relatedUserName}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                 {badges.map((badge) => (
                   <div key={badge.label} className={`flex flex-col items-center gap-1 p-3 rounded-2xl ${badge.color} min-w-[80px] shadow-sm`}>

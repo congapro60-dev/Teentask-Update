@@ -13,10 +13,12 @@ export default function BusinessDashboard() {
   const [adData, setAdData] = useState({ title: '', description: '', imageUrl: '', linkUrl: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  const isEdu = profile?.orgType === 'school' || profile?.orgType === 'teacher';
   const stats = [
     { label: 'Tin đang đăng', value: '3', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Đơn ứng tuyển', value: '12', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Lượt xem tin', value: '450', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
+    ...(isEdu ? [{ label: 'Edu Network', value: '15', icon: Presentation, color: 'text-emerald-600', bg: 'bg-emerald-50' }] : [])
   ];
 
   const performanceData = [
@@ -129,7 +131,7 @@ export default function BusinessDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-4 mb-10 relative z-10">
+      <div className={`grid grid-cols-2 ${stats.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-10 relative z-10`}>
         {stats.map((stat, i) => (
           <motion.div 
             key={stat.label}
